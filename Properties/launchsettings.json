@@ -1,0 +1,10 @@
+﻿{
+    "profiles": {
+      "LockscreenGif (Package)": {
+        "commandName": "MsixPackage"
+      },
+      "LockscreenGif (Unpackaged)": {
+        "commandName": "Project"
+      }
+    }
+}
