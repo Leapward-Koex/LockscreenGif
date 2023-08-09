@@ -4,23 +4,50 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
     mc:Ignorable="d">
 
-    <Grid x:Name="ContentArea">
+
+    <Grid Margin="24,0" MaxWidth="1000">
         <Grid.RowDefinitions>
-            <RowDefinition Height="48" />
-            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
         <TextBlock
+            x:Name="HeaderTextPresenter"
+            Margin="0,12"
             Grid.Row="0"
-            x:Uid="Main_Title"
-            Style="{StaticResource PageTitleStyle}" />
+            Style="{ThemeResource TitleTextBlockStyle}"
+            Text="Lockscreen Gif" />
 
-        <Grid Grid.Row="1">
-            
+        <Border Grid.Row="1" Height="300" Width="533" Margin="0,32" BorderThickness="4" BorderBrush="{StaticResource SystemAltLowColor}" Background="{StaticResource SystemFillColorAttentionBackground}" CornerRadius="{StaticResource ControlCornerRadius}">
+            <Image x:Name="currentImage" Stretch="Fill"  />
+        </Border>
+
+
+        <Grid Margin="12" Padding="24,16" Grid.Row="2" Background="{StaticResource SystemFillColorNeutralBackgroundBrush}" CornerRadius="{StaticResource ControlCornerRadius}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <FontIcon Glyph="&#xE8B9;" Grid.Column="0" Margin="0,0,24,0" />
+            <TextBlock
+            x:Name="BrowseGifCaption"
+            Margin="0,12"
+            Style="{ThemeResource BodyStrongTextBlockStyle}"
+            Grid.Column="1"
+            Text="Select a GIF file to set as lockscreen" />
+            <Button x:Name="openGifButton" Grid.Column="2" Click="OpenGifButton_click"  Padding="32,8" Content="Browse GIF file"></Button>
         </Grid>
-        
+
+        <Button x:Name="ApplyButton" Margin="12" Style="{StaticResource AccentButtonStyle}" Padding="32,8" Grid.Row="3" Click="SetLockscreenButton_click" Content="Apply" HorizontalAlignment="Right" IsEnabled="False"/>
+
     </Grid>
+
 </Page>
