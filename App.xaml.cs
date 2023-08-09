@@ -1,8 +1,5 @@
 ﻿using LockscreenGif.Activation;
 using LockscreenGif.Contracts.Services;
-using LockscreenGif.Core.Contracts.Services;
-using LockscreenGif.Core.Services;
-using LockscreenGif.Helpers;
 using LockscreenGif.Models;
 using LockscreenGif.Notifications;
 using LockscreenGif.Services;
@@ -61,14 +58,10 @@ public partial class App : Application
             // Services
             services.AddSingleton<IAppNotificationService, AppNotificationService>();
             services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
-            services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
             services.AddSingleton<IActivationService, ActivationService>();
             services.AddSingleton<IPageService, PageService>();
             services.AddSingleton<INavigationService, NavigationService>();
             services.AddSingleton<ILockscreenService, LockscreenService>();
-
-            // Core Services
-            services.AddSingleton<IFileService, FileService>();
 
             // Views and ViewModels
             services.AddTransient<MainViewModel>();
