@@ -46,15 +46,12 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
-
     strategy:
       matrix:
         configuration: [Release]
 
-    runs-on: windows-latest  # For a list of available runner types, refer to
-                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+    runs-on: windows-latest
 
     env:
       Solution_Name: LockscreenGif.sln
@@ -108,8 +105,8 @@ jobs:
         Configuration: ${{ matrix.configuration }}
 
     # Remove the pfx
-   - name: Remove the pfx
-     run: Remove-Item -path $env:Wap_Project_Directory\$env:Signing_Certificate
+    - name: Remove the pfx
+       run: Remove-Item -path $env:Wap_Project_Directory\$env:Signing_Certificate
 
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
