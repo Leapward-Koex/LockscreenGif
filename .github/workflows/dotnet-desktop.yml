@@ -93,16 +93,12 @@ jobs:
     # Remove the pfx
     - name: Remove the pfx
       run: Remove-Item -path GitHubActionsWorkflow.pfx
-
-        
-    - name: Create ZIP of unpackaged app
-      run: Compress-Archive ./publish/* 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
         
     - name: Upload unpackaged app
       uses: actions/upload-artifact@v2
       with:
-        name: 'Unpackaged app'
-        path: 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
+        name: 'Unpackaged app ${{ github.run_number }}.${{ github.run_attempt }}'
+        path: './publish/'
         
 
     # - name: Create GH release
