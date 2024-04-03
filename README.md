@@ -4,6 +4,10 @@ You cannot set a GIF as a lockscreen using the normal windows settings even when
 
 # Demo
 
+
+https://github.com/Leapward-Koex/LockscreenGif/assets/30615050/7448e59f-9767-4509-8ce3-721cf1783faa
+
+
 # Notes
 ONLY real .GIF files are supported.
 Videos cannot work and will never work, if you want to use a video then use FFMPEG to convert the video to a GIF. Due to limitations in the GIF format I found animations to work best with the limited colour palette, then using a custom made palette with FFMPEG. 
