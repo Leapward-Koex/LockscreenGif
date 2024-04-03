@@ -107,27 +107,31 @@ jobs:
     - name: Remove the pfx
       run: Remove-Item -path GitHubActionsWorkflow.pfx
 
+    - name: List files
+      run: tree
+      shell: cmd
+
     # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
       with:
         name: MSIX Package
-        path: LockscreenGif/LockscreenGif/Packages/**/LockscreenGif*.msix
+        path: *.msix
         
-    # Create the unpackaged app
-    - name: Build unpackaged app
-      run: msbuild $env:Solution_Name /t:Publish /p:WindowsPackageType=None /p:Configuration=$env:Configuration /p:Platform=x64
-      env:
-        Configuration: ${{ matrix.configuration }}
+    # # Create the unpackaged app
+    # - name: Build unpackaged app
+    #   run: msbuild $env:Solution_Name /t:Publish /p:WindowsPackageType=None /p:Configuration=$env:Configuration /p:Platform=x64
+    #   env:
+    #     Configuration: ${{ matrix.configuration }}
         
-    - name: Create ZIP of unpackaged app
-      run: Compress-Archive LockscreenGif/LockscreenGif/bin/x64/Release/net7.0-windows10.0.19041.0/publish/* 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
+    # - name: Create ZIP of unpackaged app
+    #   run: Compress-Archive LockscreenGif/LockscreenGif/bin/x64/Release/net7.0-windows10.0.19041.0/publish/* 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
         
-    - name: Upload unpackaged app
-      uses: actions/upload-artifact@v2
-      with:
-        name: 'Unpackaged app'
-        path: 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
+    # - name: Upload unpackaged app
+    #   uses: actions/upload-artifact@v2
+    #   with:
+    #     name: 'Unpackaged app'
+    #     path: 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
         
 
     # - name: Create GH release
