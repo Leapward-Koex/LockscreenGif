@@ -81,60 +81,28 @@ jobs:
     - name: Setup MSBuild.exe
       uses: microsoft/setup-msbuild@v2
 
-    # Restore the application to populate the obj folder with RuntimeIdentifiers
-    - name: Restore the application
-      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
-      env:
-        Configuration: ${{ matrix.configuration }}
-
     - name: Decode the pfx
       run: |
         $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.BASE64_ENCODED_PFX }}")
         $certificatePath = "GitHubActionsWorkflow.pfx"
         [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
-
-    # Create the app package by building and packaging the Windows Application Packaging project
-    # - name: Create the app package
-    #   run: msbuild $env:Solution_Name /p:AppxBundlePlatforms="$env:Appx_Bundle_Platforms" /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:AppxPackageDir="$env:Appx_Package_Dir" /p:GenerateAppxPackageOnBuild=true
-    #   env:
-    #     Appx_Bundle: Always
-    #     Appx_Bundle_Platforms: x64
-    #     Appx_Package_Build_Mode: SideloadOnly
-    #     Appx_Package_Dir: ./Packages/
-    #     Configuration: ${{ matrix.configuration }}
   
     - name: Publish the application
-      run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+      run: dotnet publish ./LockscreenGif.csproj -c Release -p:PublishProfile=/Properties/PublishProfiles/FolderProfile
         
     # Remove the pfx
     - name: Remove the pfx
       run: Remove-Item -path GitHubActionsWorkflow.pfx
 
-    - name: List files
-      run: tree
-      shell: cmd
-
-    # Upload the MSIX package: https://github.com/marketplace/actions/upload-a-build-artifact
-    - name: Upload build artifacts
+        
+    - name: Create ZIP of unpackaged app
+      run: Compress-Archive ./publish/* 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
+        
+    - name: Upload unpackaged app
       uses: actions/upload-artifact@v2
       with:
-        name: MSIX Package
-        path: ./Packages/**/*.msix
-
-    - name: Upload Executable as Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: windows-executable
-        path: ./publish/*.exe
-        
-    # - name: Create ZIP of unpackaged app
-    #   run: Compress-Archive LockscreenGif/LockscreenGif/bin/x64/Release/net7.0-windows10.0.19041.0/publish/* 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
-        
-    # - name: Upload unpackaged app
-    #   uses: actions/upload-artifact@v2
-    #   with:
-    #     name: 'Unpackaged app'
-    #     path: 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
+        name: 'Unpackaged app'
+        path: 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
         
 
     # - name: Create GH release
