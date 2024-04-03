@@ -97,10 +97,10 @@ jobs:
     - name: Create the app package
       run: msbuild $env:Solution_Name /p:AppxBundlePlatforms="$env:Appx_Bundle_Platforms" /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:AppxPackageDir="$env:Appx_Package_Dir" /p:GenerateAppxPackageOnBuild=true
       env:
-        Appx_Bundle: Never
+        Appx_Bundle: Always
         Appx_Bundle_Platforms: x64
         Appx_Package_Build_Mode: SideloadOnly
-        Appx_Package_Dir: Packages\
+        Appx_Package_Dir: ./Packages/
         Configuration: ${{ matrix.configuration }}
 
     # Remove the pfx
@@ -116,7 +116,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: MSIX Package
-        path: ./*.msix
+        path: ./Packages/**/*.msix
         
     # # Create the unpackaged app
     # - name: Build unpackaged app
