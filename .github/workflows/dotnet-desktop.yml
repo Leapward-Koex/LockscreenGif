@@ -94,15 +94,18 @@ jobs:
         [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
 
     # Create the app package by building and packaging the Windows Application Packaging project
-    - name: Create the app package
-      run: msbuild $env:Solution_Name /p:AppxBundlePlatforms="$env:Appx_Bundle_Platforms" /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:AppxPackageDir="$env:Appx_Package_Dir" /p:GenerateAppxPackageOnBuild=true
-      env:
-        Appx_Bundle: Always
-        Appx_Bundle_Platforms: x64
-        Appx_Package_Build_Mode: SideloadOnly
-        Appx_Package_Dir: ./Packages/
-        Configuration: ${{ matrix.configuration }}
-
+    # - name: Create the app package
+    #   run: msbuild $env:Solution_Name /p:AppxBundlePlatforms="$env:Appx_Bundle_Platforms" /p:Configuration=$env:Configuration /p:UapAppxPackageBuildMode=$env:Appx_Package_Build_Mode /p:AppxBundle=$env:Appx_Bundle /p:PackageCertificateKeyFile=GitHubActionsWorkflow.pfx /p:AppxPackageDir="$env:Appx_Package_Dir" /p:GenerateAppxPackageOnBuild=true
+    #   env:
+    #     Appx_Bundle: Always
+    #     Appx_Bundle_Platforms: x64
+    #     Appx_Package_Build_Mode: SideloadOnly
+    #     Appx_Package_Dir: ./Packages/
+    #     Configuration: ${{ matrix.configuration }}
+  
+    - name: Publish the application
+      run: dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+        
     # Remove the pfx
     - name: Remove the pfx
       run: Remove-Item -path GitHubActionsWorkflow.pfx
@@ -117,12 +120,12 @@ jobs:
       with:
         name: MSIX Package
         path: ./Packages/**/*.msix
-        
-    # # Create the unpackaged app
-    # - name: Build unpackaged app
-    #   run: msbuild $env:Solution_Name /t:Publish /p:WindowsPackageType=None /p:Configuration=$env:Configuration /p:Platform=x64
-    #   env:
-    #     Configuration: ${{ matrix.configuration }}
+
+    - name: Upload Executable as Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: windows-executable
+        path: ./publish/*.exe
         
     # - name: Create ZIP of unpackaged app
     #   run: Compress-Archive LockscreenGif/LockscreenGif/bin/x64/Release/net7.0-windows10.0.19041.0/publish/* 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
