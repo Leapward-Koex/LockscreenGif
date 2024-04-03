@@ -88,7 +88,7 @@ jobs:
         [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
   
     - name: Publish the application
-      run: dotnet publish ./LockscreenGif.csproj -c Release -p:PublishProfile=/Properties/PublishProfiles/FolderProfile
+      run: dotnet publish -c Release -p:PublishProfile=./Properties/PublishProfiles/FolderProfile.pubxml
         
     # Remove the pfx
     - name: Remove the pfx
