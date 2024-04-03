@@ -61,7 +61,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
       with:
-        fetch-depth: 0
+        fetch-depth: 1
         
     - name: File Regex Replace
       uses: mingjun97/file-regex-replace@v1
@@ -79,7 +79,7 @@ jobs:
 
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v2
 
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
@@ -112,7 +112,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: MSIX Package
-        path: LockscreenGif/Packages/**/LockscreenGif*.msix
+        path: LockscreenGif/LockscreenGif/Packages/**/LockscreenGif*.msix
         
     # Create the unpackaged app
     - name: Build unpackaged app
@@ -121,7 +121,7 @@ jobs:
         Configuration: ${{ matrix.configuration }}
         
     - name: Create ZIP of unpackaged app
-      run: Compress-Archive LockscreenGif/bin/x64/Release/net7.0-windows10.0.19041.0/publish/* 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
+      run: Compress-Archive LockscreenGif/LockscreenGif/bin/x64/Release/net7.0-windows10.0.19041.0/publish/* 'LockscreenGif-unpackaged-0.${{ github.run_number }}.${{ github.run_attempt }}.0.zip'
         
     - name: Upload unpackaged app
       uses: actions/upload-artifact@v2
