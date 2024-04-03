@@ -116,7 +116,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: MSIX Package
-        path: *.msix
+        path: ./*.msix
         
     # # Create the unpackaged app
     # - name: Build unpackaged app
