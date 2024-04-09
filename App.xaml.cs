@@ -73,14 +73,14 @@ public partial class App : Application
         Build();
 
         App.GetService<IAppNotificationService>().Initialize();
-
+        Logger.CleanupOldLogFiles();
         UnhandledException += App_UnhandledException;
+        Logger.Info("App starting up");
     }
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        // TODO: Log and handle exceptions as appropriate.
-        // https://docs.microsoft.com/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.application.unhandledexception.
+        Logger.Error("Unhandled error", e.Exception);
     }
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)

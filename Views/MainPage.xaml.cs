@@ -57,7 +57,8 @@ public sealed partial class MainPage : Page
     private async void SetLockscreenButton_click(Object sender, RoutedEventArgs e)
     {
         ApplyButton.IsEnabled = false;
-        var success = await _lockscreenService.ApplyGifAsLockscreenAsync(); ;
+        Logger.Info("Trying to set lockscreen");
+        var success = await _lockscreenService.ApplyGifAsLockscreenAsync();
         if (success)
         {
             _notificationService.Show(string.Format("AppNotificationSuccess".GetLocalized(), AppContext.BaseDirectory));

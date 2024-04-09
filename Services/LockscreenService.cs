@@ -21,8 +21,7 @@ public class LockscreenService : ILockscreenService
     private SecurityIdentifier? _currentSid;
     private readonly Task _currentSidTask;
 
-    public StorageFile? CurrentImage { get; set;
-    }
+    public StorageFile? CurrentImage { get; set; }
     public BitmapImage? CurrentImageBitmap
     {
         get
@@ -59,19 +58,25 @@ public class LockscreenService : ILockscreenService
         try
         {
             var sid = await GetCurrentSidAsync();
+            Logger.Info($"User SID: {sid}. CurrentImage: {CurrentImage?.Path}");
             if (CurrentImage != null && sid != null)
             {
+                Logger.Info($"Calling default Windows API to set lockscreen image");
                 await LockScreen.SetImageFileAsync(CurrentImage);
-                var lockscreenDirectory = $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly"; // $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly"
+                var lockscreenDirectory = $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly";
+                Logger.Info($"Trying to take ownership of {lockscreenDirectory}");
                 await TakeOwnershipOfLockscreenFolderAsync(lockscreenDirectory);
+                Logger.Info($"Trying to replace back lockscreen image in system data folder");
                 await ReplaceLockScreenFileWithGifAsync(lockscreenDirectory);
+                Logger.Info($"Trying to replace dimmed files with file extension spoofed GIF");
                 await CreateDimmedFiles(lockscreenDirectory);
+                Logger.Info("Successfully set lockscreen");
                 return true;
-
-        }
+            }
         }
         catch (Exception ex)
         {
+            Logger.Error("Failed to set lockscreen", ex);
             return false;
         }
 
@@ -82,6 +87,7 @@ public class LockscreenService : ILockscreenService
     {
         // LockScreen.jpg files with gif file.
         var filePaths = Directory.EnumerateFiles(lockscreenDirectory, "LockScreen.jpg", SearchOption.AllDirectories);
+        Logger.Info($"Replacing Lockscreen.jpg images in paths {string.Join(", ", filePaths)}");
         var tasks = filePaths.Select(async filePath => await CurrentImage!.CopyAndReplaceAsync(await StorageFile.GetFileFromPathAsync(filePath)));
         await Task.WhenAll(tasks);
     }
@@ -90,6 +96,7 @@ public class LockscreenService : ILockscreenService
     {
         // LockScreen dimmed files with gif file.
         var folderPaths = Directory.EnumerateFiles(lockscreenDirectory, "LockScreen.jpg", SearchOption.AllDirectories).Select(Path.GetDirectoryName);
+        Logger.Info($"Lockscreen images in paths {string.Join(", ", folderPaths)}");
 
         var tasks = folderPaths.Select(async folderPath =>
         {
@@ -98,6 +105,7 @@ public class LockscreenService : ILockscreenService
                 var resolutionTasks = DisplayService.GetDisplayResolutions().Select(async resolution =>
                 {
                     var fileName = $"LockScreen___{resolution}_notdimmed.jpg";
+                    Logger.Info($"Copying GIF to {Path.Join(folderPath, fileName)}");
                     await CurrentImage!.CopyAsync(await StorageFolder.GetFolderFromPathAsync(folderPath), fileName, NameCollisionOption.ReplaceExisting);
                 });
                 await Task.WhenAll(resolutionTasks);
