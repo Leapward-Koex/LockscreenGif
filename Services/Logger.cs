@@ -49,6 +49,11 @@ public static class Logger
         Log("WARN", message);
     }
 
+    public static void Error(string message)
+    {
+        Error(message, null);
+    }
+
     public static void Error(string message, Exception? ex = null)
     {
         var logMessage = new StringBuilder(message);

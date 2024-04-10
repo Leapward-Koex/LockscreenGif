@@ -66,8 +66,8 @@ public class LockscreenService : ILockscreenService
                 var lockscreenDirectory = $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly";
                 Logger.Info($"Trying to take ownership of {lockscreenDirectory}");
                 await TakeOwnershipOfLockscreenFolderAsync(lockscreenDirectory);
-                Logger.Info($"Trying to replace back lockscreen image in system data folder");
-                await ReplaceLockScreenFileWithGifAsync(lockscreenDirectory);
+
+                await Task.Delay(1000);
                 Logger.Info($"Trying to replace dimmed files with file extension spoofed GIF");
                 await CreateDimmedFiles(lockscreenDirectory);
                 Logger.Info("Successfully set lockscreen");
@@ -81,15 +81,6 @@ public class LockscreenService : ILockscreenService
         }
 
         return false;
-    }
-
-    private async Task ReplaceLockScreenFileWithGifAsync(string lockscreenDirectory)
-    {
-        // LockScreen.jpg files with gif file.
-        var filePaths = Directory.EnumerateFiles(lockscreenDirectory, "LockScreen.jpg", SearchOption.AllDirectories);
-        Logger.Info($"Replacing Lockscreen.jpg images in paths {string.Join(", ", filePaths)}");
-        var tasks = filePaths.Select(async filePath => await CurrentImage!.CopyAndReplaceAsync(await StorageFile.GetFileFromPathAsync(filePath)));
-        await Task.WhenAll(tasks);
     }
 
     private async Task CreateDimmedFiles(string lockscreenDirectory)
@@ -106,7 +97,14 @@ public class LockscreenService : ILockscreenService
                 {
                     var fileName = $"LockScreen___{resolution}_notdimmed.jpg";
                     Logger.Info($"Copying GIF to {Path.Join(folderPath, fileName)}");
-                    await CurrentImage!.CopyAsync(await StorageFolder.GetFolderFromPathAsync(folderPath), fileName, NameCollisionOption.ReplaceExisting);
+                    try
+                    {
+                        await CurrentImage!.CopyAsync(await StorageFolder.GetFolderFromPathAsync(folderPath), fileName, NameCollisionOption.ReplaceExisting);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"Failed to copy file to {Path.Join(folderPath, fileName)}", ex);
+                    }
                 });
                 await Task.WhenAll(resolutionTasks);
             }
@@ -142,6 +140,46 @@ public class LockscreenService : ILockscreenService
         if (icaslProcess != null)
         {
             await icaslProcess.WaitForExitAsync();
+        }
+
+        Logger.Info("Checking permissions post ownership");
+        try
+        {
+            var icalsListPermissionStartInfo = new ProcessStartInfo
+            {
+                WindowStyle = ProcessWindowStyle.Hidden,
+                FileName = "icacls",
+                Arguments = $"* /t",
+                WorkingDirectory = lockscreenDirectory,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+
+            using var icalsListPermissionProcess = Process.Start(icalsListPermissionStartInfo);
+            if (icalsListPermissionProcess != null)
+            {
+                // Read output and error in separate tasks to avoid deadlocks
+                var outputTask = ReadStreamAsync(icalsListPermissionProcess.StandardOutput, Logger.Info);
+                var errorTask = ReadStreamAsync(icalsListPermissionProcess.StandardError, Logger.Error);
+
+                await Task.WhenAll(outputTask, errorTask);
+                await icalsListPermissionProcess.WaitForExitAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to check permissions", ex);
+        }
+
+    }
+
+    private async Task ReadStreamAsync(StreamReader stream, Action<string> logAction)
+    {
+        string line;
+        while ((line = await stream.ReadLineAsync()) != null)
+        {
+            logAction(line);
         }
     }
 }
