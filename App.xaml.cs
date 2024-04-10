@@ -75,7 +75,7 @@ public partial class App : Application
         App.GetService<IAppNotificationService>().Initialize();
         Logger.CleanupOldLogFiles();
         UnhandledException += App_UnhandledException;
-        Logger.Info("App starting up");
+        Logger.Info($"App starting up. Running on Windows {Environment.OSVersion}");
     }
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
