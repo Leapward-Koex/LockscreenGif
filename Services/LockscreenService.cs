@@ -66,8 +66,6 @@ public class LockscreenService : ILockscreenService
                 var lockscreenDirectory = $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly";
                 Logger.Info($"Trying to take ownership of {lockscreenDirectory}");
                 await TakeOwnershipOfLockscreenFolderAsync(lockscreenDirectory);
-
-                await Task.Delay(1000);
                 Logger.Info($"Trying to replace dimmed files with file extension spoofed GIF");
                 await CreateDimmedFiles(lockscreenDirectory);
                 Logger.Info("Successfully set lockscreen");
@@ -132,7 +130,7 @@ public class LockscreenService : ILockscreenService
         {
             WindowStyle = ProcessWindowStyle.Hidden,
             FileName = "icacls",
-            Arguments = $"\"{lockscreenDirectory}\" /grant Everyone:F /T /C",
+            Arguments = $"\"{lockscreenDirectory}\" /grant *S-1-1-0:(F) /T /C",
             Verb = "runas",
             UseShellExecute = true
         };
