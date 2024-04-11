@@ -1,21 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LockscreenGif.Contracts.Services;
+﻿using LockscreenGif.Contracts.Services;
 using System.DirectoryServices.AccountManagement;
-using System.IO;
-using System.Security.AccessControl;
 using System.Diagnostics;
 using System.Security.Principal;
-using System.Security.Cryptography;
 using Windows.Storage;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.System.UserProfile;
-using Windows.Graphics.Display;
 
 namespace LockscreenGif.Services;
+
+public class DeleteFilesResult
+{
+    public int SuccessfulDeletions = 0;
+    public int FailedDeletions = 0;
+}
+
 public class LockscreenService : ILockscreenService
 {
     private SecurityIdentifier? _currentSid;
@@ -52,6 +50,30 @@ public class LockscreenService : ILockscreenService
         return _currentSid;
     }
 
+    public async Task<DeleteFilesResult?> RemoveAppliedGif()
+    {
+        try
+        {
+            var sid = await GetCurrentSidAsync();
+            Logger.Info($"User SID: {sid}");
+            if (sid == null)
+            {
+                return null;
+            }
+            var lockscreenDirectory = $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly";
+            Logger.Info($"Trying to take ownership of {lockscreenDirectory}");
+            await TakeOwnershipOfLockscreenFolderAsync(lockscreenDirectory);
+            Logger.Info($"Trying to replace dimmed files with file extension spoofed GIF");
+            var result = DeleteDimmedFiles(lockscreenDirectory);
+            Logger.Info($"Deleted dimmed files. {result.SuccessfulDeletions} success, {result.FailedDeletions} failures.");
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to delete dimmed lockscreen files", ex);
+            return null;
+        }
+    }
 
     public async Task<bool> ApplyGifAsLockscreenAsync()
     {
@@ -95,19 +117,42 @@ public class LockscreenService : ILockscreenService
                 {
                     var fileName = $"LockScreen___{resolution}_notdimmed.jpg";
                     Logger.Info($"Copying GIF to {Path.Join(folderPath, fileName)}");
-                    try
-                    {
-                        await CurrentImage!.CopyAsync(await StorageFolder.GetFolderFromPathAsync(folderPath), fileName, NameCollisionOption.ReplaceExisting);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error($"Failed to copy file to {Path.Join(folderPath, fileName)}", ex);
-                    }
+                    await CurrentImage!.CopyAsync(await StorageFolder.GetFolderFromPathAsync(folderPath), fileName, NameCollisionOption.ReplaceExisting);
                 });
                 await Task.WhenAll(resolutionTasks);
             }
         });
         await Task.WhenAll(tasks);
+    }
+
+    private DeleteFilesResult DeleteDimmedFiles(string lockscreenDirectory)
+    {
+        // LockScreen dimmed files with gif file.
+        var folderPaths = Directory.EnumerateFiles(lockscreenDirectory, "LockScreen.jpg", SearchOption.AllDirectories).Select(Path.GetDirectoryName);
+        Logger.Info($"Lockscreen images in paths {string.Join(", ", folderPaths)}");
+        var result = new DeleteFilesResult();
+        foreach (var folderPath in folderPaths)
+        {
+            if (!string.IsNullOrEmpty(folderPath))
+            {
+                var filesToDelete = Directory.GetFiles(folderPath, "*_notdimmed.jpg");
+                foreach (var file in filesToDelete)
+                {
+                    try
+                    {
+                        File.Delete(file);
+                        Logger.Info($"Deleted: {file}");
+                        result.SuccessfulDeletions++;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Error($"Error deleting file {file}", ex);
+                        result.FailedDeletions++;
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     private async Task TakeOwnershipOfLockscreenFolderAsync(string lockscreenDirectory)

@@ -68,4 +68,22 @@ public sealed partial class MainPage : Page
             _notificationService.Show(string.Format("AppNotificationFailure".GetLocalized(), AppContext.BaseDirectory));
         }
     }
+
+    private async void RemoveAnimatedLockscreenButton_click(Object sender, RoutedEventArgs e)
+    {
+        Logger.Info("Trying to delete applied animated lockscreen");
+        var result = await _lockscreenService.RemoveAppliedGif();
+        if (result == null)
+        {
+            _notificationService.Show(string.Format("AppNotificationDeleteFailure".GetLocalized(), AppContext.BaseDirectory));
+        }
+        else if (result.FailedDeletions != 0)
+        {
+            _notificationService.Show(string.Format("AppNotificationDeletePartialFailure".GetLocalized(), AppContext.BaseDirectory, result.SuccessfulDeletions, result.FailedDeletions));
+        }
+        else
+        {
+            _notificationService.Show(string.Format("AppNotificationDeleteSuccess".GetLocalized(), AppContext.BaseDirectory));
+        }
+    }
 }

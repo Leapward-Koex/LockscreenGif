@@ -13,6 +13,7 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -30,7 +31,7 @@
         </Border>
 
 
-        <Grid Margin="12" Padding="24,16" Grid.Row="2" Background="{StaticResource SystemFillColorNeutralBackgroundBrush}" CornerRadius="{StaticResource ControlCornerRadius}">
+        <Grid Margin="12,12,12,6" Padding="24,16" Grid.Row="2" Background="{StaticResource SystemFillColorNeutralBackgroundBrush}" CornerRadius="{StaticResource ControlCornerRadius}">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -46,7 +47,23 @@
             <Button x:Name="openGifButton" Grid.Column="2" Click="OpenGifButton_click"  Padding="32,8" Content="Browse GIF file"></Button>
         </Grid>
 
-        <Button x:Name="ApplyButton" Margin="12" Style="{StaticResource AccentButtonStyle}" Padding="32,8" Grid.Row="3" Click="SetLockscreenButton_click" Content="Apply" HorizontalAlignment="Right" IsEnabled="False"/>
+        <Grid Margin="12,6,12,12" Padding="24,16" Grid.Row="3" Background="{StaticResource SystemFillColorNeutralBackgroundBrush}" CornerRadius="{StaticResource ControlCornerRadius}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <FontIcon Glyph="&#xE74D;" Grid.Column="0" Margin="0,0,24,0" />
+            <TextBlock
+            x:Name="RemoveAnimationCaption"
+            Margin="0,12"
+            Style="{ThemeResource BodyStrongTextBlockStyle}"
+            Grid.Column="1"
+            Text="Remove applied animated lockscreen" />
+            <Button x:Name="removeAnimatedLockscreen" Grid.Column="2" Click="RemoveAnimatedLockscreenButton_click"  Padding="32,8" Content="Remove"></Button>
+        </Grid>
+
+        <Button x:Name="ApplyButton" Margin="12" Style="{StaticResource AccentButtonStyle}" Padding="32,8" Grid.Row="4" Click="SetLockscreenButton_click" Content="Apply" HorizontalAlignment="Right" IsEnabled="False"/>
 
     </Grid>
 
