@@ -10,6 +10,6 @@ public class DisplayService
 
     private static string GetResolution(Display display)
     {
-        return display.CurrentSetting.Resolution.Width.ToString() + "_" + display.CurrentSetting.Resolution.Height.ToString();
+        return display.CurrentSetting.Resolution.Width.ToString("0000") + "_" + display.CurrentSetting.Resolution.Height.ToString("0000");
     }
 }
