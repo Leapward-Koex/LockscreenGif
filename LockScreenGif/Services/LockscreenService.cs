@@ -83,8 +83,8 @@ public class LockscreenService : ILockscreenService
             Logger.Info($"User SID: {sid}. CurrentImage: {CurrentImage?.Path}");
             if (CurrentImage != null && sid != null)
             {
-                Logger.Info($"Calling default Windows API to set lockscreen image");
-                await LockScreen.SetImageFileAsync(CurrentImage);
+                //Logger.Info($"Calling default Windows API to set lockscreen image");
+                //await LockScreen.SetImageFileAsync(CurrentImage);
                 var lockscreenDirectory = $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly";
                 Logger.Info($"Trying to take ownership of {lockscreenDirectory}");
                 await TakeOwnershipOfLockscreenFolderAsync(lockscreenDirectory);
@@ -157,11 +157,40 @@ public class LockscreenService : ILockscreenService
 
     private async Task TakeOwnershipOfLockscreenFolderAsync(string lockscreenDirectory)
     {
+        Logger.Info("Checking permissions pre ownership");
+        try
+        {
+            var icalsListPermissionStartInfo = new ProcessStartInfo
+            {
+                WindowStyle = ProcessWindowStyle.Hidden,
+                FileName = "icacls",
+                Arguments = $"* /t",
+                WorkingDirectory = lockscreenDirectory,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+
+            using var icalsListPermissionProcess = Process.Start(icalsListPermissionStartInfo);
+            if (icalsListPermissionProcess != null)
+            {
+                // Read output and error in separate tasks to avoid deadlocks
+                var outputTask = ReadStreamAsync(icalsListPermissionProcess.StandardOutput, Logger.Info);
+                var errorTask = ReadStreamAsync(icalsListPermissionProcess.StandardError, Logger.Error);
+
+                await Task.WhenAll(outputTask, errorTask);
+                await icalsListPermissionProcess.WaitForExitAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to check permissions", ex);
+        }
+
         var startInfo = new ProcessStartInfo
         {
             WindowStyle = ProcessWindowStyle.Hidden,
-            FileName = "takeown",
-            Arguments = $"/f \"{lockscreenDirectory}\" /r /d y",
+            FileName = "PermissionElevator",
             Verb = "runas",
             UseShellExecute = true
         };
@@ -169,20 +198,6 @@ public class LockscreenService : ILockscreenService
         if (process != null)
         {
             await process.WaitForExitAsync();
-        }
-
-        var icalsStartInfo = new ProcessStartInfo
-        {
-            WindowStyle = ProcessWindowStyle.Hidden,
-            FileName = "icacls",
-            Arguments = $"\"{lockscreenDirectory}\" /grant *S-1-1-0:(F) /T /C",
-            Verb = "runas",
-            UseShellExecute = true
-        };
-        var icaslProcess = Process.Start(icalsStartInfo);
-        if (icaslProcess != null)
-        {
-            await icaslProcess.WaitForExitAsync();
         }
 
         Logger.Info("Checking permissions post ownership");

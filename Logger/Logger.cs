@@ -39,9 +39,12 @@ public static class Logger
     }
 
 
-    public static void Info(string message)
+    public static void Info(string? message)
     {
-        Log("INFO", message);
+        if (message != null)
+        {
+            Log("INFO", message);
+        }
     }
 
     public static void Warn(string message)
@@ -49,9 +52,12 @@ public static class Logger
         Log("WARN", message);
     }
 
-    public static void Error(string message)
+    public static void Error(string? message)
     {
-        Error(message, null);
+        if (message != null)
+        {
+            Error(message, null);
+        }
     }
 
     public static void Error(string message, Exception? ex = null)
