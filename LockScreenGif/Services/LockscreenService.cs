@@ -190,7 +190,8 @@ public class LockscreenService : ILockscreenService
         var startInfo = new ProcessStartInfo
         {
             WindowStyle = ProcessWindowStyle.Hidden,
-            FileName = "PermissionElevator",
+            FileName = "takeown",
+            Arguments = $"/f \"{lockscreenDirectory}\" /r /a",
             Verb = "runas",
             UseShellExecute = true
         };
@@ -198,6 +199,20 @@ public class LockscreenService : ILockscreenService
         if (process != null)
         {
             await process.WaitForExitAsync();
+        }
+
+        var icalsStartInfo = new ProcessStartInfo
+        {
+            WindowStyle = ProcessWindowStyle.Hidden,
+            FileName = "icacls",
+            Arguments = $"\"{lockscreenDirectory}\" /grant *S-1-1-0:(F) /T /C",
+            Verb = "runas",
+            UseShellExecute = true
+        };
+        var icaslProcess = Process.Start(icalsStartInfo);
+        if (icaslProcess != null)
+        {
+            await icaslProcess.WaitForExitAsync();
         }
 
         Logger.Info("Checking permissions post ownership");
