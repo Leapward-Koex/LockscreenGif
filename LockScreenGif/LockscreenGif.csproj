@@ -51,7 +51,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Logger\Logger.csproj" />
-    <ProjectReference Include="..\PermissionElevator\PermissionElevator.csproj" />
   </ItemGroup>
   
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
