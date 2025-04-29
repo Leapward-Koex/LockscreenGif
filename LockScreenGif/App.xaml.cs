@@ -1,4 +1,6 @@
-﻿using LockscreenGif.Activation;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+using LockscreenGif.Activation;
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Models;
 using LockscreenGif.Notifications;
@@ -9,6 +11,7 @@ using LockscreenGif.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
+using WinRT.Interop;
 
 namespace LockscreenGif;
 
@@ -75,12 +78,29 @@ public partial class App : Application
         App.GetService<IAppNotificationService>().Initialize();
         Logger.CleanupOldLogFiles();
         UnhandledException += App_UnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
+        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+
         Logger.Info($"App starting up. Running on Windows {Environment.OSVersion}");
+        FfmpegService.CleanupTempDirectories();
+        GifSkiService.CleanupTempDirectories();
     }
 
     private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        Logger.Error("Unhandled error", e.Exception);
+        HandleCrash(e.Exception, handledOnUIThread: true);
+        e.Handled = true;
+    }
+
+    private void CurrentDomain_UnhandledException(object s, System.UnhandledExceptionEventArgs e)
+    {
+        HandleCrash((Exception)e.ExceptionObject, handledOnUIThread: false);
+    }
+
+    private void TaskScheduler_UnobservedTaskException(object? s, UnobservedTaskExceptionEventArgs e)
+    {
+        HandleCrash(e.Exception, handledOnUIThread: false);
+        e.SetObserved();
     }
 
     protected async override void OnLaunched(LaunchActivatedEventArgs args)
@@ -89,4 +109,40 @@ public partial class App : Application
 
         await App.GetService<IActivationService>().ActivateAsync(args);
     }
+
+    private static void CreateDump(Exception exception)
+    {
+        var dumpFilePath = Path.Combine(Logger.GetLogPath(), "CrashDump.dmp");
+
+        using var fs = new FileStream(dumpFilePath, FileMode.Create);
+        var process = Process.GetCurrentProcess();
+        DumpCreator.MiniDumpWriteDump(process.Handle, (uint)process.Id, fs.SafeFileHandle, DumpCreator.Typ.MiniDumpNormal, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+    }
+
+    private void HandleCrash(Exception ex, bool handledOnUIThread)
+    {
+        CreateDump(ex);
+        Logger.Fatal("App encountered a fatal exception", ex);
+
+        // Show a simple dialog – can't use MessageBox.Show from WinUI,
+        // so call the Win32 API directly or use a ContentDialog.
+        ShowDialog(ex);
+
+        Environment.Exit(1);
+    }
+
+    private static void ShowDialog(Exception ex)
+    {
+        const uint MB_ICONERROR = 0x00000010u;
+        const uint MB_OK = 0x00000000u;
+
+        var hwnd = WindowNative.GetWindowHandle(MainWindow);
+        _ = MessageBox(hwnd,
+                   $"An uncaught exception was thrown:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                   "Fatal error",
+                   MB_ICONERROR | MB_OK);
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
 }

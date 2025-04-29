@@ -2,69 +2,242 @@
     x:Class="LockscreenGif.Views.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="using:LockscreenGif.CustomControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:winui="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
 
-
-    <Grid Margin="24,0" MaxWidth="1000">
+    <Grid MaxWidth="1000" Margin="24">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto" />
+            <!--  Header  -->
+            <RowDefinition Height="*" />
+            <!--  Pivot content  -->
+            <RowDefinition Height="Auto" />
+            <!--  Apply / Remove buttons  -->
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
 
+        <!--  1) Title  -->
         <TextBlock
-            x:Name="HeaderTextPresenter"
-            Margin="0,12"
             Grid.Row="0"
+            Margin="0,0,0,12"
             Style="{ThemeResource TitleTextBlockStyle}"
             Text="Lockscreen Gif" />
+        <ScrollView
+            Grid.Row="1"
+            IsTabStop="True"
+            VerticalScrollBarVisibility="Auto">
+            <Grid MaxWidth="1000" Margin="24">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <!--  GIF preview  -->
+                    <RowDefinition Height="Auto" />
+                    <!--  Pivot content  -->
+                </Grid.RowDefinitions>
+                <!--  GIF preview  -->
+                <Border
+                    Grid.Row="0"
+                    Width="533"
+                    Height="300"
+                    Background="{StaticResource SystemFillColorAttentionBackground}"
+                    BorderBrush="{StaticResource SystemAltLowColor}"
+                    BorderThickness="4"
+                    CornerRadius="{StaticResource ControlCornerRadius}">
+                    <Image x:Name="currentImage" Stretch="Fill" />
+                </Border>
 
-        <Border Grid.Row="1" Height="300" Width="533" Margin="0,32" BorderThickness="4" BorderBrush="{StaticResource SystemAltLowColor}" Background="{StaticResource SystemFillColorAttentionBackground}" CornerRadius="{StaticResource ControlCornerRadius}">
-            <Image x:Name="currentImage" Stretch="Fill"  />
-        </Border>
+                <!--  2) Pivot: two tabs, one for GIF, one for Video  -->
+                <winui:Pivot Grid.Row="1">
+                    <!--  2a) Convert Video  -->
+                    <winui:PivotItem Header="Video to GIF">
+                        <StackPanel Spacing="16">
+
+                            <!--  Browse Video panel  -->
+                            <Grid
+                                Padding="24"
+                                Background="{StaticResource SystemFillColorNeutralBackgroundBrush}"
+                                CornerRadius="{StaticResource ControlCornerRadius}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon
+                                    Grid.Column="0"
+                                    Margin="0,0,24,0"
+                                    Glyph="&#xE714;" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                    Text="Select a video to convert" />
+                                <Button
+                                    Grid.Column="2"
+                                    Padding="32,8"
+                                    Click="OpenVideoButton_click"
+                                    Content="Browse Video" />
+                            </Grid>
+
+                            <!--  Video preview  -->
+                            <MediaPlayerElement
+                                x:Name="VideoPreview"
+                                MaxWidth="560"
+                                AreTransportControlsEnabled="True"
+                                Visibility="Collapsed">
+                                <MediaPlayerElement.TransportControls>
+                                    <MediaTransportControls
+                                        IsCompact="True"
+                                        IsVolumeButtonVisible="False"
+                                        IsVolumeEnabled="False"
+                                        IsZoomButtonVisible="False" />
+
+                                </MediaPlayerElement.TransportControls>
+                            </MediaPlayerElement>
+
+                            <!--  Scrub controls  -->
+                            <StackPanel
+                                x:Name="TrimControlsPanel"
+                                Spacing="8"
+                                Visibility="Collapsed">
+                                <TextBlock FontWeight="SemiBold" Text="Trim range:" />
+                                <local:CustomRangeSelector
+                                    x:Name="TrimSelector"
+                                    Maximum="1"
+                                    Minimum="0"
+                                    RangeDragging="TrimSelector_RangeDragging"
+                                    RangeEnd="1"
+                                    RangeStart="0"
+                                    StepFrequency="1"
+                                    ThumbDragCompleted="TrimSelector_ThumbDragCompleted"
+                                    ThumbDragStarted="TrimSelector_ThumbDragStarted"
+                                    ValueChanged="TrimSelector_ValueChanged" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBox
+                                        x:Name="StartTimeTextBox"
+                                        Grid.Column="0"
+                                        Width="100"
+                                        LostFocus="StartTimeTextBox_LostFocus"
+                                        PlaceholderText="mm:ss.f"
+                                        Text="00:00.0" />
+
+                                    <TextBox
+                                        x:Name="EndTimeTextBox"
+                                        Grid.Column="2"
+                                        Width="100"
+                                        LostFocus="EndTimeTextBox_LostFocus"
+                                        PlaceholderText="mm:ss.f"
+                                        Text="00:00.0" />
+                                </Grid>
+                            </StackPanel>
+
+                            <StackPanel
+                                x:Name="ComboSettingsStack"
+                                Margin="0,16,0,0"
+                                Spacing="8"
+                                Visibility="Collapsed">
+                                <!--  Settings row  -->
+                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Text="Resolution" />
+                                        <ComboBox
+                                            x:Name="ComboResolution"
+                                            Width="160"
+                                            SelectionChanged="ComboResolution_SelectionChanged" />
+                                    </StackPanel>
+                                    <StackPanel>
+                                        <TextBlock FontWeight="SemiBold" Text="Frame rate" />
+                                        <ComboBox
+                                            x:Name="ComboFps"
+                                            Width="100"
+                                            SelectionChanged="ComboResolution_SelectionChanged" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </StackPanel>
 
 
-        <Grid Margin="12,12,12,6" Padding="24,16" Grid.Row="2" Background="{StaticResource SystemFillColorNeutralBackgroundBrush}" CornerRadius="{StaticResource ControlCornerRadius}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <FontIcon Glyph="&#xE8B9;" Grid.Column="0" Margin="0,0,24,0" />
-            <TextBlock
-            x:Name="BrowseGifCaption"
-            Margin="0,12"
-            Style="{ThemeResource BodyStrongTextBlockStyle}"
-            Grid.Column="1"
-            Text="Select a GIF file to set as lockscreen" />
-            <Button x:Name="openGifButton" Grid.Column="2" Click="OpenGifButton_click"  Padding="32,8" Content="Browse GIF file"></Button>
-        </Grid>
+                            <!--  Generate button  -->
+                            <InfoBar
+                                x:Name="FileSizeWarning"
+                                Title="Free space requirement"
+                                IsClosable="False"
+                                IsOpen="False"
+                                Message=""
+                                Severity="Warning" />
+                            <Button
+                                x:Name="GenerateButton"
+                                HorizontalAlignment="Right"
+                                Click="GenerateButton_Click"
+                                Content="Generate GIF"
+                                IsEnabled="False" />
+                            <ProgressBar
+                                x:Name="GenerateLoading"
+                                Visibility="Collapsed"
+                                Value="0" />
 
-        <Grid Margin="12,6,12,12" Padding="24,16" Grid.Row="3" Background="{StaticResource SystemFillColorNeutralBackgroundBrush}" CornerRadius="{StaticResource ControlCornerRadius}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <FontIcon Glyph="&#xE74D;" Grid.Column="0" Margin="0,0,24,0" />
-            <TextBlock
-            x:Name="RemoveAnimationCaption"
-            Margin="0,12"
-            Style="{ThemeResource BodyStrongTextBlockStyle}"
-            Grid.Column="1"
-            Text="Remove applied animated lockscreen" />
-            <Button x:Name="removeAnimatedLockscreen" Grid.Column="2" Click="RemoveAnimatedLockscreenButton_click"  Padding="32,8" Content="Remove"></Button>
-        </Grid>
+                        </StackPanel>
+                    </winui:PivotItem>
 
-        <Button x:Name="ApplyButton" Margin="12" Style="{StaticResource AccentButtonStyle}" Padding="32,8" Grid.Row="4" Click="SetLockscreenButton_click" Content="Apply" HorizontalAlignment="Right" IsEnabled="False"/>
+                    <!--  2b) Use existing GIF  -->
+                    <winui:PivotItem Header="Use GIF">
+                        <StackPanel Spacing="16">
 
+                            <!--  Browse GIF panel  -->
+                            <Grid
+                                Padding="24"
+                                Background="{StaticResource SystemFillColorNeutralBackgroundBrush}"
+                                CornerRadius="{StaticResource ControlCornerRadius}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon
+                                    Grid.Column="0"
+                                    Margin="0,0,24,0"
+                                    Glyph="&#xE8B9;" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                    Text="Select a GIF file to set as lockscreen" />
+                                <Button
+                                    Grid.Column="2"
+                                    Padding="32,8"
+                                    Click="OpenGifButton_click"
+                                    Content="Browse GIF" />
+                            </Grid>
+
+                        </StackPanel>
+                    </winui:PivotItem>
+                </winui:Pivot>
+            </Grid>
+        </ScrollView>
+
+        <!--  3) Bottom Row: Apply/Remove (applies only to the currently selected GIF or generated file)  -->
+        <StackPanel
+            Grid.Row="2"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal"
+            Spacing="8">
+            <Button
+                x:Name="removeAnimatedLockscreen"
+                Click="RemoveAnimatedLockscreenButton_click"
+                Content="Remove"
+                Style="{StaticResource AccentButtonStyle}"
+                Visibility="Collapsed" />
+            <Button
+                x:Name="ApplyButton"
+                Click="SetLockscreenButton_click"
+                Content="Apply"
+                IsEnabled="False"
+                Style="{StaticResource AccentButtonStyle}" />
+        </StackPanel>
     </Grid>
-
 </Page>

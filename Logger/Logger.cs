@@ -7,12 +7,17 @@ public static class Logger
     private static readonly object lockObj = new();
     private static string? logFilePath;
 
+    public static string GetLogPath()
+    {
+        return AppDomain.CurrentDomain.BaseDirectory;
+    }
+
     private static string GetLogFilePath()
     {
         if (logFilePath == null)
         {
             var fileName = $"app_{DateTime.Now:yyyy-MM-dd}.log";
-            logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+            logFilePath = Path.Combine(GetLogPath(), fileName);
         }
         return logFilePath;
     }
