@@ -469,6 +469,7 @@ public sealed partial class MainPage : Page
         }
         catch (Exception ex)
         {
+            GenerateLoading.ShowError = true;
             Logger.Error("Failed to create gif from video", ex);
         }
         finally
