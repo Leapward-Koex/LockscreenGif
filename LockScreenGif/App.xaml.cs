@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using LockscreenGif.Activation;
 using LockscreenGif.Contracts.Services;
@@ -81,7 +82,7 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
         TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-        Logger.Info($"App starting up. Running on Windows {Environment.OSVersion}");
+        Logger.Info($"App starting up. Running on Windows {Environment.OSVersion}, Language {CultureInfo.InstalledUICulture.DisplayName}");
         FfmpegService.CleanupTempDirectories();
         GifSkiService.CleanupTempDirectories();
     }

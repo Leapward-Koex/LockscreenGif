@@ -441,7 +441,7 @@ public sealed partial class MainPage : Page
             GenerateLoading.IsIndeterminate = false;
             var ExtractFramesProgress = (double percent) =>
             {
-                var display = percent * 0.5;
+                var display = percent * 0.3;
                 DispatcherQueue.TryEnqueue(() =>
                     GenerateLoading.Value = display
                 );
@@ -449,7 +449,7 @@ public sealed partial class MainPage : Page
 
             var CreateGifProgress = (double percent) =>
             {
-                var display = 50 + percent * 0.5;
+                var display = 30 + percent * 0.7;
                 DispatcherQueue.TryEnqueue(() =>
                     GenerateLoading.Value = display
                 );

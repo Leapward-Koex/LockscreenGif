@@ -1,10 +1,11 @@
 ﻿using LockscreenGif.Contracts.Services;
-using System.DirectoryServices.AccountManagement;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
-using Windows.Storage;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Windows.System.UserProfile;
+using Windows.Storage;
+using System.Security.AccessControl;
+using Path = System.IO.Path;
 
 namespace LockscreenGif.Services;
 
@@ -14,57 +15,65 @@ public class DeleteFilesResult
     public int FailedDeletions = 0;
 }
 
-public class LockscreenService : ILockscreenService
+public sealed class LockscreenService : ILockscreenService
 {
-    private SecurityIdentifier? _currentSid;
-    private readonly Task _currentSidTask;
+    private const string LockscreenRoot = @"C:\ProgramData\Microsoft\Windows\SystemData";
+    private const string DimmedSuffix = "_notdimmed.jpg";
+    private const string DimmedPattern = "*_notdimmed.jpg";
+    private const string DimmedBaseName = "LockScreen.jpg";
 
-    public StorageFile? CurrentImage { get; set; }
-    public BitmapImage? CurrentImageBitmap
+    private readonly SecurityIdentifier _sid =
+        WindowsIdentity.GetCurrent().User
+        ?? throw new InvalidOperationException("Unable to obtain user SID.");
+
+    public StorageFile? CurrentImage
     {
-        get
+        get; set;
+    }
+
+    public BitmapImage? CurrentImageBitmap =>
+        CurrentImage is null ? null : new BitmapImage { UriSource = new Uri(CurrentImage.Path) };
+
+    private string LockscreenDirectory => Path.Combine(LockscreenRoot, _sid.Value, "ReadOnly");
+
+    /*------------------------------------------------------------------
+     * PUBLIC API
+     *----------------------------------------------------------------*/
+
+    public async Task<bool> ApplyGifAsLockscreenAsync()
+    {
+        try
         {
-            if (CurrentImage == null)
+            Logger.Info($"User SID: {_sid}. CurrentImage: {CurrentImage?.Path}");
+
+            if (CurrentImage is null)
             {
-                return null;
+                return false;
             }
-            var bitmapImage = new BitmapImage
-            {
-                UriSource = new Uri(CurrentImage.Path)
-            };
-            return bitmapImage;
+
+            await EnsureFolderWritableAsync(LockscreenDirectory);
+            await CreateDimmedFilesAsync(LockscreenDirectory);
+            await LogFilesWithMimeTypesAsync(LockscreenDirectory);
+
+            Logger.Info("Successfully set lockscreen");
+            return true;
         }
-    }
-
-    public LockscreenService()
-    {
-        _currentSidTask = Task.Run(() =>
+        catch (Exception ex)
         {
-            _currentSid = UserPrincipal.Current.Sid;
-        });
-    }
-
-    private async Task<SecurityIdentifier?> GetCurrentSidAsync()
-    {
-        await _currentSidTask;
-        return _currentSid;
+            Logger.Error("Failed to set lockscreen", ex);
+            return false;
+        }
     }
 
     public async Task<DeleteFilesResult?> RemoveAppliedGif()
     {
         try
         {
-            var sid = await GetCurrentSidAsync();
-            Logger.Info($"User SID: {sid}");
-            if (sid == null)
-            {
-                return null;
-            }
-            var lockscreenDirectory = $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly";
-            Logger.Info($"Trying to take ownership of {lockscreenDirectory}");
-            await TakeOwnershipOfLockscreenFolderAsync(lockscreenDirectory);
-            Logger.Info($"Trying to replace dimmed files with file extension spoofed GIF");
-            var result = DeleteDimmedFiles(lockscreenDirectory);
+            Logger.Info($"User SID: {_sid}");
+
+            await EnsureFolderWritableAsync(LockscreenDirectory);
+
+            var result = DeleteDimmedFiles(LockscreenDirectory);
             Logger.Info($"Deleted dimmed files. {result.SuccessfulDeletions} success, {result.FailedDeletions} failures.");
             return result;
         }
@@ -75,184 +84,240 @@ public class LockscreenService : ILockscreenService
         }
     }
 
-    public async Task<bool> ApplyGifAsLockscreenAsync()
+    /*------------------------------------------------------------------
+     *   PER-FOLDER ACCESS HELPERS
+     *----------------------------------------------------------------*/
+
+    private static bool HasWriteAccess(string directory)
     {
         try
         {
-            var sid = await GetCurrentSidAsync();
-            Logger.Info($"User SID: {sid}. CurrentImage: {CurrentImage?.Path}");
-            if (CurrentImage != null && sid != null)
+            var test = Path.Combine(directory, $"write_test_{Guid.NewGuid():N}.tmp");
+            using (File.Create(test, 1, FileOptions.DeleteOnClose)) { }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private async Task EnsureFolderWritableAsync(string directory)
+    {
+        Logger.Info("Permissions prior to taking ownership");
+        LogPermissions(directory);
+        await TakeOwnershipAsync(directory);
+
+        Logger.Info("Permissions post taking ownership");
+        LogPermissions(directory);
+
+        if (!HasWriteAccess(directory))
+        {
+            throw new UnauthorizedAccessException($"Failed to obtain write access to {directory}.");
+        }
+    }
+
+    private static async Task TakeOwnershipAsync(string directory)
+    {
+        await RunElevatedAsync("takeown", $"/f \"{directory}\" /r /a");
+        // Grant Full Control to Everyone (SID S-1-1-0) recursively
+        await RunElevatedAsync("icacls", $"\"{directory}\" /grant:r *S-1-1-0:(OI)(CI)F /T /C");
+    }
+
+    private static async Task RunElevatedAsync(string fileName, string arguments)
+    {
+        var info = new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            Verb = "runas",
+            UseShellExecute = true,
+            WindowStyle = ProcessWindowStyle.Hidden
+        };
+
+        using var proc = Process.Start(info);
+        if (proc is null)
+        {
+            throw new InvalidOperationException($"Unable to start process {fileName}");
+        }
+
+        await proc.WaitForExitAsync();
+    }
+
+    private static void LogPermissions(string directory)
+    {
+        try
+        {
+            var di = new DirectoryInfo(directory);
+            var acl = di.GetAccessControl(AccessControlSections.Access);
+            var rules = acl.GetAccessRules(true, true, typeof(SecurityIdentifier))
+                           .Cast<FileSystemAccessRule>();
+
+            Logger.Info($"ACL for {directory} (DACL only):");
+            foreach (var rule in rules)
             {
-                //Logger.Info($"Calling default Windows API to set lockscreen image");
-                //await LockScreen.SetImageFileAsync(CurrentImage);
-                var lockscreenDirectory = $@"C:\ProgramData\Microsoft\Windows\SystemData\{sid}\ReadOnly";
-                Logger.Info($"Trying to take ownership of {lockscreenDirectory}");
-                await TakeOwnershipOfLockscreenFolderAsync(lockscreenDirectory);
-                Logger.Info($"Trying to replace dimmed files with file extension spoofed GIF");
-                await CreateDimmedFiles(lockscreenDirectory);
-                Logger.Info("Successfully set lockscreen");
-                return true;
+                var sid = (SecurityIdentifier)rule.IdentityReference;
+                var account = sid.Translate(typeof(NTAccount)).Value;
+                var rights = rule.FileSystemRights;
+                var type = rule.AccessControlType;
+                var inherit = rule.InheritanceFlags;
+                var prop = rule.PropagationFlags;
+                Logger.Info($"  {account}: {rights} {type} (Inherit:{inherit}, Propagate:{prop})");
             }
         }
         catch (Exception ex)
         {
-            Logger.Error("Failed to set lockscreen", ex);
-            return false;
+            Logger.Error($"Failed to read DACL via .NET for {directory}", ex);
         }
-
-        return false;
     }
 
-    private async Task CreateDimmedFiles(string lockscreenDirectory)
-    {
-        // LockScreen dimmed files with gif file.
-        var folderPaths = Directory.EnumerateFiles(lockscreenDirectory, "LockScreen.jpg", SearchOption.AllDirectories).Select(Path.GetDirectoryName);
-        Logger.Info($"Lockscreen images in paths {string.Join(", ", folderPaths)}");
+    /*------------------------------------------------------------------
+     *   FILE OPERATIONS
+     *----------------------------------------------------------------*/
 
-        var tasks = folderPaths.Select(async folderPath =>
+    private async Task CreateDimmedFilesAsync(string directory)
+    {
+        var folders = Directory.EnumerateDirectories(directory)
+                               .Where(p => !string.IsNullOrEmpty(p));
+
+        Logger.Info($"CreateDimmedFiles: Lockscreen images found in paths: {string.Join(", ", folders)}");
+
+        var tasks = new List<Task>();
+        foreach (var path in folders)
         {
-            if (!string.IsNullOrEmpty(folderPath))
+            var folder = await StorageFolder.GetFolderFromPathAsync(path!);
+
+            // Ensure full control on existing main file
+            var mainDest = Path.Combine(path!, DimmedBaseName);
+            try
             {
-                var resolutionTasks = DisplayService.GetDisplayResolutions().Select(async resolution =>
-                {
-                    var fileName = $"LockScreen___{resolution}_notdimmed.jpg";
-                    Logger.Info($"Copying GIF to {Path.Join(folderPath, fileName)}");
-                    await CurrentImage!.CopyAsync(await StorageFolder.GetFolderFromPathAsync(folderPath), fileName, NameCollisionOption.ReplaceExisting);
-                });
-                await Task.WhenAll(resolutionTasks);
+                Logger.Info($"Copying main GIF to {mainDest}");
+                await CurrentImage!.CopyAsync(folder, DimmedBaseName, NameCollisionOption.ReplaceExisting).AsTask();
             }
-        });
+            catch (Exception ex)
+            {
+                try
+                {
+                    Logger.Error("Failed to copy main LockScreen.jpg, trying to take ownership and trying again", ex);
+                    await GrantFullControlOnFileAsync(mainDest);
+                    Logger.Info($"Copying main GIF to {mainDest}");
+                    await CurrentImage!.CopyAsync(folder, DimmedBaseName, NameCollisionOption.ReplaceExisting).AsTask();
+                    Logger.Info("Successfully replaced LockScreen.jpg after taking ownership manually.");
+                }
+                catch (Exception ex2)
+                {
+                    Logger.Error("Failed to copy main LockScreen.jpg, static preview may be incorrect when waking up from sleep.", ex2);
+                }
+            }
+
+
+            // Copy per-resolution dimmed files
+            foreach (var res in DisplayService.GetDisplayResolutions())
+            {
+                var dest = $"LockScreen___{res}{DimmedSuffix}";
+                var destPath = Path.Combine(path!, dest);
+                Logger.Info($"Copying GIF to {destPath}");
+                tasks.Add(CurrentImage!.CopyAsync(folder, dest, NameCollisionOption.ReplaceExisting).AsTask());
+            }
+        }
+
         await Task.WhenAll(tasks);
     }
 
-    private DeleteFilesResult DeleteDimmedFiles(string lockscreenDirectory)
+    private static async Task GrantFullControlOnFileAsync(string filePath)
     {
-        // LockScreen dimmed files with gif file.
-        var folderPaths = Directory.EnumerateFiles(lockscreenDirectory, "LockScreen.jpg", SearchOption.AllDirectories).Select(Path.GetDirectoryName);
-        Logger.Info($"Lockscreen images in paths {string.Join(", ", folderPaths)}");
-        var result = new DeleteFilesResult();
-        foreach (var folderPath in folderPaths)
+        try
         {
-            if (!string.IsNullOrEmpty(folderPath))
+            // Take ownership of the file
+            await RunElevatedAsync("takeown", $"/f \"{filePath}\" /a");
+            // Grant FullControl to Everyone
+            await RunElevatedAsync("icacls", $"\"{filePath}\" /grant:r *S-1-1-0:F /C");
+            Logger.Info($"Granted FullControl to Everyone on {filePath}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"Failed to grant FullControl on {filePath}: {ex.Message}");
+        }
+    }
+
+    private static DeleteFilesResult DeleteDimmedFiles(string directory)
+    {
+        var folders = Directory.EnumerateFiles(directory, DimmedBaseName, SearchOption.AllDirectories)
+                               .Select(Path.GetDirectoryName)
+                               .Where(p => !string.IsNullOrEmpty(p));
+
+        Logger.Info($"DeleteDimmedFiles: Lockscreen images found in paths: {string.Join(", ", folders)}");
+
+        var result = new DeleteFilesResult();
+
+        foreach (var folder in folders)
+        {
+            foreach (var file in Directory.GetFiles(folder!, DimmedPattern))
             {
-                var filesToDelete = Directory.GetFiles(folderPath, "*_notdimmed.jpg");
-                foreach (var file in filesToDelete)
+                try
                 {
-                    try
-                    {
-                        File.Delete(file);
-                        Logger.Info($"Deleted: {file}");
-                        result.SuccessfulDeletions++;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Error($"Error deleting file {file}", ex);
-                        result.FailedDeletions++;
-                    }
+                    File.Delete(file);
+                    Logger.Info($"Deleted: {file}");
+                    result.SuccessfulDeletions++;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Error deleting file {file}", ex);
+                    result.FailedDeletions++;
                 }
             }
         }
+
         return result;
     }
 
-    private async Task TakeOwnershipOfLockscreenFolderAsync(string lockscreenDirectory)
+    /*------------------------------------------------------------------
+     *   MIME‑TYPE DIAGNOSTICS (content sniffing via UrlMon)
+     *----------------------------------------------------------------*/
+
+    [DllImport("urlmon.dll", CharSet = CharSet.Auto)]
+    private static extern int FindMimeFromData(
+        IntPtr pBC,
+        [MarshalAs(UnmanagedType.LPWStr)] string? pwzUrl,
+        [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1, SizeParamIndex = 3)] byte[]? pBuffer,
+        int cbSize,
+        [MarshalAs(UnmanagedType.LPWStr)] string? pwzMimeProposed,
+        int dwMimeFlags,
+        out IntPtr ppwzMimeOut,
+        int dwReserved);
+
+    private static string DetectMimeType(string filePath)
     {
-        Logger.Info("Checking permissions pre ownership");
+        var buffer = new byte[256];
         try
         {
-            var icalsListPermissionStartInfo = new ProcessStartInfo
+            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            var read = fs.Read(buffer, 0, buffer.Length);
+            var hr = FindMimeFromData(IntPtr.Zero, null, buffer, read, null, 0, out var mimePtr, 0);
+            if (hr != 0 || mimePtr == IntPtr.Zero)
             {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                FileName = "icacls",
-                Arguments = $"* /t",
-                WorkingDirectory = lockscreenDirectory,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            };
-
-            using var icalsListPermissionProcess = Process.Start(icalsListPermissionStartInfo);
-            if (icalsListPermissionProcess != null)
-            {
-                // Read output and error in separate tasks to avoid deadlocks
-                var outputTask = ReadStreamAsync(icalsListPermissionProcess.StandardOutput, Logger.Info);
-                var errorTask = ReadStreamAsync(icalsListPermissionProcess.StandardError, Logger.Error);
-
-                await Task.WhenAll(outputTask, errorTask);
-                await icalsListPermissionProcess.WaitForExitAsync();
+                return "unknown/unknown";
             }
+
+            var mime = Marshal.PtrToStringUni(mimePtr) ?? "unknown/unknown";
+            Marshal.FreeCoTaskMem(mimePtr);
+            return mime;
         }
         catch (Exception ex)
         {
-            Logger.Error("Failed to check permissions", ex);
+            Logger.Warn($"Failed to detect MIME type for {filePath}: {ex.Message}");
+            return "unknown/unknown";
         }
-
-        var startInfo = new ProcessStartInfo
-        {
-            WindowStyle = ProcessWindowStyle.Hidden,
-            FileName = "takeown",
-            Arguments = $"/f \"{lockscreenDirectory}\" /r /a",
-            Verb = "runas",
-            UseShellExecute = true
-        };
-        var process = Process.Start(startInfo);
-        if (process != null)
-        {
-            await process.WaitForExitAsync();
-        }
-
-        var icalsStartInfo = new ProcessStartInfo
-        {
-            WindowStyle = ProcessWindowStyle.Hidden,
-            FileName = "icacls",
-            Arguments = $"\"{lockscreenDirectory}\" /grant *S-1-1-0:(F) /T /C",
-            Verb = "runas",
-            UseShellExecute = true
-        };
-        var icaslProcess = Process.Start(icalsStartInfo);
-        if (icaslProcess != null)
-        {
-            await icaslProcess.WaitForExitAsync();
-        }
-
-        Logger.Info("Checking permissions post ownership");
-        try
-        {
-            var icalsListPermissionStartInfo = new ProcessStartInfo
-            {
-                WindowStyle = ProcessWindowStyle.Hidden,
-                FileName = "icacls",
-                Arguments = $"* /t",
-                WorkingDirectory = lockscreenDirectory,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-            };
-
-            using var icalsListPermissionProcess = Process.Start(icalsListPermissionStartInfo);
-            if (icalsListPermissionProcess != null)
-            {
-                // Read output and error in separate tasks to avoid deadlocks
-                var outputTask = ReadStreamAsync(icalsListPermissionProcess.StandardOutput, Logger.Info);
-                var errorTask = ReadStreamAsync(icalsListPermissionProcess.StandardError, Logger.Error);
-
-                await Task.WhenAll(outputTask, errorTask);
-                await icalsListPermissionProcess.WaitForExitAsync();
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Failed to check permissions", ex);
-        }
-
     }
 
-    private async Task ReadStreamAsync(StreamReader stream, Action<string> logAction)
+    private static async Task LogFilesWithMimeTypesAsync(string directory)
     {
-        string line;
-        while ((line = await stream.ReadLineAsync()) != null)
+        var files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories);
+        foreach (var file in files)
         {
-            logAction(line);
+            var mime = DetectMimeType(file);
+            Logger.Info($"{file} -> {mime}");
         }
+        await Task.CompletedTask;
     }
 }

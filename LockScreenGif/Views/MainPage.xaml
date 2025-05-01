@@ -226,6 +226,8 @@
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">
+
+            <!--  remove / apply buttons  -->
             <Button
                 x:Name="removeAnimatedLockscreen"
                 Click="RemoveAnimatedLockscreenButton_click"
@@ -238,6 +240,29 @@
                 Content="Apply"
                 IsEnabled="False"
                 Style="{StaticResource AccentButtonStyle}" />
+
+            <!--  help icon button  -->
+            <Button
+                x:Name="HelpButton"
+                Width="32"
+                Height="32"
+                Padding="0"
+                ToolTipService.Placement="Top">
+                <FontIcon
+                    Grid.Column="0"
+                    FontSize="16"
+                    Glyph="&#xE897;" />
+                <Button.Flyout>
+                    <Flyout Placement="Top">
+                        <TextBlock
+                            MaxWidth="200"
+                            Margin="8"
+                            Text="Lockscreen not showing after you apply? Try manually setting one in the Windows settings first then trying to apply."
+                            TextWrapping="Wrap" />
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+
         </StackPanel>
     </Grid>
 </Page>
