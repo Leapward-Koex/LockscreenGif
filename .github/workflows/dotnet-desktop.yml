@@ -88,7 +88,9 @@ jobs:
         [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
   
     - name: Publish the application
-      run: dotnet publish -c Release -p:PublishProfile=./LockScreenGif/Properties/PublishProfiles/FolderProfile.pubxml
+      run: |
+        cd LockScreenGif
+        dotnet publish -c Release -p:PublishProfile=FolderProfile.pubxml
         
     # Remove the pfx
     - name: Remove the pfx
@@ -98,7 +100,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: 'Unpackaged app ${{ github.run_number }}.${{ github.run_attempt }}'
-        path: './LockScreenGif/publish/'
+        path: './LockScreenGif/bin/Release/net9.0-windows10.0.26100.0/win-x64/'
         
 
     # - name: Create GH release
