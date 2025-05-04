@@ -120,8 +120,7 @@ public sealed class LockscreenService : ILockscreenService
     private static async Task TakeOwnershipAsync(string directory)
     {
         await RunElevatedAsync("takeown", $"/f \"{directory}\" /r /a");
-        // Grant Full Control to Everyone (SID S-1-1-0) recursively
-        await RunElevatedAsync("icacls", $"\"{directory}\" /grant:r *S-1-1-0:(OI)(CI)F /T /C");
+        await RunElevatedAsync("icacls", $"\"{directory}\" /grant *S-1-1-0:(F) /T /C");
     }
 
     private static async Task RunElevatedAsync(string fileName, string arguments)
@@ -217,11 +216,18 @@ public sealed class LockscreenService : ILockscreenService
                 var dest = $"LockScreen___{res}{DimmedSuffix}";
                 var destPath = Path.Combine(path!, dest);
                 Logger.Info($"Copying GIF to {destPath}");
-                tasks.Add(CurrentImage!.CopyAsync(folder, dest, NameCollisionOption.ReplaceExisting).AsTask());
+                try
+                {
+                    await CurrentImage!.CopyAsync(folder, dest, NameCollisionOption.ReplaceExisting);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Error($"Failed to copy dimmed file {destPath}. Trying to take ownership of the file...", ex);
+                    await GrantFullControlOnFileAsync(destPath);
+                    await CurrentImage!.CopyAsync(folder, dest, NameCollisionOption.ReplaceExisting);
+                }
             }
         }
-
-        await Task.WhenAll(tasks);
     }
 
     private static async Task GrantFullControlOnFileAsync(string filePath)

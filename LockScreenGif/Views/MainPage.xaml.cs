@@ -434,6 +434,7 @@ public sealed partial class MainPage : Page
 
         try
         {
+            GenerateButton.IsEnabled = false;
             GenerateLoading.Value = 0;
             GenerateLoading.IsIndeterminate = true;
             GenerateLoading.Visibility = Visibility.Visible;
@@ -475,6 +476,7 @@ public sealed partial class MainPage : Page
         finally
         {
             FfmpegService.CleanupTempDirectories();
+            GenerateButton.IsEnabled = true;
         }
 
         return;
