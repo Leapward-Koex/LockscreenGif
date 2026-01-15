@@ -40,75 +40,30 @@ public sealed class LockscreenService : ILockscreenService
      * PUBLIC API
      *----------------------------------------------------------------*/
 
-   public async Task<bool> ApplyGifAsLockscreenAsync()
-{
-    try
+    public async Task<bool> ApplyGifAsLockscreenAsync()
     {
-        Logger.Info($"User SID: {_sid}. CurrentImage: {CurrentImage?.Path}");
-
-        if (CurrentImage is null)
+        try
         {
-            Logger.Warn("No current image found; aborting ApplyGifAsLockscreenAsync");
+            Logger.Info($"User SID: {_sid}. CurrentImage: {CurrentImage?.Path}");
+
+            if (CurrentImage is null)
+            {
+                return false;
+            }
+
+            await EnsureFolderWritableAsync(LockscreenDirectory);
+            await CreateDimmedFilesAsync(LockscreenDirectory);
+            await LogFilesWithMimeTypesAsync(LockscreenDirectory);
+
+            Logger.Info("Successfully set lockscreen");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Failed to set lockscreen", ex);
             return false;
         }
-
-        // Save a copy of the image in a permanent, stable folder
-        string permanentFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
-            "LockscreenGif"
-        );
-
-        Directory.CreateDirectory(permanentFolder);
-        string permanentImagePath = Path.Combine(permanentFolder, "wallpaper.jpg");
-
-        await CurrentImage.CopyAsync(
-            await StorageFolder.GetFolderFromPathAsync(permanentFolder),
-            "wallpaper.jpg",
-            NameCollisionOption.ReplaceExisting
-        );
-
-        Logger.Info($"Saved lockscreen image permanently at {permanentImagePath}");
-
-        //Update registry so Windows remembers the image
-        SetLockscreenRegistry(permanentImagePath);
-
-        // Still copy to SystemData (optional for immediate visual sync)
-        await EnsureFolderWritableAsync(LockscreenDirectory);
-        await CreateDimmedFilesAsync(LockscreenDirectory);
-        await LogFilesWithMimeTypesAsync(LockscreenDirectory);
-
-        Logger.Info("Successfully set and persisted lockscreen.");
-        return true;
     }
-    catch (Exception ex)
-    {
-        Logger.Error("Failed to set lockscreen", ex);
-        return false;
-    }
-}
-
-
-private static void SetLockscreenRegistry(string imagePath)
-{
-    try
-    {
-        const string keyPath = @"SOFTWARE\Microsoft\Windows\CurrentVersion\PersonalizationCSP";
-        const string imageKey = "LockScreenImagePath";
-        const string imageUrlKey = "LockScreenImageUrl";
-        const string statusKey = "LockScreenImageStatus";
-
-        using var key = Microsoft.Win32.Registry.LocalMachine.CreateSubKey(keyPath, true);
-        key?.SetValue(imageKey, imagePath, Microsoft.Win32.RegistryValueKind.String);
-        key?.SetValue(imageUrlKey, imagePath, Microsoft.Win32.RegistryValueKind.String);
-        key?.SetValue(statusKey, 1, Microsoft.Win32.RegistryValueKind.DWord);
-
-        Logger.Info($"Lockscreen registry updated → {imagePath}");
-    }
-    catch (Exception ex)
-    {
-        Logger.Error("Failed to set lockscreen registry keys", ex);
-    }
-}
 
     public async Task<DeleteFilesResult?> RemoveAppliedGif()
     {
