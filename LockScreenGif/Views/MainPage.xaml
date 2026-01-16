@@ -35,21 +35,52 @@
             Grid.Row="1"
             Margin="0,0,0,16"
             HorizontalAlignment="Stretch"
-            HorizontalContentAlignment="Stretch"
-            Header="Getting Started">
-            <StackPanel Margin="0,8,0,0" Spacing="12">
-                <TextBlock
-                    Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                    Text="Follow these steps before using the application:"
-                    TextWrapping="Wrap" />
-
-                <!--  Step 1  -->
+            HorizontalContentAlignment="Stretch">
+            <Expander.Header>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
+                    <FontIcon
+                        x:Name="PrereqWarningIcon"
+                        Grid.Column="0"
+                        Margin="0,0,8,0"
+                        FontSize="16"
+                        Foreground="{StaticResource SystemFillColorCautionBrush}"
+                        Glyph="&#xE7BA;"
+                        Visibility="Collapsed" />
+                    <TextBlock Grid.Column="1" Text="Getting Started" />
+                </Grid>
+            </Expander.Header>
+            <StackPanel Margin="0,8,0,0" Spacing="12">
+                <TextBlock
+                    x:Name="PrereqIntroText"
+                    Foreground="{StaticResource TextFillColorSecondaryBrush}"
+                    Text="Follow these steps before using the application:"
+                    TextWrapping="Wrap" />
+
+                <!--  Step 1 warning  -->
+                <InfoBar
+                    x:Name="LockscreenModeWarning"
+                    Title="Lock screen must be set to Picture"
+                    Margin="0,0,0,4"
+                    IsClosable="False"
+                    IsOpen="False"
+                    Severity="Warning">
+                    <InfoBar.Message>
+                        Your current lock screen mode is not compatible (Slideshow/Spotlight). Switch to 'Picture' in Windows Settings.
+                    </InfoBar.Message>
+                </InfoBar>
+
+                <!--  Step 1  -->
+                <Grid x:Name="PrereqStep1Root">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
                     <Border
+                        x:Name="PrereqStep1Badge"
                         Grid.Column="0"
                         Width="32"
                         Height="32"
@@ -65,8 +96,12 @@
                             Text="1" />
                     </Border>
                     <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock FontWeight="SemiBold" Text="Set a default lockscreen in Windows Settings (Only required for the first time)" />
                         <TextBlock
+                            x:Name="PrereqStep1Title"
+                            FontWeight="SemiBold"
+                            Text="Set a default lockscreen in Windows Settings (Only required for the first time)" />
+                        <TextBlock
+                            x:Name="PrereqStep1Body"
                             Foreground="{StaticResource TextFillColorSecondaryBrush}"
                             Text="Open Windows Settings → Personalization → Lock screen, change lockscreen type to 'Picture' and set an initial image"
                             TextWrapping="Wrap" />

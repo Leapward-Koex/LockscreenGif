@@ -14,6 +14,8 @@ using CommunityToolkit.WinUI.Controls;
 using System.Globalization;
 using LockscreenGif.Services;
 using Windows.Media.Editing;
+using Microsoft.UI;
+using Microsoft.UI.Xaml.Media;
 
 namespace LockscreenGif.Views;
 
@@ -27,6 +29,9 @@ public sealed partial class MainPage : Page
     private readonly ILockscreenService _lockscreenService;
     private readonly IAppNotificationService _notificationService;
 
+    private Microsoft.UI.Dispatching.DispatcherQueueTimer? _lockscreenModeTimer;
+    private LockscreenService.LockScreenMode _lastLockScreenMode = LockscreenService.LockScreenMode.Unknown;
+
     private StorageFile? _videoFile;
     private double _startSec;
     private double _endSec;
@@ -35,6 +40,7 @@ public sealed partial class MainPage : Page
     private double? _videoFps;
     private bool _correctingPosition;
     private MediaPlaybackSession? _session;
+
     private void Seek(double sec)
     {
         if (_session != null)
@@ -59,6 +65,83 @@ public sealed partial class MainPage : Page
         _lockscreenService = App.GetService<ILockscreenService>();
         _notificationService = App.GetService<IAppNotificationService>();
         InitializeComponent();
+
+        StartLockscreenModePolling();
+
+        Unloaded += (_, _) => StopLockscreenModePolling();
+    }
+
+    private void StartLockscreenModePolling()
+    {
+        _lockscreenModeTimer ??= DispatcherQueue.CreateTimer();
+        _lockscreenModeTimer.Interval = TimeSpan.FromSeconds(5);
+        _lockscreenModeTimer.IsRepeating = true;
+        _lockscreenModeTimer.Tick -= LockscreenModeTimer_Tick;
+        _lockscreenModeTimer.Tick += LockscreenModeTimer_Tick;
+
+        RefreshLockscreenModeUi();
+        _lockscreenModeTimer.Start();
+    }
+
+    private void StopLockscreenModePolling()
+    {
+        if (_lockscreenModeTimer is null)
+        {
+            return;
+        }
+
+        _lockscreenModeTimer.Stop();
+        _lockscreenModeTimer.Tick -= LockscreenModeTimer_Tick;
+        _lockscreenModeTimer = null;
+    }
+
+    private void LockscreenModeTimer_Tick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args)
+    {
+        RefreshLockscreenModeUi();
+    }
+
+    private void RefreshLockscreenModeUi()
+    {
+        var mode = LockscreenService.TryGetLockScreenMode();
+        if (mode == _lastLockScreenMode)
+        {
+            return;
+        }
+
+        _lastLockScreenMode = mode;
+
+        var ok = mode is LockscreenService.LockScreenMode.PictureOrOther;
+
+        if (PrereqWarningIcon != null)
+        {
+            PrereqWarningIcon.Visibility = ok ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        if (LockscreenModeWarning != null)
+        {
+            LockscreenModeWarning.IsOpen = !ok;
+        }
+
+        if (PrereqStep1Badge != null)
+        {
+            PrereqStep1Badge.Background = ok
+                ? (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"]
+                : new SolidColorBrush(Colors.OrangeRed);
+        }
+
+        if (PrereqStep1Title != null)
+        {
+            PrereqStep1Title.Foreground = ok
+                ? (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
+                : new SolidColorBrush(Colors.OrangeRed);
+        }
+
+        if (PrereqStep1Body != null)
+        {
+            PrereqStep1Body.Foreground = ok
+                ? (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"]
+                : new SolidColorBrush(Colors.OrangeRed);
+        }
     }
 
     private async void OpenGifButton_click(object sender, RoutedEventArgs e)

@@ -4,6 +4,7 @@ using System.Security.AccessControl;
 using System.Security.Principal;
 using LockscreenGif.Contracts.Services;
 using Microsoft.UI.Xaml.Media.Imaging;
+using Microsoft.Win32;
 using Windows.Storage;
 using Path = System.IO.Path;
 
@@ -81,6 +82,50 @@ public sealed class LockscreenService : ILockscreenService
         {
             Logger.Error("Failed to delete dimmed lockscreen files", ex);
             return null;
+        }
+    }
+
+    public enum LockScreenMode
+    {
+        PictureOrOther,
+        Slideshow,
+        Spotlight,
+        Unknown
+    }
+
+    public static LockScreenMode TryGetLockScreenMode()
+    {
+        try
+        {
+            using var lockScreenKey =
+                Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Lock Screen\Creative");
+
+            // Heuristic: Spotlight usually has a CreativeId/CreativeJson
+            var creativeId = lockScreenKey?.GetValue("CreativeId") as string;
+            var creativeJson = lockScreenKey?.GetValue("CreativeJson") as string;
+            if (!string.IsNullOrWhiteSpace(creativeId) || !string.IsNullOrWhiteSpace(creativeJson))
+            {
+                return LockScreenMode.Spotlight;
+            }
+
+            using var slideshowKey =
+                Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Lock Screen");
+
+            var enabledObj = slideshowKey?.GetValue("SlideshowEnabled");
+            if (enabledObj is int enabledInt && enabledInt == 1)
+            {
+                return LockScreenMode.Slideshow;
+            }
+            if (enabledObj is byte[] enabledBytes && enabledBytes.Length > 0 && enabledBytes[0] == 1)
+            {
+                return LockScreenMode.Slideshow;
+            }
+
+            return LockScreenMode.PictureOrOther;
+        }
+        catch
+        {
+            return LockScreenMode.Unknown;
         }
     }
 
