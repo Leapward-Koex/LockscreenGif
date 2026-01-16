@@ -1,10 +1,10 @@
-﻿using LockscreenGif.Contracts.Services;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
 using System.Security.Principal;
+using LockscreenGif.Contracts.Services;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Storage;
-using System.Security.AccessControl;
 using Path = System.IO.Path;
 
 namespace LockscreenGif.Services;
