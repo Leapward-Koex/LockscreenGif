@@ -91,6 +91,18 @@ jobs:
       run: |
         cd LockScreenGif
         dotnet publish -c Release -p:PublishProfile=FolderProfile.pubxml
+
+    - name: Build AIP
+      uses: caphyon/advinst-github-action@v2.0
+      with:
+        advinst-version: '23.3'
+        advinst-enable-automation: 'true'
+        aip-path: ${{ github.workspace }}\Installer\LockscreenGif.aip
+        aip-build-name: DefaultBuild
+        aip-package-name: installLockscreenGif.msi
+        aip-output-dir:  ${{ github.workspace }}\setup
+        aip-commands: |
+          SetVersion 2.1.${{ github.run_number }}
         
     # Remove the pfx
     - name: Remove the pfx
@@ -101,6 +113,12 @@ jobs:
       with:
         name: 'Unpackaged app ${{ github.run_number }}.${{ github.run_attempt }}'
         path: './LockScreenGif/bin/Release/net9.0-windows10.0.26100.0/win-x64/'
+
+    - name: Upload MSI installer
+      uses: actions/upload-artifact@v4
+      with:
+        name: 'MSI Installer ${{ github.run_number }}.${{ github.run_attempt }}'
+        path: '${{ github.workspace }}/setup/installLockscreenGif.msi'
         
 
     # - name: Create GH release

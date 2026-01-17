@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+Installer/LockscreenGif-cache/
+Installer/Setup Files/
