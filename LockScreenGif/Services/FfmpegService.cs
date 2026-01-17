@@ -6,12 +6,12 @@ namespace LockscreenGif.Services;
 public class FfmpegService
 {
     private static readonly List<string> _tracked = [];
-    private static readonly string _exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-    private const string _prefix = ".ffmpeg_temp_";
+    private static readonly string _tempRoot = TempDirectoryService.GetAppTempRoot();
+    private const string _prefix = "ffmpeg_temp_";
 
     public static string CreateTempDirectory()
     {
-        var dir = Path.Combine(_exeDir, $"{_prefix}{Guid.NewGuid()}");
+        var dir = Path.Combine(_tempRoot, $"{_prefix}{Guid.NewGuid()}");
         Directory.CreateDirectory(dir);
         _tracked.Add(dir);
         return dir;
@@ -28,7 +28,7 @@ public class FfmpegService
         _tracked.Clear();
 
         // delete any orphaned folders from previous runs
-        foreach (var dir in Directory.EnumerateDirectories(_exeDir, $"{_prefix}*"))
+        foreach (var dir in Directory.EnumerateDirectories(_tempRoot, $"{_prefix}*"))
         {
             TryDelete(dir);
         }

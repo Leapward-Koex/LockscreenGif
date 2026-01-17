@@ -9,12 +9,12 @@ namespace LockscreenGif.Services;
 public class GifSkiService
 {
     private static readonly List<string> _tracked = [];
-    private static readonly string _exeDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-    private const string _prefix = ".giski_temp_";
+    private static readonly string _tempRoot = TempDirectoryService.GetAppTempRoot();
+    private const string _prefix = "gifski_temp_";
 
     public static string CreateTempDirectory()
     {
-        var dir = Path.Combine(_exeDir, $"{_prefix}{Guid.NewGuid()}");
+        var dir = Path.Combine(_tempRoot, $"{_prefix}{Guid.NewGuid()}");
         Directory.CreateDirectory(dir);
         _tracked.Add(dir);
         return dir;
@@ -31,7 +31,7 @@ public class GifSkiService
         _tracked.Clear();
 
         // delete any orphaned folders from previous runs
-        foreach (var dir in Directory.EnumerateDirectories(_exeDir, $"{_prefix}*"))
+        foreach (var dir in Directory.EnumerateDirectories(_tempRoot, $"{_prefix}*"))
         {
             TryDelete(dir);
         }
@@ -65,8 +65,8 @@ public class GifSkiService
 
         return await Task.Run(() =>
         {
-            var exeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location)!;
-            var gifskiDll = Path.Combine(exeDir, "Vendor", "gifski", "gifski.dll");
+            var baseDir = AppContext.BaseDirectory;
+            var gifskiDll = Path.Combine(baseDir, "Vendor", "gifski", "gifski.dll");
 
             using var gifski = Gifski.Create(gifskiDll, settings =>
             {
@@ -119,6 +119,6 @@ public class GifSkiService
 
             return outputFile;
         });
-        
+
     }
 }
