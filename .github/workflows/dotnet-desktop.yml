@@ -111,13 +111,13 @@ jobs:
     - name: Upload unpackaged app
       uses: actions/upload-artifact@v4
       with:
-        name: 'Unpackaged app ${{ github.run_number }}.${{ github.run_attempt }}'
+        name: 'Lockscreen Gif Unpackaged App ${{ github.run_number }}.${{ github.run_attempt }}'
         path: './LockScreenGif/bin/Release/net9.0-windows10.0.26100.0/win-x64/'
 
     - name: Upload MSI installer
       uses: actions/upload-artifact@v4
       with:
-        name: 'Installer ${{ github.run_number }}.${{ github.run_attempt }}'
+        name: 'Lockscreen Gif Installer ${{ github.run_number }}.${{ github.run_attempt }}'
         path: '${{ github.workspace }}/setup/installLockscreenGif.msi'
         
 
