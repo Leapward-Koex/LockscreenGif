@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<DOCUMENT Type="Advanced Installer" CreateVersion="23.3" version="23.3" Modules="simple" RootPath="." Language="en" Id="{703481DB-A576-46B4-9561-786FA38F6814}">
+<DOCUMENT Type="Advanced Installer" CreateVersion="23.3" version="23.3" Modules="simple" RootPath="." Language="en" Id="{49D3866E-26DA-45B3-A2A6-CACE10BEB611}">
   <COMPONENT cid="caphyon.advinst.msicomp.MsiPropsComponent">
     <ROW Property="AI_APP_FILE" Value="[#LockscreenGif.exe]"/>
     <ROW Property="AI_BITMAP_DISPLAY_MODE" Value="0"/>
-    <ROW Property="AI_IA_APPLICATION_ID" Value="696aed613f570bda6b606658"/>
+    <ROW Property="AI_IA_APPLICATION_ID" Value="696b04283f570bda6b606cc0"/>
     <ROW Property="AI_IA_ENABLE" Value="1"/>
     <ROW Property="AI_PREDEF_LCONDS_PROPS" Value="AI_DETECTED_ALL"/>
     <ROW Property="ALLUSERS" Value="1"/>
@@ -12,13 +12,13 @@
     <ROW Property="ARPURLINFOABOUT" Value="https://github.com/Leapward-Koex/LockscreenGif"/>
     <ROW Property="CTRLS" Value="2"/>
     <ROW Property="Manufacturer" Value="Leapward-Koex"/>
-    <ROW Property="ProductCode" Value="1033:{E1E5F45C-F2EB-4E29-A04B-AD69E4C60167} " Type="16"/>
+    <ROW Property="ProductCode" Value="1033:{D7A1CECE-E9A0-4E7C-8388-12C706F4AAA5} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
-    <ROW Property="ProductName" Value="LockscreenGif"/>
+    <ROW Property="ProductName" Value="Lockscreen Gif"/>
     <ROW Property="ProductVersion" Value="1.0.0" Options="32"/>
     <ROW Property="RUNAPPLICATION" Value="1" Type="4"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND"/>
-    <ROW Property="UpgradeCode" Value="{6C92F43C-876C-4E1D-9818-39CC27DA5B13}"/>
+    <ROW Property="UpgradeCode" Value="{7220BFE6-1277-492D-8552-B88B8303F6DE}"/>
     <ROW Property="WindowsType9X" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
     <ROW Property="WindowsType9XDisplay" MultiBuildValue="DefaultBuild:Windows 9x/ME" ValueLocId="-"/>
     <ROW Property="WindowsTypeNT" MultiBuildValue="DefaultBuild:Windows 9x/ME/NT/2000/XP/Vista/Windows 7/Windows 8 x86/Windows 8.1 x86/Windows 10 x86" ValueLocId="-"/>
@@ -93,10 +93,6 @@
     <ROW Directory="koKR_Dir" Directory_Parent="APPDIR" DefaultDir="ko-KR" DirectoryOptions="3"/>
     <ROW Directory="kokIN_Dir" Directory_Parent="APPDIR" DefaultDir="kok-IN" DirectoryOptions="3"/>
     <ROW Directory="lbLU_Dir" Directory_Parent="APPDIR" DefaultDir="lb-LU" DirectoryOptions="3"/>
-    <ROW Directory="lib_1_Dir" Directory_Parent="osx_Dir" DefaultDir="lib" DirectoryOptions="3"/>
-    <ROW Directory="lib_2_Dir" Directory_Parent="win_Dir" DefaultDir="lib" DirectoryOptions="3"/>
-    <ROW Directory="lib_Dir" Directory_Parent="linux_Dir" DefaultDir="lib" DirectoryOptions="3"/>
-    <ROW Directory="linux_Dir" Directory_Parent="runtimes_Dir" DefaultDir="linux" DirectoryOptions="3"/>
     <ROW Directory="loLA_Dir" Directory_Parent="APPDIR" DefaultDir="lo-LA" DirectoryOptions="3"/>
     <ROW Directory="ltLT_Dir" Directory_Parent="APPDIR" DefaultDir="lt-LT" DirectoryOptions="3"/>
     <ROW Directory="lvLV_Dir" Directory_Parent="APPDIR" DefaultDir="lv-LV" DirectoryOptions="3"/>
@@ -106,19 +102,11 @@
     <ROW Directory="mrIN_Dir" Directory_Parent="APPDIR" DefaultDir="mr-IN" DirectoryOptions="3"/>
     <ROW Directory="msMY_Dir" Directory_Parent="APPDIR" DefaultDir="ms-MY" DirectoryOptions="3"/>
     <ROW Directory="mtMT_Dir" Directory_Parent="APPDIR" DefaultDir="mt-MT" DirectoryOptions="3"/>
-    <ROW Directory="native_1_Dir" Directory_Parent="winarm64ec_Dir" DefaultDir="native" DirectoryOptions="3"/>
-    <ROW Directory="native_2_Dir" Directory_Parent="winx64_Dir" DefaultDir="native" DirectoryOptions="3"/>
-    <ROW Directory="native_3_Dir" Directory_Parent="winx86_Dir" DefaultDir="native" DirectoryOptions="3"/>
-    <ROW Directory="native_Dir" Directory_Parent="winarm64_Dir" DefaultDir="native" DirectoryOptions="3"/>
     <ROW Directory="nbNO_Dir" Directory_Parent="APPDIR" DefaultDir="nb-NO" DirectoryOptions="3"/>
     <ROW Directory="neNP_Dir" Directory_Parent="APPDIR" DefaultDir="ne-NP" DirectoryOptions="3"/>
-    <ROW Directory="net9.0_1_Dir" Directory_Parent="lib_1_Dir" DefaultDir="net9.0" DirectoryOptions="3"/>
-    <ROW Directory="net9.0_2_Dir" Directory_Parent="lib_2_Dir" DefaultDir="net9.0" DirectoryOptions="3"/>
-    <ROW Directory="net9.0_Dir" Directory_Parent="lib_Dir" DefaultDir="net9.0" DirectoryOptions="3"/>
     <ROW Directory="nlNL_Dir" Directory_Parent="APPDIR" DefaultDir="nl-NL" DirectoryOptions="3"/>
     <ROW Directory="nnNO_Dir" Directory_Parent="APPDIR" DefaultDir="nn-NO" DirectoryOptions="3"/>
     <ROW Directory="orIN_Dir" Directory_Parent="APPDIR" DefaultDir="or-IN" DirectoryOptions="3"/>
-    <ROW Directory="osx_Dir" Directory_Parent="runtimes_Dir" DefaultDir="osx" DirectoryOptions="3"/>
     <ROW Directory="paIN_Dir" Directory_Parent="APPDIR" DefaultDir="pa-IN" DirectoryOptions="3"/>
     <ROW Directory="plPL_Dir" Directory_Parent="APPDIR" DefaultDir="pl-PL" DirectoryOptions="3"/>
     <ROW Directory="ptBR_Dir" Directory_Parent="APPDIR" DefaultDir="pt-BR" DirectoryOptions="3"/>
@@ -126,7 +114,6 @@
     <ROW Directory="quzPE_Dir" Directory_Parent="APPDIR" DefaultDir="quz-PE" DirectoryOptions="3"/>
     <ROW Directory="roRO_Dir" Directory_Parent="APPDIR" DefaultDir="ro-RO" DirectoryOptions="3"/>
     <ROW Directory="ruRU_Dir" Directory_Parent="APPDIR" DefaultDir="ru-RU" DirectoryOptions="3"/>
-    <ROW Directory="runtimes_Dir" Directory_Parent="APPDIR" DefaultDir="runtimes" DirectoryOptions="3"/>
     <ROW Directory="skSK_Dir" Directory_Parent="APPDIR" DefaultDir="sk-SK" DirectoryOptions="3"/>
     <ROW Directory="slSI_Dir" Directory_Parent="APPDIR" DefaultDir="sl-SI" DirectoryOptions="3"/>
     <ROW Directory="sqAL_Dir" Directory_Parent="APPDIR" DefaultDir="sq-AL" DirectoryOptions="3"/>
@@ -144,237 +131,218 @@
     <ROW Directory="urPK_Dir" Directory_Parent="APPDIR" DefaultDir="ur-PK" DirectoryOptions="3"/>
     <ROW Directory="uzLatnUZ_Dir" Directory_Parent="APPDIR" DefaultDir="UZ-LAT~1|uz-Latn-UZ" DirectoryOptions="3"/>
     <ROW Directory="viVN_Dir" Directory_Parent="APPDIR" DefaultDir="vi-VN" DirectoryOptions="3"/>
-    <ROW Directory="win_Dir" Directory_Parent="runtimes_Dir" DefaultDir="win" DirectoryOptions="3"/>
-    <ROW Directory="winarm64_Dir" Directory_Parent="runtimes_Dir" DefaultDir="WIN-AR~1|win-arm64" DirectoryOptions="3"/>
-    <ROW Directory="winarm64ec_Dir" Directory_Parent="runtimes_Dir" DefaultDir="WIN-AR~2|win-arm64ec" DirectoryOptions="3"/>
-    <ROW Directory="winx64_Dir" Directory_Parent="runtimes_Dir" DefaultDir="win-x64" DirectoryOptions="3"/>
-    <ROW Directory="winx86_Dir" Directory_Parent="runtimes_Dir" DefaultDir="win-x86" DirectoryOptions="3"/>
     <ROW Directory="zhCN_Dir" Directory_Parent="APPDIR" DefaultDir="zh-CN" DirectoryOptions="3"/>
     <ROW Directory="zhTW_Dir" Directory_Parent="APPDIR" DefaultDir="zh-TW" DirectoryOptions="3"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.SideBySideGuidComponent">
-    <ROW Component="APPDIR" Value="{22D76EC6-6095-43CA-A71B-A79DE90D6BFF}"/>
-    <ROW Component="ProductInformation" Value="{DFA06820-B988-4449-951F-AFD6450528E1}"/>
+    <ROW Component="APPDIR" Value="{9A510946-CD52-4703-9030-410EC5E47B53}"/>
+    <ROW Component="ProductInformation" Value="{35BBE05E-CC0D-4834-BAA0-5666134A913D}"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiCompsComponent">
-    <ROW Component="AI_IA_ENABLE" ComponentId="{9D67B80E-2603-4AA3-B7EF-B03F0E206D33}" Directory_="APPDIR" Attributes="4" KeyPath="AI_IA_ENABLE" Options="1"/>
-    <ROW Component="APPDIR" ComponentId="{22D76EC6-6095-43CA-A71B-A79DE90D6BFF}" Directory_="APPDIR" Attributes="0"/>
-    <ROW Component="App.xbf" ComponentId="{B92E106E-EF67-45B9-AB19-0CEE22352BEB}" Directory_="APPDIR" Attributes="0" KeyPath="App.xbf" Type="0"/>
-    <ROW Component="CommunityToolkit.Common.dll" ComponentId="{251D4EBB-D177-40F4-8273-ABE63F492BCC}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.Common.dll"/>
-    <ROW Component="CommunityToolkit.Mvvm.dll" ComponentId="{0092BF4C-2BD4-4CF2-A598-EE3AABFA0157}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll"/>
-    <ROW Component="CommunityToolkit.WinUI.Controls.RangeSelector.dll" ComponentId="{24A0A2E4-656B-4201-BF50-F2198739AAC4}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.WinUI.Controls.RangeSelector.dll"/>
-    <ROW Component="CommunityToolkit.WinUI.Extensions.dll" ComponentId="{46A19CDC-3958-4D56-B4A0-75E33F4C7F87}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.WinUI.Extensions.dll"/>
-    <ROW Component="CoreMessagingXP.dll" ComponentId="{A0CECBE2-DE77-4EFA-88D9-C75ED641494E}" Directory_="APPDIR" Attributes="256" KeyPath="CoreMessagingXP.dll"/>
-    <ROW Component="DWriteCore.dll" ComponentId="{F53441C9-A332-446B-82FA-B240B104B6BC}" Directory_="APPDIR" Attributes="256" KeyPath="DWriteCore.dll"/>
-    <ROW Component="DwmSceneI.dll" ComponentId="{C1C4FD3B-B4EF-4134-92BD-79EDCC50CE75}" Directory_="APPDIR" Attributes="256" KeyPath="DwmSceneI.dll"/>
-    <ROW Component="FFMpegCore.dll" ComponentId="{8991B942-4D70-4E65-9447-26435F72E450}" Directory_="APPDIR" Attributes="0" KeyPath="FFMpegCore.dll"/>
-    <ROW Component="FontSizes.xbf" ComponentId="{3354C726-15E6-4E93-8AEE-50FDEA6F29B5}" Directory_="Styles_Dir" Attributes="0" KeyPath="FontSizes.xbf" Type="0"/>
-    <ROW Component="Gifski.Net.dll" ComponentId="{1CFE9840-ED90-4A0E-A415-D13AC8AE165B}" Directory_="APPDIR" Attributes="0" KeyPath="Gifski.Net.dll"/>
-    <ROW Component="Instances.dll" ComponentId="{4F75589D-1EE5-4AA7-9AF4-E81D9FE4C6F9}" Directory_="APPDIR" Attributes="0" KeyPath="Instances.dll"/>
-    <ROW Component="LockScreenLogo.scale200.png" ComponentId="{3A80877D-442C-48FC-95C6-E9820CF63DF3}" Directory_="Assets_Dir" Attributes="0" KeyPath="LockScreenLogo.scale200.png" Type="0"/>
-    <ROW Component="LockscreenGif.dll" ComponentId="{02316BAA-8722-4302-9F67-433AE0A71671}" Directory_="APPDIR" Attributes="256" KeyPath="LockscreenGif.dll"/>
-    <ROW Component="LockscreenGif.exe" ComponentId="{067E188B-061A-4E8A-A6BE-C106B977B99F}" Directory_="APPDIR" Attributes="256" KeyPath="LockscreenGif.exe"/>
-    <ROW Component="Logger.dll" ComponentId="{35C4227A-0708-4A9F-81BC-4DD61A380C9B}" Directory_="APPDIR" Attributes="0" KeyPath="Logger.dll"/>
-    <ROW Component="MRM.dll" ComponentId="{D477950E-8A26-4FF9-8825-B9D76C5D7425}" Directory_="APPDIR" Attributes="256" KeyPath="MRM.dll"/>
-    <ROW Component="MainPage.xbf" ComponentId="{78C83484-DDA7-4F9B-AC6A-9EBDAD102D39}" Directory_="Views_Dir" Attributes="0" KeyPath="MainPage.xbf" Type="0"/>
-    <ROW Component="Microsoft.DirectManipulation.dll" ComponentId="{7AAC4727-5205-4F0A-821C-837114E222A3}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.DirectManipulation.dll"/>
-    <ROW Component="Microsoft.Extensions.Configuration.Abstractions.dll" ComponentId="{C538F09C-4CDA-4B84-8924-343671049DEC}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.Abstractions.dll"/>
-    <ROW Component="Microsoft.Extensions.Configuration.Binder.dll" ComponentId="{7D5D9DD5-15C2-434B-8510-71D8DC49846F}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.Binder.dll"/>
-    <ROW Component="Microsoft.Extensions.Configuration.CommandLine.dll" ComponentId="{50CA2F12-A175-4030-9299-30AFF2471E6C}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.CommandLine.dll"/>
-    <ROW Component="Microsoft.Extensions.Configuration.EnvironmentVariables.dll" ComponentId="{69FBB492-0BC5-4F5B-BE3F-802C7F15402F}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.EnvironmentVariables.dll"/>
-    <ROW Component="Microsoft.Extensions.Configuration.FileExtensions.dll" ComponentId="{44F61FCD-6BCA-4372-9A35-3F17579D441E}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.FileExtensions.dll"/>
-    <ROW Component="Microsoft.Extensions.Configuration.Json.dll" ComponentId="{B84579EA-2C18-41F3-9765-EA597EA4D3E7}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.Json.dll"/>
-    <ROW Component="Microsoft.Extensions.Configuration.UserSecrets.dll" ComponentId="{7D18EE35-4E70-41BE-8537-57C088821331}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.UserSecrets.dll"/>
-    <ROW Component="Microsoft.Extensions.Configuration.dll" ComponentId="{C50822B2-1971-489D-BC7A-E4DC10227DD4}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.dll"/>
-    <ROW Component="Microsoft.Extensions.DependencyInj_1_ection.dll" ComponentId="{A95384D8-0871-445A-89A6-46E17C0A65E1}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.DependencyInjection.dll"/>
-    <ROW Component="Microsoft.Extensions.DependencyInjection.Abstractions.dll" ComponentId="{AD2F61D2-9044-4207-9D17-A4F07185A011}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.DependencyInjection.Abstractions.dll"/>
-    <ROW Component="Microsoft.Extensions.Diagnostics.Abstractions.dll" ComponentId="{955A2D3B-564C-42AC-935B-454FD3728787}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Diagnostics.Abstractions.dll"/>
-    <ROW Component="Microsoft.Extensions.Diagnostics.dll" ComponentId="{A2B51D74-51E2-4055-8681-28C03B8BB14B}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Diagnostics.dll"/>
-    <ROW Component="Microsoft.Extensions.FileProviders.Abstractions.dll" ComponentId="{8A638939-5BA1-44A3-AE80-50DB10F06B18}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.FileProviders.Abstractions.dll"/>
-    <ROW Component="Microsoft.Extensions.FileProviders.Physical.dll" ComponentId="{BA44A628-ECF8-44E5-9620-9E9D3F752666}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.FileProviders.Physical.dll"/>
-    <ROW Component="Microsoft.Extensions.FileSystemGlobbing.dll" ComponentId="{043BD8C5-0313-45CA-8EA9-2BDA5E12F272}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.FileSystemGlobbing.dll"/>
-    <ROW Component="Microsoft.Extensions.Hosting.Abstractions.dll" ComponentId="{19A894B1-EF35-4677-AFC0-52B4CC33F28D}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Hosting.Abstractions.dll"/>
-    <ROW Component="Microsoft.Extensions.Hosting.dll" ComponentId="{73B0FDBA-0BAF-4D8F-9B57-B1F1A4765354}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Hosting.dll"/>
-    <ROW Component="Microsoft.Extensions.Logging.Abstractions.dll" ComponentId="{254F9652-D976-4C9B-9EF2-C5ABEC51788F}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.Abstractions.dll"/>
-    <ROW Component="Microsoft.Extensions.Logging.Configuration.dll" ComponentId="{A3EC0166-7006-4BB2-9D44-B340C411E502}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.Configuration.dll"/>
-    <ROW Component="Microsoft.Extensions.Logging.Console.dll" ComponentId="{0FE9D7CD-07B6-4374-AA95-84B9A9338776}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.Console.dll"/>
-    <ROW Component="Microsoft.Extensions.Logging.Debug.dll" ComponentId="{4C7E41D2-8574-42DB-84FB-5F5A76E2FB45}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.Debug.dll"/>
-    <ROW Component="Microsoft.Extensions.Logging.EventLog.dll" ComponentId="{2D362511-4615-4EEB-A502-D987B0EA37EF}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.EventLog.dll"/>
-    <ROW Component="Microsoft.Extensions.Logging.EventSource.dll" ComponentId="{991F3D0F-E93D-4D84-8BBA-B9C2A84CA852}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.EventSource.dll"/>
-    <ROW Component="Microsoft.Extensions.Logging.dll" ComponentId="{D2AFF379-A374-489A-8BFB-D807B38319BC}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.dll"/>
-    <ROW Component="Microsoft.Extensions.Options.ConfigurationExtensions.dll" ComponentId="{773E9BD3-653D-4BA3-9A0B-25A2CBB4C04B}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Options.ConfigurationExtensions.dll"/>
-    <ROW Component="Microsoft.Extensions.Options.dll" ComponentId="{D9790DEB-9D59-46A5-BF3F-518EF2F69E03}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Options.dll"/>
-    <ROW Component="Microsoft.Extensions.Primitives.dll" ComponentId="{CC9CCF56-1E9A-4DEC-B223-BF4453D739D6}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Primitives.dll"/>
-    <ROW Component="Microsoft.Graphics.Display.dll" ComponentId="{BA95941C-BA83-4327-9778-7340C52D3A4B}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Graphics.Display.dll"/>
-    <ROW Component="Microsoft.InputStateManager.dll" ComponentId="{B5067C30-BE9A-4CC9-853D-D8FC0EDF30A7}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.InputStateManager.dll"/>
-    <ROW Component="Microsoft.InteractiveExperiences.Projection.dll" ComponentId="{629B6995-F344-41C1-A65F-57FB794A01FF}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.InteractiveExperiences.Projection.dll"/>
-    <ROW Component="Microsoft.Internal.FrameworkUdk.dll" ComponentId="{98D2A431-9938-44C0-AF87-C35971574F67}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Internal.FrameworkUdk.dll"/>
-    <ROW Component="Microsoft.Security.Authentication.OAuth.Projection.dll" ComponentId="{979B7D88-B562-4F0C-9B6D-5F7972E732F9}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Security.Authentication.OAuth.Projection.dll"/>
-    <ROW Component="Microsoft.UI.Composition.OSSupport.dll" ComponentId="{DCF98273-F7AA-4502-97A9-1979BEF2589E}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Composition.OSSupport.dll"/>
-    <ROW Component="Microsoft.UI.Input.dll" ComponentId="{87AA00CD-BE66-4F13-9B2C-53FF9F028696}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Input.dll"/>
-    <ROW Component="Microsoft.UI.Windowing.Core.dll" ComponentId="{46A5E4DE-FA46-4502-B2EB-203F11BF2FE6}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Windowing.Core.dll"/>
-    <ROW Component="Microsoft.UI.Windowing.dll" ComponentId="{CBA1D0C8-6AD6-4715-A7EF-903CB2210948}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Windowing.dll"/>
-    <ROW Component="Microsoft.UI.Xaml.Controls.dll" ComponentId="{F57B3410-2C04-4249-B695-72BB6A70D9F4}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Xaml.Controls.dll"/>
-    <ROW Component="Microsoft.UI.Xaml.Internal.dll" ComponentId="{14951BC4-4F95-4688-9561-C3E07264E618}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Xaml.Internal.dll"/>
-    <ROW Component="Microsoft.UI.Xaml.Phone.dll" ComponentId="{E7BE322D-EC44-4E89-BEEC-CCCFB1D66949}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Xaml.Phone.dll"/>
-    <ROW Component="Microsoft.UI.dll" ComponentId="{55C7133A-E86F-4C38-9103-77DB1E56811B}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.dll"/>
-    <ROW Component="Microsoft.Web.WebView2.Core.Projection.dll" ComponentId="{2113ADBB-FF33-4B4C-BA5C-FFF63AD88866}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Web.WebView2.Core.Projection.dll"/>
-    <ROW Component="Microsoft.Web.WebView2.Core.dll" ComponentId="{CC7AD590-AECC-4E24-A67A-35B5817AB017}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Web.WebView2.Core.dll"/>
-    <ROW Component="Microsoft.WinUI.dll" ComponentId="{D235A931-E927-41C6-892C-BA59C2C7FA9A}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.WinUI.dll"/>
-    <ROW Component="Microsoft.Windows.AppLifecycle.Projection.dll" ComponentId="{E4B165A0-0BE9-4483-844B-DA7346994BFC}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.AppLifecycle.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.AppNotifications.Builder.Projection.dll" ComponentId="{DC8D3489-D557-4F9C-A20D-9F67C9821A87}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.AppNotifications.Builder.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.AppNotifications.Projection.dll" ComponentId="{6ACD132F-4E1D-43C4-8308-11CD221A9F48}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.AppNotifications.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel.Background.Projection.dll" ComponentId="{8F607E8C-700E-4F3C-8958-CB312B174DE6}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel.Background.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" ComponentId="{547343EA-531B-4201-A247-BADE07E2CCBE}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel.Resources.dll" ComponentId="{D338B887-5441-4F38-8176-8F24938A35F1}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Windows.ApplicationModel.Resources.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" ComponentId="{AC5D5AF1-5F7E-4A7C-B16A-D6066A238691}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel_1_.Background.UniversalBGTask.dll" ComponentId="{BCDCB380-822D-4DEA-83DB-3F52F229146A}" Directory_="native_Dir" Attributes="256" KeyPath="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel_1_.Resources.Projection.dll" ComponentId="{745EB1CF-2832-4E43-A070-54D77EF9294C}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel.Resources.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel_2_.Background.UniversalBGTask.dll" ComponentId="{78B3EDB3-A7CE-4547-9509-BF0852D4A633}" Directory_="native_1_Dir" Attributes="256" KeyPath="Microsoft.Windows.ApplicationModel_1_.Background.UniversalBGTask.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel_3_.Background.UniversalBGTask.dll" ComponentId="{F37091FE-E67A-45FE-832A-48422D85160B}" Directory_="native_2_Dir" Attributes="256" KeyPath="Microsoft.Windows.ApplicationModel_2_.Background.UniversalBGTask.dll"/>
-    <ROW Component="Microsoft.Windows.ApplicationModel_4_.Background.UniversalBGTask.dll" ComponentId="{557D4F34-C5EB-4E3D-9F53-23CF9DDC3A5B}" Directory_="native_3_Dir" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel_3_.Background.UniversalBGTask.dll"/>
-    <ROW Component="Microsoft.Windows.BadgeNotifications.Projection.dll" ComponentId="{B913482C-A8B3-45A9-87F9-D0504A5D8878}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.BadgeNotifications.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.Management.Deployment.Projection.dll" ComponentId="{26102676-D9BD-40E7-AF25-35E754684C28}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Management.Deployment.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.Media.Capture.Projection.dll" ComponentId="{BDEF4C40-845F-4236-BC47-14B1B9CF5F69}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Media.Capture.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.PushNotifications.Projection.dll" ComponentId="{01D27696-5EEF-4D17-BABD-B6256881DE16}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.PushNotifications.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.SDK.NET.dll" ComponentId="{90C370B5-25F7-4276-8453-172846622034}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.SDK.NET.dll"/>
-    <ROW Component="Microsoft.Windows.Security.AccessControl.Projection.dll" ComponentId="{96C2B640-B3A3-4ECA-A7E6-F6B3A28E992F}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Security.AccessControl.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.Storage.Projection.dll" ComponentId="{1BB9D2F7-88FB-4051-9F5F-02F204CFC136}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Storage.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.System.Power.Projection.dll" ComponentId="{48DC8831-9841-4CD5-806C-59E852D7EB61}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.System.Power.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.System.Projection.dll" ComponentId="{DF9C3261-8A04-4FAF-BE90-A50E2726A94D}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.System.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.Widgets.Projection.dll" ComponentId="{DB550C6B-D65F-4BA4-A2DF-CD79E971B8EC}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Widgets.Projection.dll"/>
-    <ROW Component="Microsoft.Windows.Widgets.dll" ComponentId="{D2F21E40-6162-4704-9E77-AA18824A3E13}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Windows.Widgets.dll"/>
-    <ROW Component="Microsoft.WindowsAppRuntime.Bootst_1_rap.dll" ComponentId="{A964DC7B-1115-40C9-887C-9A00E2448BB9}" Directory_="native_1_Dir" Attributes="256" KeyPath="Microsoft.WindowsAppRuntime.Bootst_1_rap.dll"/>
-    <ROW Component="Microsoft.WindowsAppRuntime.Bootst_2_rap.dll" ComponentId="{12AF2471-EDA1-4677-9466-CEB6E7475115}" Directory_="native_2_Dir" Attributes="256" KeyPath="Microsoft.WindowsAppRuntime.Bootst_2_rap.dll"/>
-    <ROW Component="Microsoft.WindowsAppRuntime.Bootst_3_rap.dll" ComponentId="{A1CBFEEB-58B4-42F2-A251-832C163E829A}" Directory_="native_3_Dir" Attributes="0" KeyPath="Microsoft.WindowsAppRuntime.Bootst_3_rap.dll"/>
-    <ROW Component="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" ComponentId="{61E031AD-048B-4DDA-90F9-D0BD1506E574}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll"/>
-    <ROW Component="Microsoft.WindowsAppRuntime.Bootstrap.dll" ComponentId="{D16DB584-F628-46F2-84CA-61FCDDDD6473}" Directory_="native_Dir" Attributes="256" KeyPath="Microsoft.WindowsAppRuntime.Bootstrap.dll"/>
-    <ROW Component="Microsoft.WindowsAppRuntime.Insights.Resource.dll" ComponentId="{64A45A12-7CED-45F9-9880-7A84F2BB8611}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.WindowsAppRuntime.Insights.Resource.dll"/>
-    <ROW Component="Microsoft.WindowsAppRuntime.dll" ComponentId="{5043BBD8-E289-4DA9-A414-38D35270D084}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.WindowsAppRuntime.dll"/>
-    <ROW Component="Microsoft.Xaml.Interactivity.dll" ComponentId="{67722AF7-C63F-4D44-A100-6A2EB0C48719}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Xaml.Interactivity.dll"/>
-    <ROW Component="Microsoft.ui.xaml.dll" ComponentId="{8982D7EB-488D-452D-92C8-A157CE081F7C}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.ui.xaml.dll"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui" ComponentId="{90FF0B81-13E2-4852-B4AF-BA63E32E2DDB}" Directory_="afZA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_1" ComponentId="{D7349F64-54FC-44F2-A86A-69595B2FADE0}" Directory_="amET_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_1" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_10" ComponentId="{BD9FBEF1-D420-452C-95F1-55C46849D27F}" Directory_="csCZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_10" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_11" ComponentId="{069E7B29-AD91-4FAE-8A99-79EBC9F5E9A9}" Directory_="cyGB_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_11" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_12" ComponentId="{3ADA9734-7AF0-4271-92D1-253BC0980A92}" Directory_="daDK_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_12" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_13" ComponentId="{DF962C60-789D-4DFC-A0C8-0DF6ADA2B640}" Directory_="deDE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_13" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_14" ComponentId="{CEC963ED-2F0C-4837-873D-B90AA1207179}" Directory_="elGR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_14" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_15" ComponentId="{D624EE45-F363-48BA-ACE5-03442E2A5D2F}" Directory_="enGB_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_15" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_16" ComponentId="{902C5631-67AC-4B0D-A812-D82D20FE6557}" Directory_="enus_Dir" Attributes="256" KeyPath="Microsoft.ui.xaml.dll.mui_16" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_17" ComponentId="{9D10DD73-30FE-44FB-A8F6-48336E0C256F}" Directory_="esES_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_17" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_18" ComponentId="{A942C9D8-70F6-4C87-8B6E-5ED33BBB9D54}" Directory_="esMX_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_18" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_19" ComponentId="{6C9DE04E-8A8D-4401-8A89-5DF87C71B1CD}" Directory_="etEE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_19" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_2" ComponentId="{1C59D09A-0E18-413D-B1EA-E2B13FA0642D}" Directory_="arSA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_2" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_20" ComponentId="{99C2CD15-896F-4951-9EE6-4268C1FF99E7}" Directory_="euES_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_20" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_21" ComponentId="{4F22C1A7-DCB9-4187-B81E-09CCD9BD42E2}" Directory_="faIR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_21" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_22" ComponentId="{762DED68-D8BD-42B3-9CA0-DBB36A431CB5}" Directory_="fiFI_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_22" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_23" ComponentId="{7EC1BAAF-6234-4F2C-B8BE-77B9B3E5D4A6}" Directory_="filPH_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_23" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_24" ComponentId="{3B115312-5561-452C-ABBC-79BFBE2181D2}" Directory_="frCA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_24" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_25" ComponentId="{3B93FDE9-537D-4C17-A22B-1B92E248D398}" Directory_="frFR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_25" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_26" ComponentId="{C0680B5D-254D-445D-B076-22476D3B93FC}" Directory_="gaIE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_26" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_27" ComponentId="{2BF6E29B-02A3-4406-A5D7-227B6A7803A5}" Directory_="gdgb_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_27" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_28" ComponentId="{D5C1E0CB-7C34-49CD-A51E-93471895B353}" Directory_="glES_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_28" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_29" ComponentId="{99D8F16A-4D86-4DDD-9FD4-62D6D0C6C60B}" Directory_="guIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_29" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_3" ComponentId="{3B673EEB-E62C-45B7-8F78-85BD2E011478}" Directory_="asIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_3" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_30" ComponentId="{AE356114-C26A-4B3B-A79A-C2F775321FB2}" Directory_="heIL_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_30" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_31" ComponentId="{FE3E9110-8852-4E00-8799-55343870885E}" Directory_="hiIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_31" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_32" ComponentId="{A1B2BB8C-9A43-446D-9262-92B95357211E}" Directory_="hrHR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_32" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_33" ComponentId="{2FFCAF67-601D-4DD1-AEB6-5721ED322094}" Directory_="huHU_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_33" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_34" ComponentId="{C3C1A55E-9B25-43E7-AF0E-7F0E095C4545}" Directory_="hyAM_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_34" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_35" ComponentId="{9061037F-2EEF-400A-864C-6E3E1F0F696A}" Directory_="idID_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_35" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_36" ComponentId="{388B500D-254E-4F66-9D5E-972060CC23C8}" Directory_="isIS_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_36" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_37" ComponentId="{3EFB2515-0104-4070-8446-7313CB12F0B6}" Directory_="itIT_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_37" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_38" ComponentId="{DC9E7028-989B-484B-A4A6-692B3278F393}" Directory_="jaJP_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_38" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_39" ComponentId="{3FD74053-ADBE-4866-87E6-5270D18E30D3}" Directory_="kaGE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_39" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_4" ComponentId="{C4F8DF6D-8BF4-45AD-AA0C-741F1EB42D87}" Directory_="azLatnAZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_4" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_40" ComponentId="{3861BDDF-A514-4B71-B6F5-0D08A870EAE1}" Directory_="kkKZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_40" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_41" ComponentId="{D428DB85-F3B6-4B5A-A0C4-7F9BF45D689A}" Directory_="kmKH_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_41" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_42" ComponentId="{81F13EDB-CD5B-4084-BFFC-C2A2E42A5717}" Directory_="knIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_42" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_43" ComponentId="{EF150A8B-9544-46F2-B564-859EC75F5CCD}" Directory_="koKR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_43" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_44" ComponentId="{5A4139B8-7198-4FAE-86EA-A74F9C7AA9FB}" Directory_="kokIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_44" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_45" ComponentId="{FCDA6ADF-9C69-4D63-A1A3-3601E0C2F059}" Directory_="lbLU_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_45" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_46" ComponentId="{E73D499F-6701-4B10-9758-DBD1DA822633}" Directory_="loLA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_46" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_47" ComponentId="{CA2F66D0-7608-490D-A2D6-400A16857E25}" Directory_="ltLT_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_47" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_48" ComponentId="{3A9B951B-BA8A-4E06-8BFB-C5D8EE9C3ABB}" Directory_="lvLV_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_48" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_49" ComponentId="{78A54B01-C6D2-416C-9119-6A40B88BCF17}" Directory_="miNZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_49" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_5" ComponentId="{92D5734D-0130-42C0-9ABE-6BB8C53CE12C}" Directory_="bgBG_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_5" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_50" ComponentId="{F66DD336-1B69-4D40-9A33-4D915B7B5C1F}" Directory_="mkMK_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_50" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_51" ComponentId="{8DE0D430-BABD-4F8C-8333-EBD0A17BC6A9}" Directory_="mlIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_51" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_52" ComponentId="{374D54D2-C585-4FC0-AACB-E0F995F60A0B}" Directory_="mrIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_52" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_53" ComponentId="{28532749-54D7-4889-BCF9-1C2DBB33B684}" Directory_="msMY_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_53" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_54" ComponentId="{0A14B095-148E-429E-875E-D622E1A1943A}" Directory_="mtMT_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_54" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_55" ComponentId="{7B12EEBA-0E32-40F8-AFEB-1747A4BD702F}" Directory_="nbNO_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_55" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_56" ComponentId="{B8C362D6-B5E9-4D34-A86E-0EC39B6827A7}" Directory_="neNP_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_56" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_57" ComponentId="{D1FAC26B-5FC1-4C83-BE03-E12D75600E6C}" Directory_="nlNL_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_57" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_58" ComponentId="{3AECFE54-CB78-4608-B96D-5D37A9CB46E3}" Directory_="nnNO_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_58" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_59" ComponentId="{8A1DDE0D-397F-452F-B352-073EE1A1D50D}" Directory_="orIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_59" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_6" ComponentId="{8C2ADF24-FC61-4A57-A0E7-F3263F80155B}" Directory_="bnIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_6" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_60" ComponentId="{5105911A-B4F2-429B-BC7D-70D81181D042}" Directory_="paIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_60" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_61" ComponentId="{C61A987D-FF08-488B-B949-F5F26CC0CD0D}" Directory_="plPL_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_61" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_62" ComponentId="{6D858306-ABBC-4A60-AA3F-7C9E42239216}" Directory_="ptBR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_62" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_63" ComponentId="{6B87B8B3-3563-4122-B284-7A0702D0558F}" Directory_="ptPT_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_63" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_64" ComponentId="{F0095D69-5CFD-4B5C-80BF-E2A87468F35E}" Directory_="quzPE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_64" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_65" ComponentId="{98C8BB58-B16D-4AA5-82EE-0B1CC684ACC8}" Directory_="roRO_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_65" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_66" ComponentId="{2F192872-674A-4AA9-BBDD-67E3EE02DE11}" Directory_="ruRU_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_66" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_67" ComponentId="{FC584590-739D-42AE-8329-01F1E0C68529}" Directory_="skSK_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_67" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_68" ComponentId="{876A824F-3B52-43E2-B0A1-701A743FF129}" Directory_="slSI_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_68" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_69" ComponentId="{44C46D08-CDBC-40F6-B078-029ACD2C1CF2}" Directory_="sqAL_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_69" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_7" ComponentId="{8F27B2D6-09F8-4B5B-B696-435ED4A54E6D}" Directory_="bsLatnBA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_7" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_70" ComponentId="{120F5CFF-E29B-492B-A68F-6BC8DFD69AAC}" Directory_="srCyrlBA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_70" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_71" ComponentId="{B25D1E02-35D1-40E2-8D69-B1281096D525}" Directory_="srCyrlRS_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_71" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_72" ComponentId="{3C8F0194-B96D-46B8-9110-D2A27F0E861B}" Directory_="srLatnRS_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_72" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_73" ComponentId="{2FD480CF-198E-45AD-8F7E-6C59CA08C7C9}" Directory_="svSE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_73" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_74" ComponentId="{73E00108-E3A3-43AE-B408-0FDA2924592C}" Directory_="taIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_74" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_75" ComponentId="{5CC0C888-BEF6-4926-9AE3-DFF580310881}" Directory_="teIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_75" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_76" ComponentId="{C50542A4-3081-4A21-803D-490E656A9648}" Directory_="thTH_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_76" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_77" ComponentId="{87060285-DA3A-4A53-9FC3-630B0A3459B1}" Directory_="trTR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_77" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_78" ComponentId="{6106FF9D-4D68-43BE-A402-24BDEF6A6343}" Directory_="ttRU_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_78" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_79" ComponentId="{5D070C86-2A2E-4AF7-954A-D866B9AB3927}" Directory_="ugCN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_79" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_8" ComponentId="{B30F8424-7B55-47A6-BE7C-C1731BDDB8AD}" Directory_="caES_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_8" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_80" ComponentId="{045E9FD1-C82E-416D-ABDC-C6FF7C666BF7}" Directory_="ukUA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_80" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_81" ComponentId="{564F872E-A5AA-4982-BB49-0CE080B30903}" Directory_="urPK_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_81" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_82" ComponentId="{679448FA-68E7-4369-A8C6-4FFD98408163}" Directory_="uzLatnUZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_82" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_83" ComponentId="{2514E243-D6FD-45D8-AF5F-2078B1A1922B}" Directory_="viVN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_83" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_84" ComponentId="{F08A455A-26F2-4C19-BA78-D08BCA1746E8}" Directory_="zhCN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_84" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_85" ComponentId="{13104383-5064-4D24-8ECE-26D33157F09D}" Directory_="zhTW_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_85" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.dll.mui_9" ComponentId="{1E746C69-9D01-431F-88DF-3B931591C331}" Directory_="caEsVALENCIA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_9" Type="0"/>
-    <ROW Component="Microsoft.ui.xaml.resources.19h1.dll" ComponentId="{1F047152-F565-4F10-8C21-1364FC763F49}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.ui.xaml.resources.19h1.dll"/>
-    <ROW Component="Microsoft.ui.xaml.resources.common.dll" ComponentId="{0C228633-BB1E-44DF-A87C-01E34A674F85}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.ui.xaml.resources.common.dll"/>
-    <ROW Component="ProductInformation" ComponentId="{DFA06820-B988-4449-951F-AFD6450528E1}" Directory_="APPDIR" Attributes="4" KeyPath="Version"/>
-    <ROW Component="PushNotificationsLongRunningTask.ProxyStub.dll" ComponentId="{36D941CC-0802-4BBF-A58C-0E418D86CB8A}" Directory_="APPDIR" Attributes="256" KeyPath="PushNotificationsLongRunningTask.ProxyStub.dll"/>
-    <ROW Component="RestartAgent.exe" ComponentId="{C0214248-82C5-436A-9C7C-C04AA007427A}" Directory_="APPDIR" Attributes="256" KeyPath="RestartAgent.exe"/>
-    <ROW Component="SHORTCUTDIR" ComponentId="{824C1543-8A6D-40E0-973B-2EE6C2C2E985}" Directory_="SHORTCUTDIR" Attributes="0"/>
-    <ROW Component="System.Configuration.ConfigurationManager.dll" ComponentId="{91F38B40-1F25-4045-A485-9A524D5D95E5}" Directory_="APPDIR" Attributes="0" KeyPath="System.Configuration.ConfigurationManager.dll"/>
-    <ROW Component="System.Diagnostics.EventLog.Messages.dll" ComponentId="{66934773-254C-43B8-8CF8-5710D38987A0}" Directory_="net9.0_2_Dir" Attributes="0" KeyPath="System.Diagnostics.EventLog.Messages.dll"/>
-    <ROW Component="System.Diagnostics.EventLog.dll" ComponentId="{5D63D791-237C-4737-B3B6-9E881C1DD99C}" Directory_="net9.0_2_Dir" Attributes="0" KeyPath="System.Diagnostics.EventLog.dll"/>
-    <ROW Component="System.Diagnostics.EventLog.dll_1" ComponentId="{64001C7A-CECC-4A0F-A0A8-8120D290CF93}" Directory_="APPDIR" Attributes="0" KeyPath="System.Diagnostics.EventLog.dll_1"/>
-    <ROW Component="System.DirectoryServices.AccountMa_1_nagement.dll" ComponentId="{E39DC946-5668-404E-B1FB-773471BB6699}" Directory_="APPDIR" Attributes="0" KeyPath="System.DirectoryServices.AccountMa_1_nagement.dll"/>
-    <ROW Component="System.DirectoryServices.AccountManagement.dll" ComponentId="{2C9B78F1-E1CB-47E4-9DFB-0BDD908413B5}" Directory_="net9.0_2_Dir" Attributes="0" KeyPath="System.DirectoryServices.AccountManagement.dll"/>
-    <ROW Component="System.DirectoryServices.Protocols.dll" ComponentId="{D2154880-8543-4E3D-A47F-FC7B150D3C10}" Directory_="net9.0_Dir" Attributes="0" KeyPath="System.DirectoryServices.Protocols.dll"/>
-    <ROW Component="System.DirectoryServices.Protocols.dll_1" ComponentId="{BF79E710-7DED-4FFF-9841-46B6A68FD045}" Directory_="net9.0_1_Dir" Attributes="0" KeyPath="System.DirectoryServices.Protocols.dll_1"/>
-    <ROW Component="System.DirectoryServices.Protocols_10_.dll" ComponentId="{89CAC991-2CD7-4864-B008-EA069BB5B23E}" Directory_="net9.0_2_Dir" Attributes="0" KeyPath="System.DirectoryServices.Protocols.dll_2"/>
-    <ROW Component="System.DirectoryServices.Protocols_11_.dll" ComponentId="{0BCEBB6F-DAD1-4A5C-A79B-291C9DBDF1C9}" Directory_="APPDIR" Attributes="0" KeyPath="System.DirectoryServices.Protocols.dll_3"/>
-    <ROW Component="System.DirectoryServices.dll" ComponentId="{A12C25D4-80E8-4F49-905F-0DC6565911B7}" Directory_="net9.0_2_Dir" Attributes="0" KeyPath="System.DirectoryServices.dll"/>
-    <ROW Component="System.DirectoryServices.dll_1" ComponentId="{895F2BB8-FFE8-4466-BCFB-68498D978E89}" Directory_="APPDIR" Attributes="0" KeyPath="System.DirectoryServices.dll_1"/>
-    <ROW Component="System.Security.Cryptography.ProtectedData.dll" ComponentId="{300CDDD3-7F6F-4D2E-93ED-A7C3279BFE70}" Directory_="APPDIR" Attributes="0" KeyPath="System.Security.Cryptography.ProtectedData.dll"/>
-    <ROW Component="WebView2Loader.dll" ComponentId="{A8311558-FF65-4037-91E8-FA7F4BA8D220}" Directory_="native_Dir" Attributes="256" KeyPath="WebView2Loader.dll"/>
-    <ROW Component="WebView2Loader.dll_1" ComponentId="{B7D276FE-975B-423A-B40C-2328EF91081C}" Directory_="native_2_Dir" Attributes="256" KeyPath="WebView2Loader.dll_1"/>
-    <ROW Component="WebView2Loader.dll_2" ComponentId="{93A1B6CC-B4BE-4B70-B404-E0FE77488F77}" Directory_="native_3_Dir" Attributes="0" KeyPath="WebView2Loader.dll_2"/>
-    <ROW Component="WinRT.Runtime.dll" ComponentId="{C8095334-9E62-4981-81F5-5807D3B6D279}" Directory_="APPDIR" Attributes="0" KeyPath="WinRT.Runtime.dll"/>
-    <ROW Component="WinUIEdit.dll" ComponentId="{15AE462A-3CCE-46D8-A81D-6772F65EDFBC}" Directory_="APPDIR" Attributes="256" KeyPath="WinUIEdit.dll"/>
-    <ROW Component="WinUIEx.dll" ComponentId="{2BC1DF00-703B-4F9B-8AF0-056894469726}" Directory_="APPDIR" Attributes="0" KeyPath="WinUIEx.dll"/>
-    <ROW Component="WindowsAppRuntime.DeploymentExtensions.OneCore.dll" ComponentId="{5B5F220F-8047-45A9-B011-D2E5536478E3}" Directory_="APPDIR" Attributes="256" KeyPath="WindowsAppRuntime.DeploymentExtensions.OneCore.dll"/>
-    <ROW Component="WindowsAppSdk.AppxDeploymentExtens_1_ions.Desktop.dll" ComponentId="{90494760-560E-4EE2-A149-EF2C77FD1ECA}" Directory_="APPDIR" Attributes="256" KeyPath="WindowsAppSdk.AppxDeploymentExtensions.Desktop.dll"/>
-    <ROW Component="WindowsAppSdk.AppxDeploymentExtensions.DesktopEventLogInstrumentation.dl" ComponentId="{01338A09-68AA-4484-ACC8-3FC767AA4D4E}" Directory_="APPDIR" Attributes="256" KeyPath="WindowsAppSdk.AppxDeploymentExtensions.DesktopEventLogInstrumentation"/>
-    <ROW Component="WindowsDisplayAPI.dll" ComponentId="{69FCB04E-9527-43D0-AD57-F14FB92C2316}" Directory_="APPDIR" Attributes="0" KeyPath="WindowsDisplayAPI.dll"/>
-    <ROW Component="dcompi.dll" ComponentId="{60CF4F99-F3E9-4082-BEEA-302896035A56}" Directory_="APPDIR" Attributes="256" KeyPath="dcompi.dll"/>
-    <ROW Component="dwmcorei.dll" ComponentId="{3FF451F9-4B7D-4E6C-9E06-78275BD4367F}" Directory_="APPDIR" Attributes="256" KeyPath="dwmcorei.dll"/>
-    <ROW Component="ffmpeg.exe" ComponentId="{2B482EF1-64FF-4C2F-B664-056AA0F9EF3D}" Directory_="FFMPEG_Dir" Attributes="256" KeyPath="ffmpeg.exe"/>
-    <ROW Component="gifski.dll" ComponentId="{3A57728F-DAE7-404A-AD35-C292769BF66C}" Directory_="gifski_Dir" Attributes="256" KeyPath="gifski.dll"/>
-    <ROW Component="map.html" ComponentId="{71C73C13-7050-4E99-BD7D-591EAF0670F5}" Directory_="Assets_1_Dir" Attributes="0" KeyPath="map.html" Type="0"/>
-    <ROW Component="marshal.dll" ComponentId="{0419C0CA-D27F-44FA-A5BC-2A7C30768D4C}" Directory_="APPDIR" Attributes="256" KeyPath="marshal.dll"/>
-    <ROW Component="wuceffectsi.dll" ComponentId="{B3A4AB03-D4B6-448D-B850-43F8D01AE9B8}" Directory_="APPDIR" Attributes="256" KeyPath="wuceffectsi.dll"/>
+    <ROW Component="AI_IA_ENABLE" ComponentId="{DDFA8C50-ADD2-45A0-9747-25BB39A38F82}" Directory_="APPDIR" Attributes="4" KeyPath="AI_IA_ENABLE" Options="1"/>
+    <ROW Component="APPDIR" ComponentId="{9A510946-CD52-4703-9030-410EC5E47B53}" Directory_="APPDIR" Attributes="0"/>
+    <ROW Component="App.xbf" ComponentId="{187D676C-D0C8-45B4-B08B-286C1767AB1E}" Directory_="APPDIR" Attributes="0" KeyPath="App.xbf" Type="0"/>
+    <ROW Component="CommunityToolkit.Common.dll" ComponentId="{10B94199-ACD8-4271-ABC0-F822A30A48D7}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.Common.dll"/>
+    <ROW Component="CommunityToolkit.Mvvm.dll" ComponentId="{28EE97B2-4AB1-42B4-8A3D-72C724ADEA90}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll"/>
+    <ROW Component="CommunityToolkit.WinUI.Controls.RangeSelector.dll" ComponentId="{E73F2329-A2C5-431A-A14A-DB46AA8EC4A8}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.WinUI.Controls.RangeSelector.dll"/>
+    <ROW Component="CommunityToolkit.WinUI.Extensions.dll" ComponentId="{2B65B2E8-0EBA-4B9E-9CDE-30CB8BDD3241}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.WinUI.Extensions.dll"/>
+    <ROW Component="CoreMessagingXP.dll" ComponentId="{DB5740C3-CD27-4E9B-97A2-47A8BC5B7A62}" Directory_="APPDIR" Attributes="256" KeyPath="CoreMessagingXP.dll"/>
+    <ROW Component="DWriteCore.dll" ComponentId="{DDE84A0A-B034-4563-91EC-9C241D4761A6}" Directory_="APPDIR" Attributes="256" KeyPath="DWriteCore.dll"/>
+    <ROW Component="DwmSceneI.dll" ComponentId="{3B7486EB-85D0-458A-9CC1-11557FC2CEC0}" Directory_="APPDIR" Attributes="256" KeyPath="DwmSceneI.dll"/>
+    <ROW Component="FFMpegCore.dll" ComponentId="{DD86D046-FC5A-41BF-9B26-509366A6DD1F}" Directory_="APPDIR" Attributes="0" KeyPath="FFMpegCore.dll"/>
+    <ROW Component="FontSizes.xbf" ComponentId="{2323FA6A-58FD-4BF7-A48C-8E9675B605CC}" Directory_="Styles_Dir" Attributes="0" KeyPath="FontSizes.xbf" Type="0"/>
+    <ROW Component="Gifski.Net.dll" ComponentId="{E02A6723-D892-4CD4-BF71-04121138A322}" Directory_="APPDIR" Attributes="0" KeyPath="Gifski.Net.dll"/>
+    <ROW Component="Instances.dll" ComponentId="{C5C6A619-2453-4E4A-B2AC-A0E4403AB565}" Directory_="APPDIR" Attributes="0" KeyPath="Instances.dll"/>
+    <ROW Component="LockScreenLogo.scale200.png" ComponentId="{37546A25-C9C3-4A91-AF7A-3785EAFB0A67}" Directory_="Assets_Dir" Attributes="0" KeyPath="LockScreenLogo.scale200.png" Type="0"/>
+    <ROW Component="LockscreenGif.dll" ComponentId="{AA6F747C-E4F0-40E1-913A-888137B9B080}" Directory_="APPDIR" Attributes="256" KeyPath="LockscreenGif.dll"/>
+    <ROW Component="LockscreenGif.exe" ComponentId="{FA037A32-CF15-41DE-B7F2-7D9FD1412690}" Directory_="APPDIR" Attributes="256" KeyPath="LockscreenGif.exe"/>
+    <ROW Component="Logger.dll" ComponentId="{B0E3596D-FA34-4F2D-A72D-791ECD65F0D5}" Directory_="APPDIR" Attributes="0" KeyPath="Logger.dll"/>
+    <ROW Component="MRM.dll" ComponentId="{6C1A052C-2BCA-4C57-A4B9-EC5974B0E22D}" Directory_="APPDIR" Attributes="256" KeyPath="MRM.dll"/>
+    <ROW Component="MainPage.xbf" ComponentId="{4CA95071-11AE-47A7-8BD9-0FFB325DCE8B}" Directory_="Views_Dir" Attributes="0" KeyPath="MainPage.xbf" Type="0"/>
+    <ROW Component="Microsoft.DirectManipulation.dll" ComponentId="{88C88886-F454-47EE-8CD3-497CA0CD94EC}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.DirectManipulation.dll"/>
+    <ROW Component="Microsoft.Extensions.Configuration.Abstractions.dll" ComponentId="{5BA39E96-4DDA-461E-AA87-37F648C56589}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.Abstractions.dll"/>
+    <ROW Component="Microsoft.Extensions.Configuration.Binder.dll" ComponentId="{5420FEC5-1FCE-4E29-BA3D-63A72AB084D6}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.Binder.dll"/>
+    <ROW Component="Microsoft.Extensions.Configuration.CommandLine.dll" ComponentId="{5D52325A-F6BE-467E-9B1F-B00F4CE59DA8}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.CommandLine.dll"/>
+    <ROW Component="Microsoft.Extensions.Configuration.EnvironmentVariables.dll" ComponentId="{869712EC-5001-4816-9BFD-1A11CCC19367}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.EnvironmentVariables.dll"/>
+    <ROW Component="Microsoft.Extensions.Configuration.FileExtensions.dll" ComponentId="{D2B1402D-A233-47CA-A019-B5DF75FBD38A}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.FileExtensions.dll"/>
+    <ROW Component="Microsoft.Extensions.Configuration.Json.dll" ComponentId="{66B9AAC8-41C7-4570-BB8F-B1EF8BDAC892}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.Json.dll"/>
+    <ROW Component="Microsoft.Extensions.Configuration.UserSecrets.dll" ComponentId="{7EBC524B-6C95-44CF-8AE7-5686B8C10ED4}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.UserSecrets.dll"/>
+    <ROW Component="Microsoft.Extensions.Configuration.dll" ComponentId="{62DAA073-651F-4F7F-A576-47B4A345F505}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Configuration.dll"/>
+    <ROW Component="Microsoft.Extensions.DependencyInj_1_ection.dll" ComponentId="{3F95F62D-1254-4A99-A3CE-50A7306BE9B6}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.DependencyInjection.dll"/>
+    <ROW Component="Microsoft.Extensions.DependencyInjection.Abstractions.dll" ComponentId="{12DCDBCD-A2FC-4B32-9638-546F21148086}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.DependencyInjection.Abstractions.dll"/>
+    <ROW Component="Microsoft.Extensions.Diagnostics.Abstractions.dll" ComponentId="{9CC5201C-ED48-4FEA-BF42-588208FBE89D}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Diagnostics.Abstractions.dll"/>
+    <ROW Component="Microsoft.Extensions.Diagnostics.dll" ComponentId="{962976A0-A924-4651-8276-561A0AACEE80}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Diagnostics.dll"/>
+    <ROW Component="Microsoft.Extensions.FileProviders.Abstractions.dll" ComponentId="{4726255A-0859-46B3-9ACD-912EAF6336E3}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.FileProviders.Abstractions.dll"/>
+    <ROW Component="Microsoft.Extensions.FileProviders.Physical.dll" ComponentId="{56ECE41B-D6E2-441D-A01A-352F7F0F31E5}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.FileProviders.Physical.dll"/>
+    <ROW Component="Microsoft.Extensions.FileSystemGlobbing.dll" ComponentId="{08EDB3BD-2CD5-4B2D-B452-F63935B37C51}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.FileSystemGlobbing.dll"/>
+    <ROW Component="Microsoft.Extensions.Hosting.Abstractions.dll" ComponentId="{7D80CAF5-C2A7-44FC-8D71-EE545FA25B3A}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Hosting.Abstractions.dll"/>
+    <ROW Component="Microsoft.Extensions.Hosting.dll" ComponentId="{E2EE67AC-F2F8-41AE-AB7F-F9E7E53BC829}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Hosting.dll"/>
+    <ROW Component="Microsoft.Extensions.Logging.Abstractions.dll" ComponentId="{DC575CF7-A0AB-4F1B-A77E-4295194F8E49}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.Abstractions.dll"/>
+    <ROW Component="Microsoft.Extensions.Logging.Configuration.dll" ComponentId="{681019B7-5B29-465A-A3E8-DAF4C4DB1D27}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.Configuration.dll"/>
+    <ROW Component="Microsoft.Extensions.Logging.Console.dll" ComponentId="{AA4292F2-F25F-4BD8-91D5-129E588F4BCE}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.Console.dll"/>
+    <ROW Component="Microsoft.Extensions.Logging.Debug.dll" ComponentId="{C0B8F831-5FEA-45ED-A460-2A443994B622}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.Debug.dll"/>
+    <ROW Component="Microsoft.Extensions.Logging.EventLog.dll" ComponentId="{6490741F-1E41-4195-8232-4AA5501CEF3C}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.EventLog.dll"/>
+    <ROW Component="Microsoft.Extensions.Logging.EventSource.dll" ComponentId="{1B07131C-D89A-4C10-944D-CCFC9DD94783}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.EventSource.dll"/>
+    <ROW Component="Microsoft.Extensions.Logging.dll" ComponentId="{558AA703-0862-4E96-B1F5-598CACFA3726}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Logging.dll"/>
+    <ROW Component="Microsoft.Extensions.Options.ConfigurationExtensions.dll" ComponentId="{4A43AFBA-E9DF-43C2-B90E-FF17BB00C84C}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Options.ConfigurationExtensions.dll"/>
+    <ROW Component="Microsoft.Extensions.Options.dll" ComponentId="{BC300615-6D5B-4F3B-A93F-634BAE65B528}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Options.dll"/>
+    <ROW Component="Microsoft.Extensions.Primitives.dll" ComponentId="{4BCB591E-93FA-4F7B-A778-64C8639AB359}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Extensions.Primitives.dll"/>
+    <ROW Component="Microsoft.Graphics.Display.dll" ComponentId="{902FBAFB-6C73-4308-A420-B27D39586BDF}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Graphics.Display.dll"/>
+    <ROW Component="Microsoft.InputStateManager.dll" ComponentId="{100D7CA8-6820-4795-8B35-F5BE327DF4F1}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.InputStateManager.dll"/>
+    <ROW Component="Microsoft.InteractiveExperiences.Projection.dll" ComponentId="{82586D8D-B42B-4856-A3C3-45D3CE914874}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.InteractiveExperiences.Projection.dll"/>
+    <ROW Component="Microsoft.Internal.FrameworkUdk.dll" ComponentId="{68D9BC00-BD90-4080-8F4A-5DFEFC9C3C0E}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Internal.FrameworkUdk.dll"/>
+    <ROW Component="Microsoft.Security.Authentication.OAuth.Projection.dll" ComponentId="{8594FCDA-6AB9-4EAF-8A97-D64C24AFEDC1}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Security.Authentication.OAuth.Projection.dll"/>
+    <ROW Component="Microsoft.UI.Composition.OSSupport.dll" ComponentId="{D22B527D-D1A1-444B-9E8D-732A4C9830C3}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Composition.OSSupport.dll"/>
+    <ROW Component="Microsoft.UI.Input.dll" ComponentId="{ACF7913E-876F-4EA9-9C17-0E4DCC671B19}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Input.dll"/>
+    <ROW Component="Microsoft.UI.Windowing.Core.dll" ComponentId="{D3EB35A6-9B00-401A-A718-F2A46A75FA8C}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Windowing.Core.dll"/>
+    <ROW Component="Microsoft.UI.Windowing.dll" ComponentId="{E65B30C5-9A3A-472C-97F4-E8A5112BEBF5}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Windowing.dll"/>
+    <ROW Component="Microsoft.UI.Xaml.Controls.dll" ComponentId="{2FCADA2D-980E-4751-92B4-F10A0F4771B0}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Xaml.Controls.dll"/>
+    <ROW Component="Microsoft.UI.Xaml.Internal.dll" ComponentId="{D32E6682-B470-48AA-A012-34B4E0146EDC}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Xaml.Internal.dll"/>
+    <ROW Component="Microsoft.UI.Xaml.Phone.dll" ComponentId="{6AB25608-6BB5-4748-87C5-7276D6D38168}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.Xaml.Phone.dll"/>
+    <ROW Component="Microsoft.UI.dll" ComponentId="{FD71FBEB-3461-494E-84E5-305B0F4769DE}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.UI.dll"/>
+    <ROW Component="Microsoft.Web.WebView2.Core.Projection.dll" ComponentId="{6914A45F-36D2-49E0-8BB7-DEC5253D9619}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Web.WebView2.Core.Projection.dll"/>
+    <ROW Component="Microsoft.Web.WebView2.Core.dll" ComponentId="{2C929053-AB2C-4D41-90EC-761F09C993F5}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Web.WebView2.Core.dll"/>
+    <ROW Component="Microsoft.WinUI.dll" ComponentId="{33443FCC-FD5A-4E75-8348-00CA7D4591F1}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.WinUI.dll"/>
+    <ROW Component="Microsoft.Windows.AppLifecycle.Projection.dll" ComponentId="{DDFE8816-C4BF-47B5-B1B5-476988CD71E5}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.AppLifecycle.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.AppNotifications.Builder.Projection.dll" ComponentId="{9FADB584-BEDE-4FF7-AC88-5513A7A63912}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.AppNotifications.Builder.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.AppNotifications.Projection.dll" ComponentId="{98A31611-E0DC-4D0B-A5D0-42750F5AD333}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.AppNotifications.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.ApplicationModel.Background.Projection.dll" ComponentId="{E090B107-7645-4844-BEB2-3F69521A402E}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel.Background.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" ComponentId="{8A423F42-23CB-43C5-9C9E-4654641D558D}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.ApplicationModel.Resources.dll" ComponentId="{2C5B7D2E-2CAC-4A21-AD4E-1467EC95A708}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Windows.ApplicationModel.Resources.dll"/>
+    <ROW Component="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" ComponentId="{8FF67AEF-3F64-47E3-8452-83ADA362968E}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.ApplicationModel_1_.Background.UniversalBGTask.dll" ComponentId="{4534FCDD-DFCA-41AF-BD31-EDB2683B6A1B}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll"/>
+    <ROW Component="Microsoft.Windows.ApplicationModel_1_.Resources.Projection.dll" ComponentId="{D21975B3-7C08-4A90-95DF-8A98225268BA}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.ApplicationModel.Resources.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.BadgeNotifications.Projection.dll" ComponentId="{894CC650-6F41-44C1-9497-B85B89C17C91}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.BadgeNotifications.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.Management.Deployment.Projection.dll" ComponentId="{ABCD6F78-1DC0-4C30-88AA-CE30781A3E6D}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Management.Deployment.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.Media.Capture.Projection.dll" ComponentId="{C123F01F-FF48-4319-98C2-3DAC15311B8E}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Media.Capture.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.PushNotifications.Projection.dll" ComponentId="{D2004D48-B5D5-4BF1-870E-AC2E65345D24}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.PushNotifications.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.SDK.NET.dll" ComponentId="{D32CC23E-EC5F-4781-B96A-4789D7920D70}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.SDK.NET.dll"/>
+    <ROW Component="Microsoft.Windows.Security.AccessControl.Projection.dll" ComponentId="{AF71735E-F5E8-4262-B91F-7A8ADD23B993}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Security.AccessControl.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.Storage.Projection.dll" ComponentId="{5EF683A6-A219-46F9-9060-E2F7A2EC99B3}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Storage.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.System.Power.Projection.dll" ComponentId="{FCB71260-CEF7-45A2-878D-287B7B17ECB0}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.System.Power.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.System.Projection.dll" ComponentId="{AFBFBBF5-DA00-4D2C-992A-E52F5E5A14FB}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.System.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.Widgets.Projection.dll" ComponentId="{CE9F99EC-A176-4C88-B4BC-8AC21103F0A4}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Windows.Widgets.Projection.dll"/>
+    <ROW Component="Microsoft.Windows.Widgets.dll" ComponentId="{D6D290E7-CA60-459D-A871-DA660F21F0AD}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.Windows.Widgets.dll"/>
+    <ROW Component="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" ComponentId="{41740339-BA1A-4C3E-BDC5-2302442F7E0C}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll"/>
+    <ROW Component="Microsoft.WindowsAppRuntime.Bootstrap.dll" ComponentId="{964AEE6E-AB18-4C62-8BCA-AFCB694BCA0E}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.WindowsAppRuntime.Bootstrap.dll"/>
+    <ROW Component="Microsoft.WindowsAppRuntime.Insights.Resource.dll" ComponentId="{51EED87F-02D0-4C44-86AE-C5943C7B07EE}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.WindowsAppRuntime.Insights.Resource.dll"/>
+    <ROW Component="Microsoft.WindowsAppRuntime.dll" ComponentId="{A3DD34F7-62E4-447B-850E-4370AD257A94}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.WindowsAppRuntime.dll"/>
+    <ROW Component="Microsoft.Xaml.Interactivity.dll" ComponentId="{3F2D2EF9-FC1B-490E-A03F-18C53E7F04C0}" Directory_="APPDIR" Attributes="0" KeyPath="Microsoft.Xaml.Interactivity.dll"/>
+    <ROW Component="Microsoft.ui.xaml.dll" ComponentId="{49800222-6BA2-4D77-84A6-5B3DEC07BF4B}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.ui.xaml.dll"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui" ComponentId="{AEEB7F65-E6E5-4839-A634-B22DB2FAA66E}" Directory_="afZA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_1" ComponentId="{643963C7-BCE2-40C2-A36B-234DBAA63E23}" Directory_="amET_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_1" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_10" ComponentId="{ECE394B1-ABBF-4D78-BEDB-ABBCE5696FEA}" Directory_="csCZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_10" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_11" ComponentId="{3E00D49F-84EA-4C74-BB8F-40E500882E34}" Directory_="cyGB_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_11" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_12" ComponentId="{E27AE074-F90A-4261-BB5B-9B1CEA2179CD}" Directory_="daDK_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_12" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_13" ComponentId="{C3C19434-9475-4392-8B85-0A302999A9D1}" Directory_="deDE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_13" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_14" ComponentId="{DCD1C67A-1444-4C68-A79B-B30D242D7000}" Directory_="elGR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_14" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_15" ComponentId="{F370A88C-8E7C-4189-B260-50B481991365}" Directory_="enGB_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_15" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_16" ComponentId="{FC9167FB-5632-4253-8762-DD04A31E780E}" Directory_="enus_Dir" Attributes="256" KeyPath="Microsoft.ui.xaml.dll.mui_16" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_17" ComponentId="{A7482D3E-5543-402F-BA01-2561319F58B4}" Directory_="esES_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_17" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_18" ComponentId="{16767735-CED3-4F65-BA00-B950C898E0B3}" Directory_="esMX_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_18" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_19" ComponentId="{64F282D0-6E35-40B2-B7DF-0FB0B46C1A83}" Directory_="etEE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_19" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_2" ComponentId="{2684BDF4-CE34-4081-821B-C01952929B3C}" Directory_="arSA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_2" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_20" ComponentId="{28EA856D-40E6-41C5-B924-9894692EB476}" Directory_="euES_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_20" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_21" ComponentId="{3D824C1D-2E9E-453B-8AB3-9E3354A7A9C8}" Directory_="faIR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_21" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_22" ComponentId="{1311D2EF-7C2F-4CEE-9EE2-4B1DF0C160D7}" Directory_="fiFI_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_22" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_23" ComponentId="{13CAEF83-A9C4-445A-B088-DE3E5646967F}" Directory_="filPH_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_23" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_24" ComponentId="{BDD2BA21-9158-40CC-83E5-A48A0F03B4D6}" Directory_="frCA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_24" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_25" ComponentId="{CE41948C-7345-4877-A048-2295558B4948}" Directory_="frFR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_25" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_26" ComponentId="{F5E23C4C-7DA1-48A0-83C4-B99519818516}" Directory_="gaIE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_26" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_27" ComponentId="{3F84F253-41E9-4449-9F2A-AA14277694C6}" Directory_="gdgb_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_27" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_28" ComponentId="{2189324D-F815-4893-8DE7-E2322AC4FDCC}" Directory_="glES_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_28" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_29" ComponentId="{B18E8FCD-62C6-46AF-8383-54BBA8B8D2D1}" Directory_="guIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_29" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_3" ComponentId="{5F98BCBD-3F48-4325-87E3-E3A0E3167727}" Directory_="asIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_3" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_30" ComponentId="{F20470B7-9355-4C2C-8062-3DBF5121BC4C}" Directory_="heIL_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_30" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_31" ComponentId="{1F44CD3F-B0FB-456C-A34B-1081D23BC4C5}" Directory_="hiIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_31" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_32" ComponentId="{149DE334-DD9E-4FF8-AAE8-A526F3B67ADE}" Directory_="hrHR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_32" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_33" ComponentId="{83CAACF5-A072-4259-B6CB-D4709AF056AD}" Directory_="huHU_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_33" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_34" ComponentId="{9284EA94-FE8E-472B-BBBD-6048EC329924}" Directory_="hyAM_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_34" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_35" ComponentId="{C4BF1AD4-F750-4868-BCA8-DD157D0044D3}" Directory_="idID_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_35" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_36" ComponentId="{FDDFEAAF-546C-4C97-9C24-95562140CAA2}" Directory_="isIS_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_36" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_37" ComponentId="{925DA06B-D141-430D-BB1E-CBBA7BBA5599}" Directory_="itIT_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_37" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_38" ComponentId="{955ACA1E-271E-4DA7-B2DB-351889BD382F}" Directory_="jaJP_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_38" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_39" ComponentId="{EB9172C6-81BC-4166-B0AF-DA652E7D0839}" Directory_="kaGE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_39" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_4" ComponentId="{4CC19934-4BFA-4981-8505-75AA74A4FF63}" Directory_="azLatnAZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_4" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_40" ComponentId="{21EF3B15-A7A1-46CE-B3F7-D0386FFAF590}" Directory_="kkKZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_40" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_41" ComponentId="{AE6EF03B-ECA7-420B-8A13-111DE8742E71}" Directory_="kmKH_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_41" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_42" ComponentId="{7AD382E3-9739-415E-8C20-21461BA8F0CA}" Directory_="knIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_42" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_43" ComponentId="{8F9E597E-E47A-42A3-B53F-45E52F22F983}" Directory_="koKR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_43" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_44" ComponentId="{2AF7656E-D7E7-490F-8C60-15E62A1BF079}" Directory_="kokIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_44" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_45" ComponentId="{437D6401-9B83-40DE-AA7C-A630C1DB22B4}" Directory_="lbLU_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_45" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_46" ComponentId="{F9CEFD18-B84B-434B-8AF9-26C4D6BD7FF9}" Directory_="loLA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_46" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_47" ComponentId="{2405CE23-F0AC-49FD-BC73-BA8085CA6279}" Directory_="ltLT_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_47" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_48" ComponentId="{9A519C01-0270-48FD-9DAE-CE99A4595B9C}" Directory_="lvLV_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_48" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_49" ComponentId="{F9FFF191-CD8F-4EC6-BF5F-3871C4A69FD6}" Directory_="miNZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_49" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_5" ComponentId="{7D716C90-3970-4798-8318-CEA76AAE9D70}" Directory_="bgBG_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_5" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_50" ComponentId="{08AAC6B5-44DD-4D7F-A533-B73248D0D5D5}" Directory_="mkMK_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_50" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_51" ComponentId="{4E5AF846-9A3F-4632-9F8C-869D012F5FAB}" Directory_="mlIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_51" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_52" ComponentId="{3B347BB3-D94D-4FBC-AE1B-067ACC471BAE}" Directory_="mrIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_52" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_53" ComponentId="{0F420D59-649E-49CF-B852-E71857872D56}" Directory_="msMY_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_53" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_54" ComponentId="{F26B5C1D-C984-4836-801E-928C2C92DA1D}" Directory_="mtMT_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_54" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_55" ComponentId="{90087685-30FA-4639-AA70-35CC862CCCA9}" Directory_="nbNO_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_55" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_56" ComponentId="{20FD4020-D376-41C6-A7BD-C42B66FAD8AB}" Directory_="neNP_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_56" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_57" ComponentId="{5F4C3F59-86BB-432B-9C50-2393FC8DC912}" Directory_="nlNL_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_57" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_58" ComponentId="{164DB4C1-13B2-4092-9375-0D0AB5F9989F}" Directory_="nnNO_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_58" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_59" ComponentId="{8936225F-1B5C-4F5F-80B5-B010AA564F44}" Directory_="orIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_59" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_6" ComponentId="{19077FED-62ED-4242-B0CD-E676D9C9ACC0}" Directory_="bnIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_6" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_60" ComponentId="{065AB2A3-E4DE-4CD9-9E54-DC322072F0B5}" Directory_="paIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_60" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_61" ComponentId="{CD18F92D-32B0-40E8-B393-68F61E8B0D6E}" Directory_="plPL_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_61" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_62" ComponentId="{DD622344-A814-4A32-80A4-07D755ADC780}" Directory_="ptBR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_62" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_63" ComponentId="{05C03D00-BD21-4BB7-BDBA-51C46850E00C}" Directory_="ptPT_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_63" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_64" ComponentId="{B2FC8ECD-7BD2-4C8A-A597-34B133B15DC8}" Directory_="quzPE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_64" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_65" ComponentId="{F96EB4F6-5DD8-4F75-BAE4-298F4555539D}" Directory_="roRO_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_65" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_66" ComponentId="{A8255E30-956D-464C-85D9-FC10FBE719BA}" Directory_="ruRU_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_66" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_67" ComponentId="{1EA9255A-2F4B-4C03-B0C8-0A8D6B03B37D}" Directory_="skSK_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_67" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_68" ComponentId="{495AADD4-9813-44AC-95F5-71F26DD9927D}" Directory_="slSI_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_68" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_69" ComponentId="{AC723425-5CBD-44D9-B2FC-76CB05BEF5BA}" Directory_="sqAL_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_69" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_7" ComponentId="{28F17448-CB96-4885-BBB0-ED36A0086239}" Directory_="bsLatnBA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_7" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_70" ComponentId="{1158045E-C946-4C72-94FF-22E5D0FB4D6E}" Directory_="srCyrlBA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_70" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_71" ComponentId="{E8CBF10C-180C-4A2A-99D3-ABB6913195FA}" Directory_="srCyrlRS_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_71" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_72" ComponentId="{C562BC9F-AEBD-4615-97E3-DAC9770ED52E}" Directory_="srLatnRS_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_72" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_73" ComponentId="{D4317ED7-C503-44D7-8CB9-E57073202E8F}" Directory_="svSE_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_73" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_74" ComponentId="{B3B4B5BA-4005-4D5A-BF19-B5392EC0093F}" Directory_="taIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_74" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_75" ComponentId="{36ECF71A-8469-46F0-A180-858CA0805125}" Directory_="teIN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_75" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_76" ComponentId="{445439E3-58E9-4DC9-8F78-7EE4D70F5F30}" Directory_="thTH_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_76" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_77" ComponentId="{8C82201C-1626-4C6D-94CA-0965A3AB2542}" Directory_="trTR_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_77" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_78" ComponentId="{731E4BAD-A7BE-44F9-A519-F65C10987E77}" Directory_="ttRU_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_78" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_79" ComponentId="{C1BBBEEA-8573-413D-B3BE-C7C8B50DB42F}" Directory_="ugCN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_79" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_8" ComponentId="{9F598615-8E7F-494B-B2BC-DFA2F981DD43}" Directory_="caES_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_8" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_80" ComponentId="{6BC482CD-F9FF-48C2-8F52-30D4227F38AB}" Directory_="ukUA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_80" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_81" ComponentId="{19A68878-CA64-491C-BC05-6081D26258D0}" Directory_="urPK_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_81" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_82" ComponentId="{3B2D4988-19A8-457B-8BE9-E99E79339E00}" Directory_="uzLatnUZ_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_82" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_83" ComponentId="{09D6B892-781C-4BD0-8266-024865BCE6C7}" Directory_="viVN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_83" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_84" ComponentId="{415895B2-975F-41C9-96FC-D4B0BC24EEAC}" Directory_="zhCN_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_84" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_85" ComponentId="{43B00E9A-54D5-4D21-B48F-8478FF1F47B3}" Directory_="zhTW_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_85" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.dll.mui_9" ComponentId="{74989BC8-F516-47B5-AD1B-1238A366D006}" Directory_="caEsVALENCIA_Dir" Attributes="0" KeyPath="Microsoft.ui.xaml.dll.mui_9" Type="0"/>
+    <ROW Component="Microsoft.ui.xaml.resources.19h1.dll" ComponentId="{74520026-EA1F-4A47-810C-85088BFA7A72}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.ui.xaml.resources.19h1.dll"/>
+    <ROW Component="Microsoft.ui.xaml.resources.common.dll" ComponentId="{5A71FA5B-C2E8-4725-A3CD-58552E9AF769}" Directory_="APPDIR" Attributes="256" KeyPath="Microsoft.ui.xaml.resources.common.dll"/>
+    <ROW Component="ProductInformation" ComponentId="{35BBE05E-CC0D-4834-BAA0-5666134A913D}" Directory_="APPDIR" Attributes="4" KeyPath="Version"/>
+    <ROW Component="PushNotificationsLongRunningTask.ProxyStub.dll" ComponentId="{9D86F515-2F7B-4FAE-94B2-B9D5FDF935E9}" Directory_="APPDIR" Attributes="256" KeyPath="PushNotificationsLongRunningTask.ProxyStub.dll"/>
+    <ROW Component="RestartAgent.exe" ComponentId="{2ACEC546-4025-4D5C-9DCD-EE7CA1BE8F3B}" Directory_="APPDIR" Attributes="256" KeyPath="RestartAgent.exe"/>
+    <ROW Component="SHORTCUTDIR" ComponentId="{56B21487-C378-4A88-9677-06970A9ED21E}" Directory_="SHORTCUTDIR" Attributes="0"/>
+    <ROW Component="System.Configuration.ConfigurationManager.dll" ComponentId="{E5F0BE50-FC82-4CA6-BE38-C2FA38D4B8DC}" Directory_="APPDIR" Attributes="0" KeyPath="System.Configuration.ConfigurationManager.dll"/>
+    <ROW Component="System.Diagnostics.EventLog.Messages.dll" ComponentId="{4DDF618A-7FF9-4AC8-A74E-5075BC4FDB82}" Directory_="APPDIR" Attributes="0" KeyPath="System.Diagnostics.EventLog.Messages.dll"/>
+    <ROW Component="System.Diagnostics.EventLog.dll" ComponentId="{E927A8CE-2AF4-40F1-95B7-4FD3F1BC3E69}" Directory_="APPDIR" Attributes="0" KeyPath="System.Diagnostics.EventLog.dll"/>
+    <ROW Component="System.DirectoryServices.AccountManagement.dll" ComponentId="{733F3554-38A8-4379-ADBA-7C9333B09A11}" Directory_="APPDIR" Attributes="0" KeyPath="System.DirectoryServices.AccountManagement.dll"/>
+    <ROW Component="System.DirectoryServices.Protocols.dll" ComponentId="{4D12AFDD-2240-4A52-9AFF-D6A45C0D12D0}" Directory_="APPDIR" Attributes="0" KeyPath="System.DirectoryServices.Protocols.dll"/>
+    <ROW Component="System.DirectoryServices.dll" ComponentId="{6545579C-B7FE-4C0A-BA1D-5F89C3D42E15}" Directory_="APPDIR" Attributes="0" KeyPath="System.DirectoryServices.dll"/>
+    <ROW Component="System.Security.Cryptography.ProtectedData.dll" ComponentId="{B26F761A-32F1-4039-9BBB-F76740739DAC}" Directory_="APPDIR" Attributes="0" KeyPath="System.Security.Cryptography.ProtectedData.dll"/>
+    <ROW Component="WebView2Loader.dll" ComponentId="{B4FFA72D-5B4A-47EA-B7E2-842FFEC7A30C}" Directory_="APPDIR" Attributes="256" KeyPath="WebView2Loader.dll"/>
+    <ROW Component="WinRT.Runtime.dll" ComponentId="{22E1E78E-BD22-413F-99F2-4D20D5E4B844}" Directory_="APPDIR" Attributes="0" KeyPath="WinRT.Runtime.dll"/>
+    <ROW Component="WinUIEdit.dll" ComponentId="{077C7087-EE08-431F-9E8D-EABAEC6C4C39}" Directory_="APPDIR" Attributes="256" KeyPath="WinUIEdit.dll"/>
+    <ROW Component="WinUIEx.dll" ComponentId="{A5DBE971-E8C4-45D1-ACA5-E94D21502260}" Directory_="APPDIR" Attributes="0" KeyPath="WinUIEx.dll"/>
+    <ROW Component="WindowsAppRuntime.DeploymentExtensions.OneCore.dll" ComponentId="{25E33653-E68A-4331-9C63-3BDBC443C2F3}" Directory_="APPDIR" Attributes="256" KeyPath="WindowsAppRuntime.DeploymentExtensions.OneCore.dll"/>
+    <ROW Component="WindowsAppSdk.AppxDeploymentExtens_1_ions.Desktop.dll" ComponentId="{32D321A8-169D-4E44-89BC-A05DD7A67265}" Directory_="APPDIR" Attributes="256" KeyPath="WindowsAppSdk.AppxDeploymentExtensions.Desktop.dll"/>
+    <ROW Component="WindowsAppSdk.AppxDeploymentExtensions.DesktopEventLogInstrumentation.dl" ComponentId="{57D83604-4447-4AC9-AC69-E98A5A5CFA74}" Directory_="APPDIR" Attributes="256" KeyPath="WindowsAppSdk.AppxDeploymentExtensions.DesktopEventLogInstrumentation"/>
+    <ROW Component="WindowsDisplayAPI.dll" ComponentId="{7C07F0FA-8271-4B8A-B2BF-AAE4E1A91CD5}" Directory_="APPDIR" Attributes="0" KeyPath="WindowsDisplayAPI.dll"/>
+    <ROW Component="dcompi.dll" ComponentId="{928FC25C-98A7-4AD6-A9CA-25022D8C49F9}" Directory_="APPDIR" Attributes="256" KeyPath="dcompi.dll"/>
+    <ROW Component="dwmcorei.dll" ComponentId="{B943AE32-4634-4AC1-A67D-42F1D627C557}" Directory_="APPDIR" Attributes="256" KeyPath="dwmcorei.dll"/>
+    <ROW Component="ffmpeg.exe" ComponentId="{1477CD08-16FF-4A3D-A464-E728B37705B3}" Directory_="FFMPEG_Dir" Attributes="256" KeyPath="ffmpeg.exe"/>
+    <ROW Component="gifski.dll" ComponentId="{1B56F556-61FB-41F0-92B9-5C179B6EF8DD}" Directory_="gifski_Dir" Attributes="256" KeyPath="gifski.dll"/>
+    <ROW Component="map.html" ComponentId="{B2ABB5D9-C725-4634-9E02-D8FE15901108}" Directory_="Assets_1_Dir" Attributes="0" KeyPath="map.html" Type="0"/>
+    <ROW Component="marshal.dll" ComponentId="{EB51EC83-A002-4246-9D18-0B160A88CC08}" Directory_="APPDIR" Attributes="256" KeyPath="marshal.dll"/>
+    <ROW Component="wuceffectsi.dll" ComponentId="{03BCCEB9-655F-4AFB-A431-5F2ABDA075D4}" Directory_="APPDIR" Attributes="256" KeyPath="wuceffectsi.dll"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
     <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0"/>
@@ -387,7 +355,7 @@
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_1" Component_="Microsoft.ui.xaml.dll.mui_1" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\am-ET\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="App.xbf" Component_="App.xbf" FileName="App.xbf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\App.xbf" SelfReg="false"/>
     <ROW File="appsettings.json" Component_="App.xbf" FileName="APPSET~1.JSO|appsettings.json" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\appsettings.json" SelfReg="false"/>
-    <ROW File="app_20260117.log" Component_="App.xbf" FileName="APP_20~1.LOG|app_2026-01-17.log" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\app_2026-01-17.log" SelfReg="false"/>
+    <ROW File="app_20250502.log" Component_="App.xbf" FileName="APP_20~1.LOG|app_2025-05-02.log" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\app_2025-05-02.log" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_2" Component_="Microsoft.ui.xaml.dll.mui_2" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ar-SA\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_2" Component_="Microsoft.ui.xaml.dll.mui_2" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ar-SA\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_3" Component_="Microsoft.ui.xaml.dll.mui_3" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\as-IN\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
@@ -497,6 +465,8 @@
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_44" Component_="Microsoft.ui.xaml.dll.mui_44" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\kok-IN\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_45" Component_="Microsoft.ui.xaml.dll.mui_45" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\lb-LU\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_45" Component_="Microsoft.ui.xaml.dll.mui_45" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\lb-LU\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
+    <ROW File="LICENSE.rtf" Component_="App.xbf" FileName="LICENSE.rtf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\LICENSE.rtf" SelfReg="false"/>
+    <ROW File="LICENSE.txt" Component_="App.xbf" FileName="LICENSE.txt" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\LICENSE.txt" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_46" Component_="Microsoft.ui.xaml.dll.mui_46" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\lo-LA\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_46" Component_="Microsoft.ui.xaml.dll.mui_46" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\lo-LA\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="LockscreenGif.deps.json" Component_="App.xbf" FileName="LOCKSC~1.JSO|LockscreenGif.deps.json" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\LockscreenGif.deps.json" SelfReg="false"/>
@@ -571,47 +541,49 @@
     <ROW File="Microsoft.Web.WebView2.Core.dll" Component_="Microsoft.Web.WebView2.Core.dll" FileName="MICRO~45.DLL|Microsoft.Web.WebView2.Core.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Web.WebView2.Core.dll" SelfReg="false"/>
     <ROW File="Microsoft.Web.WebView2.Core.Projection.dll" Component_="Microsoft.Web.WebView2.Core.Projection.dll" FileName="MICRO~46.DLL|Microsoft.Web.WebView2.Core.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Web.WebView2.Core.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.ApplicationModel.Background.Projection.dll" Component_="Microsoft.Windows.ApplicationModel.Background.Projection.dll" FileName="MICRO~47.DLL|Microsoft.Windows.ApplicationModel.Background.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Background.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" Component_="Microsoft.Windows.ApplicationModel_1_.Background.UniversalBGTask.dll" FileName="MICRO~48.DLL|Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd" Component_="App.xbf" FileName="MICROS~7.WIN|Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.winmd" SelfReg="false"/>
     <ROW File="Microsoft.Windows.ApplicationModel.Background.winmd" Component_="App.xbf" FileName="MICROS~8.WIN|Microsoft.Windows.ApplicationModel.Background.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Background.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" Component_="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" FileName="MICRO~48.DLL|Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" Component_="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" FileName="MICRO~49.DLL|Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.ApplicationModel.DynamicDependency.winmd" Component_="App.xbf" FileName="MICROS~9.WIN|Microsoft.Windows.ApplicationModel.DynamicDependency.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.DynamicDependency.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.ApplicationModel.Resources.dll" Component_="Microsoft.Windows.ApplicationModel.Resources.dll" FileName="MICRO~49.DLL|Microsoft.Windows.ApplicationModel.Resources.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Resources.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.ApplicationModel.Resources.Projection.dll" Component_="Microsoft.Windows.ApplicationModel_1_.Resources.Projection.dll" FileName="MICRO~50.DLL|Microsoft.Windows.ApplicationModel.Resources.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Resources.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.ApplicationModel.Resources.dll" Component_="Microsoft.Windows.ApplicationModel.Resources.dll" FileName="MICRO~50.DLL|Microsoft.Windows.ApplicationModel.Resources.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Resources.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.ApplicationModel.Resources.Projection.dll" Component_="Microsoft.Windows.ApplicationModel_1_.Resources.Projection.dll" FileName="MICRO~51.DLL|Microsoft.Windows.ApplicationModel.Resources.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Resources.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.ApplicationModel.Resources.winmd" Component_="App.xbf" FileName="MICRO~10.WIN|Microsoft.Windows.ApplicationModel.Resources.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.Resources.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" Component_="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" FileName="MICRO~51.DLL|Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" Component_="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" FileName="MICRO~52.DLL|Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd" Component_="App.xbf" FileName="MICRO~11.WIN|Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.ApplicationModel.WindowsAppRuntime.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.AppLifecycle.Projection.dll" Component_="Microsoft.Windows.AppLifecycle.Projection.dll" FileName="MICRO~52.DLL|Microsoft.Windows.AppLifecycle.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppLifecycle.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.AppLifecycle.Projection.dll" Component_="Microsoft.Windows.AppLifecycle.Projection.dll" FileName="MICRO~53.DLL|Microsoft.Windows.AppLifecycle.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppLifecycle.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.AppLifecycle.winmd" Component_="App.xbf" FileName="MICRO~12.WIN|Microsoft.Windows.AppLifecycle.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppLifecycle.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.AppNotifications.Builder.Projection.dll" Component_="Microsoft.Windows.AppNotifications.Builder.Projection.dll" FileName="MICRO~53.DLL|Microsoft.Windows.AppNotifications.Builder.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppNotifications.Builder.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.AppNotifications.Builder.Projection.dll" Component_="Microsoft.Windows.AppNotifications.Builder.Projection.dll" FileName="MICRO~54.DLL|Microsoft.Windows.AppNotifications.Builder.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppNotifications.Builder.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.AppNotifications.Builder.winmd" Component_="App.xbf" FileName="MICRO~13.WIN|Microsoft.Windows.AppNotifications.Builder.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppNotifications.Builder.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.AppNotifications.Projection.dll" Component_="Microsoft.Windows.AppNotifications.Projection.dll" FileName="MICRO~54.DLL|Microsoft.Windows.AppNotifications.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppNotifications.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.AppNotifications.Projection.dll" Component_="Microsoft.Windows.AppNotifications.Projection.dll" FileName="MICRO~55.DLL|Microsoft.Windows.AppNotifications.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppNotifications.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.AppNotifications.winmd" Component_="App.xbf" FileName="MICRO~14.WIN|Microsoft.Windows.AppNotifications.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.AppNotifications.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.BadgeNotifications.Projection.dll" Component_="Microsoft.Windows.BadgeNotifications.Projection.dll" FileName="MICRO~55.DLL|Microsoft.Windows.BadgeNotifications.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.BadgeNotifications.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.BadgeNotifications.Projection.dll" Component_="Microsoft.Windows.BadgeNotifications.Projection.dll" FileName="MICRO~56.DLL|Microsoft.Windows.BadgeNotifications.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.BadgeNotifications.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.BadgeNotifications.winmd" Component_="App.xbf" FileName="MICRO~15.WIN|Microsoft.Windows.BadgeNotifications.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.BadgeNotifications.winmd" SelfReg="false"/>
     <ROW File="Microsoft.Windows.Globalization.winmd" Component_="App.xbf" FileName="MICRO~16.WIN|Microsoft.Windows.Globalization.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Globalization.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.Management.Deployment.Projection.dll" Component_="Microsoft.Windows.Management.Deployment.Projection.dll" FileName="MICRO~56.DLL|Microsoft.Windows.Management.Deployment.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Management.Deployment.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.Management.Deployment.Projection.dll" Component_="Microsoft.Windows.Management.Deployment.Projection.dll" FileName="MICRO~57.DLL|Microsoft.Windows.Management.Deployment.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Management.Deployment.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.Management.Deployment.winmd" Component_="App.xbf" FileName="MICRO~17.WIN|Microsoft.Windows.Management.Deployment.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Management.Deployment.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.Media.Capture.Projection.dll" Component_="Microsoft.Windows.Media.Capture.Projection.dll" FileName="MICRO~57.DLL|Microsoft.Windows.Media.Capture.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Media.Capture.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.Media.Capture.Projection.dll" Component_="Microsoft.Windows.Media.Capture.Projection.dll" FileName="MICRO~58.DLL|Microsoft.Windows.Media.Capture.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Media.Capture.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.Media.Capture.winmd" Component_="App.xbf" FileName="MICRO~18.WIN|Microsoft.Windows.Media.Capture.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Media.Capture.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.PushNotifications.Projection.dll" Component_="Microsoft.Windows.PushNotifications.Projection.dll" FileName="MICRO~58.DLL|Microsoft.Windows.PushNotifications.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.PushNotifications.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.PushNotifications.Projection.dll" Component_="Microsoft.Windows.PushNotifications.Projection.dll" FileName="MICRO~59.DLL|Microsoft.Windows.PushNotifications.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.PushNotifications.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.PushNotifications.winmd" Component_="App.xbf" FileName="MICRO~19.WIN|Microsoft.Windows.PushNotifications.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.PushNotifications.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.SDK.NET.dll" Component_="Microsoft.Windows.SDK.NET.dll" FileName="MICRO~59.DLL|Microsoft.Windows.SDK.NET.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.SDK.NET.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.Security.AccessControl.Projection.dll" Component_="Microsoft.Windows.Security.AccessControl.Projection.dll" FileName="MICRO~60.DLL|Microsoft.Windows.Security.AccessControl.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Security.AccessControl.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.SDK.NET.dll" Component_="Microsoft.Windows.SDK.NET.dll" FileName="MICRO~60.DLL|Microsoft.Windows.SDK.NET.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.SDK.NET.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.Security.AccessControl.Projection.dll" Component_="Microsoft.Windows.Security.AccessControl.Projection.dll" FileName="MICRO~61.DLL|Microsoft.Windows.Security.AccessControl.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Security.AccessControl.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.Security.AccessControl.winmd" Component_="App.xbf" FileName="MICRO~20.WIN|Microsoft.Windows.Security.AccessControl.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Security.AccessControl.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.Storage.Projection.dll" Component_="Microsoft.Windows.Storage.Projection.dll" FileName="MICRO~61.DLL|Microsoft.Windows.Storage.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Storage.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.Storage.Projection.dll" Component_="Microsoft.Windows.Storage.Projection.dll" FileName="MICRO~62.DLL|Microsoft.Windows.Storage.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Storage.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.Storage.winmd" Component_="App.xbf" FileName="MICRO~21.WIN|Microsoft.Windows.Storage.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Storage.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.System.Power.Projection.dll" Component_="Microsoft.Windows.System.Power.Projection.dll" FileName="MICRO~62.DLL|Microsoft.Windows.System.Power.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.System.Power.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.System.Power.Projection.dll" Component_="Microsoft.Windows.System.Power.Projection.dll" FileName="MICRO~63.DLL|Microsoft.Windows.System.Power.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.System.Power.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.System.Power.winmd" Component_="App.xbf" FileName="MICRO~22.WIN|Microsoft.Windows.System.Power.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.System.Power.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.System.Projection.dll" Component_="Microsoft.Windows.System.Projection.dll" FileName="MICRO~63.DLL|Microsoft.Windows.System.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.System.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.System.Projection.dll" Component_="Microsoft.Windows.System.Projection.dll" FileName="MICRO~64.DLL|Microsoft.Windows.System.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.System.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.System.winmd" Component_="App.xbf" FileName="MICRO~23.WIN|Microsoft.Windows.System.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.System.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.Widgets.dll" Component_="Microsoft.Windows.Widgets.dll" FileName="MICRO~64.DLL|Microsoft.Windows.Widgets.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Widgets.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.Widgets.Projection.dll" Component_="Microsoft.Windows.Widgets.Projection.dll" FileName="MICRO~65.DLL|Microsoft.Windows.Widgets.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Widgets.Projection.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.Widgets.dll" Component_="Microsoft.Windows.Widgets.dll" FileName="MICRO~65.DLL|Microsoft.Windows.Widgets.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Widgets.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Windows.Widgets.Projection.dll" Component_="Microsoft.Windows.Widgets.Projection.dll" FileName="MICRO~66.DLL|Microsoft.Windows.Widgets.Projection.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Widgets.Projection.dll" SelfReg="false"/>
     <ROW File="Microsoft.Windows.Widgets.winmd" Component_="App.xbf" FileName="MICRO~24.WIN|Microsoft.Windows.Widgets.winmd" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Windows.Widgets.winmd" SelfReg="false"/>
-    <ROW File="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" Component_="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" FileName="MICRO~66.DLL|Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" SelfReg="false"/>
-    <ROW File="Microsoft.WindowsAppRuntime.dll" Component_="Microsoft.WindowsAppRuntime.dll" FileName="MICRO~67.DLL|Microsoft.WindowsAppRuntime.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WindowsAppRuntime.dll" SelfReg="false"/>
-    <ROW File="Microsoft.WindowsAppRuntime.Insights.Resource.dll" Component_="Microsoft.WindowsAppRuntime.Insights.Resource.dll" FileName="MICRO~68.DLL|Microsoft.WindowsAppRuntime.Insights.Resource.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WindowsAppRuntime.Insights.Resource.dll" SelfReg="false"/>
-    <ROW File="Microsoft.WinUI.dll" Component_="Microsoft.WinUI.dll" FileName="MICRO~69.DLL|Microsoft.WinUI.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WinUI.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Xaml.Interactivity.dll" Component_="Microsoft.Xaml.Interactivity.dll" FileName="MICRO~70.DLL|Microsoft.Xaml.Interactivity.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Xaml.Interactivity.dll" SelfReg="false"/>
+    <ROW File="Microsoft.WindowsAppRuntime.Bootstrap.dll" Component_="Microsoft.WindowsAppRuntime.Bootstrap.dll" FileName="MICRO~67.DLL|Microsoft.WindowsAppRuntime.Bootstrap.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WindowsAppRuntime.Bootstrap.dll" SelfReg="false"/>
+    <ROW File="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" Component_="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" FileName="MICRO~68.DLL|Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WindowsAppRuntime.Bootstrap.Net.dll" SelfReg="false"/>
+    <ROW File="Microsoft.WindowsAppRuntime.dll" Component_="Microsoft.WindowsAppRuntime.dll" FileName="MICRO~69.DLL|Microsoft.WindowsAppRuntime.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WindowsAppRuntime.dll" SelfReg="false"/>
+    <ROW File="Microsoft.WindowsAppRuntime.Insights.Resource.dll" Component_="Microsoft.WindowsAppRuntime.Insights.Resource.dll" FileName="MICRO~70.DLL|Microsoft.WindowsAppRuntime.Insights.Resource.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WindowsAppRuntime.Insights.Resource.dll" SelfReg="false"/>
+    <ROW File="Microsoft.WinUI.dll" Component_="Microsoft.WinUI.dll" FileName="MICRO~71.DLL|Microsoft.WinUI.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.WinUI.dll" SelfReg="false"/>
+    <ROW File="Microsoft.Xaml.Interactivity.dll" Component_="Microsoft.Xaml.Interactivity.dll" FileName="MICRO~72.DLL|Microsoft.Xaml.Interactivity.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Microsoft.Xaml.Interactivity.dll" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_50" Component_="Microsoft.ui.xaml.dll.mui_50" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\mk-MK\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_50" Component_="Microsoft.ui.xaml.dll.mui_50" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\mk-MK\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_51" Component_="Microsoft.ui.xaml.dll.mui_51" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ml-IN\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
@@ -650,24 +622,6 @@
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_65" Component_="Microsoft.ui.xaml.dll.mui_65" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ro-RO\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_66" Component_="Microsoft.ui.xaml.dll.mui_66" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ru-RU\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_66" Component_="Microsoft.ui.xaml.dll.mui_66" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ru-RU\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
-    <ROW File="System.DirectoryServices.Protocols.dll" Component_="System.DirectoryServices.Protocols.dll" FileName="SYSTEM~1.DLL|System.DirectoryServices.Protocols.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\linux\lib\net9.0\System.DirectoryServices.Protocols.dll" SelfReg="false"/>
-    <ROW File="System.DirectoryServices.Protocols.dll_1" Component_="System.DirectoryServices.Protocols.dll_1" FileName="SYSTEM~1.DLL|System.DirectoryServices.Protocols.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\osx\lib\net9.0\System.DirectoryServices.Protocols.dll" SelfReg="false"/>
-    <ROW File="System.Diagnostics.EventLog.dll" Component_="System.Diagnostics.EventLog.dll" FileName="SYSTEM~1.DLL|System.Diagnostics.EventLog.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win\lib\net9.0\System.Diagnostics.EventLog.dll" SelfReg="false"/>
-    <ROW File="System.Diagnostics.EventLog.Messages.dll" Component_="System.Diagnostics.EventLog.Messages.dll" FileName="SYSTEM~2.DLL|System.Diagnostics.EventLog.Messages.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win\lib\net9.0\System.Diagnostics.EventLog.Messages.dll" SelfReg="false"/>
-    <ROW File="System.DirectoryServices.AccountManagement.dll" Component_="System.DirectoryServices.AccountManagement.dll" FileName="SYSTEM~3.DLL|System.DirectoryServices.AccountManagement.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win\lib\net9.0\System.DirectoryServices.AccountManagement.dll" SelfReg="false"/>
-    <ROW File="System.DirectoryServices.dll" Component_="System.DirectoryServices.dll" FileName="SYSTEM~4.DLL|System.DirectoryServices.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win\lib\net9.0\System.DirectoryServices.dll" SelfReg="false"/>
-    <ROW File="System.DirectoryServices.Protocols.dll_2" Component_="System.DirectoryServices.Protocols_10_.dll" FileName="SYSTEM~5.DLL|System.DirectoryServices.Protocols.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win\lib\net9.0\System.DirectoryServices.Protocols.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" Component_="Microsoft.Windows.ApplicationModel_1_.Background.UniversalBGTask.dll" FileName="MICROS~1.DLL|Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-arm64\native\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" SelfReg="false"/>
-    <ROW File="Microsoft.WindowsAppRuntime.Bootstrap.dll" Component_="Microsoft.WindowsAppRuntime.Bootstrap.dll" FileName="MICROS~2.DLL|Microsoft.WindowsAppRuntime.Bootstrap.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-arm64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" SelfReg="false"/>
-    <ROW File="WebView2Loader.dll" Component_="WebView2Loader.dll" FileName="WEBVIE~1.DLL|WebView2Loader.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-arm64\native\WebView2Loader.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.ApplicationModel_1_.Background.UniversalBGTask.dll" Component_="Microsoft.Windows.ApplicationModel_2_.Background.UniversalBGTask.dll" FileName="MICROS~1.DLL|Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-arm64ec\native\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" SelfReg="false"/>
-    <ROW File="Microsoft.WindowsAppRuntime.Bootst_1_rap.dll" Component_="Microsoft.WindowsAppRuntime.Bootst_1_rap.dll" FileName="MICROS~2.DLL|Microsoft.WindowsAppRuntime.Bootstrap.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-arm64ec\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.ApplicationModel_2_.Background.UniversalBGTask.dll" Component_="Microsoft.Windows.ApplicationModel_3_.Background.UniversalBGTask.dll" FileName="MICROS~1.DLL|Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-x64\native\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" SelfReg="false"/>
-    <ROW File="Microsoft.WindowsAppRuntime.Bootst_2_rap.dll" Component_="Microsoft.WindowsAppRuntime.Bootst_2_rap.dll" FileName="MICROS~2.DLL|Microsoft.WindowsAppRuntime.Bootstrap.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" SelfReg="false"/>
-    <ROW File="WebView2Loader.dll_1" Component_="WebView2Loader.dll_1" FileName="WEBVIE~1.DLL|WebView2Loader.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-x64\native\WebView2Loader.dll" SelfReg="false"/>
-    <ROW File="Microsoft.Windows.ApplicationModel_3_.Background.UniversalBGTask.dll" Component_="Microsoft.Windows.ApplicationModel_4_.Background.UniversalBGTask.dll" FileName="MICROS~1.DLL|Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-x86\native\Microsoft.Windows.ApplicationModel.Background.UniversalBGTask.dll" SelfReg="false"/>
-    <ROW File="Microsoft.WindowsAppRuntime.Bootst_3_rap.dll" Component_="Microsoft.WindowsAppRuntime.Bootst_3_rap.dll" FileName="MICROS~2.DLL|Microsoft.WindowsAppRuntime.Bootstrap.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-x86\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" SelfReg="false"/>
-    <ROW File="WebView2Loader.dll_2" Component_="WebView2Loader.dll_2" FileName="WEBVIE~1.DLL|WebView2Loader.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\runtimes\win-x86\native\WebView2Loader.dll" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_67" Component_="Microsoft.ui.xaml.dll.mui_67" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\sk-SK\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_67" Component_="Microsoft.ui.xaml.dll.mui_67" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\sk-SK\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_68" Component_="Microsoft.ui.xaml.dll.mui_68" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\sl-SI\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
@@ -686,11 +640,12 @@
     <ROW File="Microsoft.ui.xaml.dll.mui_73" Component_="Microsoft.ui.xaml.dll.mui_73" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\sv-SE\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_73" Component_="Microsoft.ui.xaml.dll.mui_73" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\sv-SE\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="System.Configuration.ConfigurationManager.dll" Component_="System.Configuration.ConfigurationManager.dll" FileName="SYSTEM~1.DLL|System.Configuration.ConfigurationManager.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.Configuration.ConfigurationManager.dll" SelfReg="false"/>
-    <ROW File="System.Diagnostics.EventLog.dll_1" Component_="System.Diagnostics.EventLog.dll_1" FileName="SYSTEM~2.DLL|System.Diagnostics.EventLog.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.Diagnostics.EventLog.dll" SelfReg="false"/>
-    <ROW File="System.DirectoryServices.AccountMa_1_nagement.dll" Component_="System.DirectoryServices.AccountMa_1_nagement.dll" FileName="SYSTEM~3.DLL|System.DirectoryServices.AccountManagement.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.DirectoryServices.AccountManagement.dll" SelfReg="false"/>
-    <ROW File="System.DirectoryServices.dll_1" Component_="System.DirectoryServices.dll_1" FileName="SYSTEM~4.DLL|System.DirectoryServices.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.DirectoryServices.dll" SelfReg="false"/>
-    <ROW File="System.DirectoryServices.Protocols.dll_3" Component_="System.DirectoryServices.Protocols_11_.dll" FileName="SYSTEM~5.DLL|System.DirectoryServices.Protocols.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.DirectoryServices.Protocols.dll" SelfReg="false"/>
-    <ROW File="System.Security.Cryptography.ProtectedData.dll" Component_="System.Security.Cryptography.ProtectedData.dll" FileName="SYSTEM~6.DLL|System.Security.Cryptography.ProtectedData.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.Security.Cryptography.ProtectedData.dll" SelfReg="false"/>
+    <ROW File="System.Diagnostics.EventLog.dll" Component_="System.Diagnostics.EventLog.dll" FileName="SYSTEM~2.DLL|System.Diagnostics.EventLog.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.Diagnostics.EventLog.dll" SelfReg="false"/>
+    <ROW File="System.Diagnostics.EventLog.Messages.dll" Component_="System.Diagnostics.EventLog.Messages.dll" FileName="SYSTEM~3.DLL|System.Diagnostics.EventLog.Messages.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.Diagnostics.EventLog.Messages.dll" SelfReg="false"/>
+    <ROW File="System.DirectoryServices.AccountManagement.dll" Component_="System.DirectoryServices.AccountManagement.dll" FileName="SYSTEM~4.DLL|System.DirectoryServices.AccountManagement.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.DirectoryServices.AccountManagement.dll" SelfReg="false"/>
+    <ROW File="System.DirectoryServices.dll" Component_="System.DirectoryServices.dll" FileName="SYSTEM~5.DLL|System.DirectoryServices.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.DirectoryServices.dll" SelfReg="false"/>
+    <ROW File="System.DirectoryServices.Protocols.dll" Component_="System.DirectoryServices.Protocols.dll" FileName="SYSTEM~6.DLL|System.DirectoryServices.Protocols.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.DirectoryServices.Protocols.dll" SelfReg="false"/>
+    <ROW File="System.Security.Cryptography.ProtectedData.dll" Component_="System.Security.Cryptography.ProtectedData.dll" FileName="SYSTEM~7.DLL|System.Security.Cryptography.ProtectedData.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.Security.Cryptography.ProtectedData.dll" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_74" Component_="Microsoft.ui.xaml.dll.mui_74" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ta-IN\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_74" Component_="Microsoft.ui.xaml.dll.mui_74" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ta-IN\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_75" Component_="Microsoft.ui.xaml.dll.mui_75" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\te-IN\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
@@ -714,6 +669,7 @@
     <ROW File="Microsoft.ui.xaml.dll.mui_83" Component_="Microsoft.ui.xaml.dll.mui_83" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\vi-VN\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_83" Component_="Microsoft.ui.xaml.dll.mui_83" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\vi-VN\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="MainPage.xbf" Component_="MainPage.xbf" FileName="MainPage.xbf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Views\MainPage.xbf" SelfReg="false"/>
+    <ROW File="WebView2Loader.dll" Component_="WebView2Loader.dll" FileName="WEBVIE~1.DLL|WebView2Loader.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\WebView2Loader.dll" SelfReg="false"/>
     <ROW File="WindowsAppRuntime.DeploymentExtensions.OneCore.dll" Component_="WindowsAppRuntime.DeploymentExtensions.OneCore.dll" FileName="WINDOW~1.DLL|WindowsAppRuntime.DeploymentExtensions.OneCore.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\WindowsAppRuntime.DeploymentExtensions.OneCore.dll" SelfReg="false"/>
     <ROW File="WindowsAppRuntime.png" Component_="App.xbf" FileName="WINDOW~1.PNG|WindowsAppRuntime.png" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\WindowsAppRuntime.png" SelfReg="false"/>
     <ROW File="WindowsAppSdk.AppxDeploymentExtensions.DesktopEventLogInstrumentation" Component_="WindowsAppSdk.AppxDeploymentExtensions.DesktopEventLogInstrumentation.dl" FileName="WINDOW~2.DLL|WindowsAppSdk.AppxDeploymentExtensions.Desktop-EventLog-Instrumentation.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\WindowsAppSdk.AppxDeploymentExtensions.Desktop-EventLog-Instrumentation.dll" SelfReg="false"/>
@@ -949,6 +905,7 @@
     <ROW Feature_="MainFeature" Component_="Microsoft.Web.WebView2.Core.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Web.WebView2.Core.Projection.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel.Background.Projection.dll"/>
+    <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel_1_.Background.UniversalBGTask.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel.DynamicDependency.Projection.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel.Resources.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel_1_.Resources.Projection.dll"/>
@@ -967,6 +924,7 @@
     <ROW Feature_="MainFeature" Component_="Microsoft.Windows.System.Projection.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Windows.Widgets.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.Windows.Widgets.Projection.dll"/>
+    <ROW Feature_="MainFeature" Component_="Microsoft.WindowsAppRuntime.Bootstrap.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.WindowsAppRuntime.Bootstrap.Net.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.WindowsAppRuntime.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.WindowsAppRuntime.Insights.Resource.dll"/>
@@ -992,24 +950,6 @@
     <ROW Feature_="MainFeature" Component_="RestartAgent.exe"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_65"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_66"/>
-    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.Protocols.dll"/>
-    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.Protocols.dll_1"/>
-    <ROW Feature_="MainFeature" Component_="System.Diagnostics.EventLog.dll"/>
-    <ROW Feature_="MainFeature" Component_="System.Diagnostics.EventLog.Messages.dll"/>
-    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.AccountManagement.dll"/>
-    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.dll"/>
-    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.Protocols_10_.dll"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel_1_.Background.UniversalBGTask.dll"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.WindowsAppRuntime.Bootstrap.dll"/>
-    <ROW Feature_="MainFeature" Component_="WebView2Loader.dll"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel_2_.Background.UniversalBGTask.dll"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.WindowsAppRuntime.Bootst_1_rap.dll"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel_3_.Background.UniversalBGTask.dll"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.WindowsAppRuntime.Bootst_2_rap.dll"/>
-    <ROW Feature_="MainFeature" Component_="WebView2Loader.dll_1"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.Windows.ApplicationModel_4_.Background.UniversalBGTask.dll"/>
-    <ROW Feature_="MainFeature" Component_="Microsoft.WindowsAppRuntime.Bootst_3_rap.dll"/>
-    <ROW Feature_="MainFeature" Component_="WebView2Loader.dll_2"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_67"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_68"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_69"/>
@@ -1019,10 +959,11 @@
     <ROW Feature_="MainFeature" Component_="FontSizes.xbf"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_73"/>
     <ROW Feature_="MainFeature" Component_="System.Configuration.ConfigurationManager.dll"/>
-    <ROW Feature_="MainFeature" Component_="System.Diagnostics.EventLog.dll_1"/>
-    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.AccountMa_1_nagement.dll"/>
-    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.dll_1"/>
-    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.Protocols_11_.dll"/>
+    <ROW Feature_="MainFeature" Component_="System.Diagnostics.EventLog.dll"/>
+    <ROW Feature_="MainFeature" Component_="System.Diagnostics.EventLog.Messages.dll"/>
+    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.AccountManagement.dll"/>
+    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.dll"/>
+    <ROW Feature_="MainFeature" Component_="System.DirectoryServices.Protocols.dll"/>
     <ROW Feature_="MainFeature" Component_="System.Security.Cryptography.ProtectedData.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_74"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_75"/>
@@ -1037,6 +978,7 @@
     <ROW Feature_="MainFeature" Component_="gifski.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_83"/>
     <ROW Feature_="MainFeature" Component_="MainPage.xbf"/>
+    <ROW Feature_="MainFeature" Component_="WebView2Loader.dll"/>
     <ROW Feature_="MainFeature" Component_="WindowsAppRuntime.DeploymentExtensions.OneCore.dll"/>
     <ROW Feature_="MainFeature" Component_="WindowsAppSdk.AppxDeploymentExtensions.DesktopEventLogInstrumentation.dl"/>
     <ROW Feature_="MainFeature" Component_="WindowsAppSdk.AppxDeploymentExtens_1_ions.Desktop.dll"/>
