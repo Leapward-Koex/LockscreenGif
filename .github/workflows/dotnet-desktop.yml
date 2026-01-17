@@ -117,7 +117,7 @@ jobs:
     - name: Upload MSI installer
       uses: actions/upload-artifact@v4
       with:
-        name: 'MSI Installer ${{ github.run_number }}.${{ github.run_attempt }}'
+        name: 'Installer ${{ github.run_number }}.${{ github.run_attempt }}'
         path: '${{ github.workspace }}/setup/installLockscreenGif.msi'
         
 
