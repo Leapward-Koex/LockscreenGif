@@ -451,11 +451,26 @@
                     Glyph="&#xE897;" />
                 <Button.Flyout>
                     <Flyout Placement="Top">
-                        <TextBlock
-                            MaxWidth="200"
+                        <StackPanel
+                            MaxWidth="260"
                             Margin="8"
-                            Text="Lockscreen not showing after you apply? Try manually setting one in the Windows settings first then trying to apply."
-                            TextWrapping="Wrap" />
+                            Spacing="10">
+                            <StackPanel Spacing="6">
+                                <TextBlock
+                                    FontWeight="SemiBold"
+                                    Text="Lockscreen not showing after you apply?"
+                                    TextWrapping="Wrap" />
+                                <TextBlock Text="Try manually setting one in the Windows settings first, then try applying again." TextWrapping="Wrap" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="6">
+                                <TextBlock
+                                    FontWeight="SemiBold"
+                                    Text="Changed your primary monitor resolution?"
+                                    TextWrapping="Wrap" />
+                                <TextBlock Text="If you change the screen resolution of your primary monitor, re-apply your GIF from the app for it to take effect." TextWrapping="Wrap" />
+                            </StackPanel>
+                        </StackPanel>
                     </Flyout>
                 </Button.Flyout>
             </Button>

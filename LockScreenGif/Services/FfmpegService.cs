@@ -1,8 +1,6 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using FFMpegCore;
 using FFMpegCore.Enums;
-using WindowsDisplayAPI;
 
 namespace LockscreenGif.Services;
 public class FfmpegService
@@ -49,7 +47,8 @@ public class FfmpegService
         }
         catch (IOException) { /* in‐use → ignore/log */ }
         catch (UnauthorizedAccessException) { /* perms → ignore/log */ }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             Logger.Error($"Failed to delete {path}", ex);
         }
     }
@@ -131,7 +130,7 @@ public class FfmpegService
               .Scale(width, -2)                // scale to [width], keep aspect
             )
             .WithFramerate(fps)                // emit frames at “fps” per second :contentReference[oaicite:0]{index=0}
-            .WithVideoCodec(VideoCodec.Png)    // PNG sequence
+            .WithVideoCodec(VideoCodec.Image.Png)    // PNG sequence
           )
           .NotifyOnProgress(onPercentageProgress, videoDuration)
           .ProcessAsynchronously();
