@@ -1,6 +1,4 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 
 public static class Logger
 {
@@ -9,7 +7,12 @@ public static class Logger
 
     public static string GetLogPath()
     {
-        return AppDomain.CurrentDomain.BaseDirectory;
+        var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LockscreenGif");
+        if (!Directory.Exists(path))
+        {
+            Directory.CreateDirectory(path);
+        }
+        return path;
     }
 
     private static string GetLogFilePath()
@@ -25,8 +28,7 @@ public static class Logger
 
     public static void CleanupOldLogFiles()
     {
-        var directory = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
-        var oldFiles = directory.GetFiles("app_*.log")
+        var oldFiles = new DirectoryInfo(GetLogPath()).GetFiles("app_*.log")
                                  .Where(f => f.CreationTime < DateTime.Now.AddDays(-7))
                                  .ToList();
 
