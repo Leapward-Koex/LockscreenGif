@@ -103,12 +103,42 @@
                         <TextBlock
                             x:Name="PrereqStep1Body"
                             Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                            Text="Open Windows Settings → Personalization → Lock screen, change lockscreen type to 'Picture' and set an initial image"
+                            Text="Open Windows Settings → Personalization → Lock screen, change lockscreen type to 'Picture' and browse to select an initial image (actual image in unimportant, but it should be a picture on your computer)."
                             TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
 
                 <!--  Step 2  -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Border
+                        Grid.Column="0"
+                        Width="32"
+                        Height="32"
+                        Margin="0,0,12,0"
+                        VerticalAlignment="Top"
+                        Background="{StaticResource AccentFillColorDefaultBrush}"
+                        CornerRadius="16">
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            FontWeight="SemiBold"
+                            Foreground="{StaticResource TextOnAccentFillColorPrimaryBrush}"
+                            Text="1" />
+                    </Border>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock FontWeight="SemiBold" Text="Generate the required image cache for your screens" />
+                        <TextBlock
+                            Foreground="{StaticResource TextFillColorSecondaryBrush}"
+                            Text="Lock your screen once to generate the required image cache for your screens, then unlock and proceed with the next step."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+
+                <!--  Step 3  -->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -133,12 +163,12 @@
                         <TextBlock FontWeight="SemiBold" Text="Choose your GIF source" />
                         <TextBlock
                             Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                            Text="Either choose a video to convert to a GIF or select an existing GIF file from your device"
+                            Text="Either choose a video to convert to a GIF or select an existing GIF file from your device."
                             TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
 
-                <!--  Step 3  -->
+                <!--  Step 4  -->
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
@@ -163,34 +193,18 @@
                         <TextBlock FontWeight="SemiBold" Text="Apply and enjoy" />
                         <TextBlock
                             Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                            Text="Click the Apply button to set your animated GIF as your lockscreen wallpaper"
+                            Text="Click the Apply button to set your animated GIF as your lockscreen."
                             TextWrapping="Wrap" />
                     </StackPanel>
                 </Grid>
 
-                <!--  Step 4  -->
+                <!--  Resetting  -->
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Border
-                        Grid.Column="0"
-                        Width="32"
-                        Height="32"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Top"
-                        Background="{StaticResource AccentFillColorDefaultBrush}"
-                        CornerRadius="16">
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource TextOnAccentFillColorPrimaryBrush}"
-                            Text="4" />
-                    </Border>
                     <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock FontWeight="SemiBold" Text="Resetting back to a regular lockscreen" />
+                        <TextBlock FontWeight="SemiBold" Text="Resetting back to a regular lockscreen if you want to remove the GIF" />
                         <TextBlock
                             Foreground="{StaticResource TextFillColorSecondaryBrush}"
                             Text="Click the 'Remove' button in the app to reset to the image you previously selected as your lockscreen."

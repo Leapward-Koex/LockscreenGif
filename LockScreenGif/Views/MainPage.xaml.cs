@@ -1,21 +1,21 @@
-﻿using LockscreenGif.ViewModels;
+﻿using System.Globalization;
+using System.Runtime.InteropServices;
+using CommunityToolkit.WinUI.Controls;
+using LockscreenGif.Contracts.Services;
+using LockscreenGif.Helpers;
+using LockscreenGif.Services;
+using LockscreenGif.ViewModels;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
-using Windows.Storage.Pickers;
-using WinRT;
-using System.Runtime.InteropServices;
-using LockscreenGif.Contracts.Services;
-using LockscreenGif.Helpers;
+using Microsoft.UI.Xaml.Media;
 using Windows.Media.Core;
+using Windows.Media.Editing;
 using Windows.Media.Playback;
 using Windows.Storage;
-using CommunityToolkit.WinUI.Controls;
-using System.Globalization;
-using LockscreenGif.Services;
-using Windows.Media.Editing;
-using Microsoft.UI;
-using Microsoft.UI.Xaml.Media;
+using Windows.Storage.Pickers;
+using WinRT;
 
 namespace LockscreenGif.Views;
 
@@ -242,6 +242,15 @@ public sealed partial class MainPage : Page
         else
         {
             _notificationService.Show(string.Format("AppNotificationDeleteSuccess".GetLocalized(), AppContext.BaseDirectory));
+            var dialog = new ContentDialog
+            {
+                Title = "Removal Successful",
+                Content = "You may need to lock and unlock your device before reapplying a GIF for it to take effect.",
+                CloseButtonText = "OK",
+                XamlRoot = XamlRoot
+            };
+
+            await dialog.ShowAsync();
         }
     }
 
@@ -466,7 +475,7 @@ public sealed partial class MainPage : Page
         VideoPreview.MediaPlayer.Play();
         _correctingPosition = false;
     }
-    
+
 
     private void Session_PositionChanged(MediaPlaybackSession sender, object args)
     {
@@ -594,7 +603,8 @@ public sealed partial class MainPage : Page
 
     private void ComboResolution_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ComboFps.SelectedItem != null && ComboResolution.SelectedItem != null) {
+        if (ComboFps.SelectedItem != null && ComboResolution.SelectedItem != null)
+        {
             UpdateFileSizeWarning();
         }
     }

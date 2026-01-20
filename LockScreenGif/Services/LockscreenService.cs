@@ -219,6 +219,37 @@ public sealed class LockscreenService : ILockscreenService
      *   FILE OPERATIONS
      *----------------------------------------------------------------*/
 
+    private static HashSet<string> GetDimmedDestFileNames(string lockScreenFolderPath)
+    {
+        var dests = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        // 1) expected per current display resolution list
+        foreach (var res in DisplayService.GetDisplayResolutions())
+        {
+            dests.Add($"LockScreen___{res}{DimmedSuffix}");
+        }
+
+        // 2) any already-existing dimmed variants Windows created (e.g. off-by-one widths)
+        try
+        {
+            foreach (var existingPath in Directory.EnumerateFiles(lockScreenFolderPath, DimmedPattern, SearchOption.TopDirectoryOnly))
+            {
+                var fileName = Path.GetFileName(existingPath);
+                if (!string.IsNullOrWhiteSpace(fileName) && !dests.Contains(fileName))
+                {
+                    Logger.Info($"Adding non-resolution matching existing dimmed file to files to clobber: {fileName}");
+                    dests.Add(fileName);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"Failed to enumerate existing dimmed files in {lockScreenFolderPath}: {ex.Message}");
+        }
+
+        return dests;
+    }
+
     private async Task CreateDimmedFilesAsync(string directory)
     {
         var folders = Directory.EnumerateDirectories(directory)
@@ -254,11 +285,12 @@ public sealed class LockscreenService : ILockscreenService
                 }
             }
 
-
             // Copy per-resolution dimmed files
-            foreach (var res in DisplayService.GetDisplayResolutions())
+            var dimmedDestFileNames = GetDimmedDestFileNames(path!);
+            Logger.Info($"Dimmed destinations for {path}: {string.Join(", ", dimmedDestFileNames.OrderBy(n => n))}");
+
+            foreach (var dest in dimmedDestFileNames)
             {
-                var dest = $"LockScreen___{res}{DimmedSuffix}";
                 var destPath = Path.Combine(path!, dest);
                 Logger.Info($"Copying GIF to {destPath}");
                 try
@@ -363,11 +395,12 @@ public sealed class LockscreenService : ILockscreenService
 
     private static async Task LogFilesWithMimeTypesAsync(string directory)
     {
+        Logger.Info("File mime types after copying GIF to lockscreen files:");
         var files = Directory.EnumerateFiles(directory, "*.*", SearchOption.AllDirectories);
         foreach (var file in files)
         {
             var mime = DetectMimeType(file);
-            Logger.Info($"{file} -> {mime}");
+            Logger.Info($"    {file} -> {mime}");
         }
         await Task.CompletedTask;
     }
