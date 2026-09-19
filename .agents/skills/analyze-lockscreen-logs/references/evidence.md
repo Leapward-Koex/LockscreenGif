@@ -42,6 +42,16 @@ A subsequent reference-GIF cycle completed without ETW loss, transport loss, omi
 
 However, its baseline copies were already 43,495 bytes, whereas the earlier overflowing run inspected 145,966,787-byte copies. Zero drops with small baseline files does not by itself validate the large-file optimization or establish that code changes caused the improvement. Compare baseline sizes, inventory completeness, source size, duration, and operation volume before attributing performance changes. The helper's `BaselineInventory` exposes known file counts and bytes separately from `SourceBytes`; missing sizes must stay unknown. A later test that begins with a large cached GIF is needed to exercise that workload again.
 
+## Drain timeout without a large workload or recorded drops
+
+`Trace draining exceeded five seconds.` originates in `EtwFileCollector.StopCoreAsync`: after calling `NativeTraceSession.Stop()`, it waits up to five seconds for the entire consumer worker. That task includes `source.Process()`, disposal, and final correlation. The message alone does not identify which stage was delayed, prove a full transport queue, or measure five seconds of active event processing. `DiagnosticProcessTrace` final IPC draining is a separate stage with its own failure message.
+
+A timeout has also occurred with small baseline files and zero recorded ETW/transport loss or retention omissions. Do not reuse the large-baseline diagnosis simply because the warning text matches. Windows documents that a real-time `ProcessTrace` call may take several seconds to return after the session stops; this is a possible contributor, not a report-proven cause. See [ProcessTrace](https://learn.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-processtrace).
+
+Check the latest `Operations.Timestamp` and `CompletedAt`, plus aggregate `LastAt`, against final snapshot `HashReadAt` for fresh hashes. If even the app's final inspection reads are absent from an otherwise untruncated trace, there is evidence that the report lacks activity near shutdown. A quiet interval by itself is not proof of a stall; omissions or unresolved correlation can also remove those records. `ProcessTrace.EndedAt` is assigned during worker cleanup and must not be treated as the last consumed event timestamp or a guarantee of full coverage. Zero loss counters do not establish successful draining.
+
+At the deadline the collector calls `StopProcessing`, so keep tracing incomplete while preserving earlier positive read/copy evidence. Do not claim the timeout is harmless, that animation failed, or that a longer timeout fixes the underlying issue. To isolate its cause, future collector evidence should record stop-request time, native stop return/result, consumer last-event and buffer progress, `Process()` return, and cleanup completion; retain timings/counts without raw unrelated event data. These measurements are currently absent from reports.
+
 ## Code and verification map
 
 Paths below are relative to the repository root.
