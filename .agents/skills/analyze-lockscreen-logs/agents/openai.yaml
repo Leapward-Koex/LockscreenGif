@@ -1,0 +1,4 @@
+interface:
+  display_name: "Analyze LockscreenGif logs"
+  short_description: "Investigate lock-screen diagnostics and trace evidence"
+  default_prompt: "Use $analyze-lockscreen-logs to investigate this LockscreenGif diagnostic report."
