@@ -102,6 +102,18 @@ class ReportTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 load_report(path)
 
+    def test_baseline_workload_is_reported_separately_from_selected_source(self):
+        report = fixture()
+        report["Snapshots"][0].update(Complete=False)
+        report["Snapshots"][0]["Files"].append({"Path": "<cache>/unknown.jpg"})
+        result = summarize(report)
+        self.assertEqual(result["SourceBytes"], 43495)
+        self.assertEqual(result["BaselineInventory"], {
+            "Complete": False, "FileCount": 2, "FilesWithKnownSize": 1,
+            "TotalKnownBytes": OLD_SIZE, "LargestKnownFileBytes": OLD_SIZE})
+        report["Snapshots"] = []
+        self.assertIsNone(summarize(report)["BaselineInventory"]["LargestKnownFileBytes"])
+
     def test_does_not_mutate_report(self):
         report = fixture()
         original = copy.deepcopy(report)

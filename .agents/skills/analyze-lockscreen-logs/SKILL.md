@@ -29,6 +29,8 @@ Separate these questions:
 
 One verified GIF copy being accessed is enough for the access finding. Other variants are optional, and reads never establish decoding or animation. User observation is separate playback evidence.
 
+When comparing collector performance between reports, compare `BaselineInventory` as well as selected source size: a small reference GIF can replace a very large previous GIF, and the baseline hashing workload differs.
+
 Prefer concrete file sizes, byte counts, timestamps, and return statuses over process-name guesses. Identify a collector or presentation defect separately from a lock-screen failure. State uncertainty when evidence is missing; do not dismiss a real queue loss or timeout just because animation worked.
 
 When fixing a confirmed defect, add a small synthetic regression reproducing the important relationship, not a copy of the user's report. Run the relevant isolated console test project. Native/elevated harnesses and real lock/unlock tests are separate acceptance checks; never describe isolated tests as proving a real Windows cycle.

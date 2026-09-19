@@ -36,6 +36,12 @@ The old findings matched only filename and final verification flags, falsely awa
 
 The same run had transport overflow and a drain timeout. Fixed-delay polling of only 128 records every 200 ms limited draining to roughly 640 records/s. Backlogged batches now drain without the idle delay. Baseline reads use a 1 MiB stream buffer to reduce operation volume. Filename correlation uses a pending-key index to avoid scanning all pending operations for every unrelated rundown name. These changes require new real-cycle evidence before claiming that every timeout/overflow is resolved.
 
+## Compare collector workload before declaring a performance fix verified
+
+A subsequent reference-GIF cycle completed without ETW loss, transport loss, omissions, or a drain timeout. It captured the two completed application reads after verification and freshly verified all intended copies after unlocking. That is useful acceptance evidence for that cycle.
+
+However, its baseline copies were already 43,495 bytes, whereas the earlier overflowing run inspected 145,966,787-byte copies. Zero drops with small baseline files does not by itself validate the large-file optimization or establish that code changes caused the improvement. Compare baseline sizes, inventory completeness, source size, duration, and operation volume before attributing performance changes. The helper's `BaselineInventory` exposes known file counts and bytes separately from `SourceBytes`; missing sizes must stay unknown. A later test that begins with a large cached GIF is needed to exercise that workload again.
+
 ## Code and verification map
 
 Paths below are relative to the repository root.

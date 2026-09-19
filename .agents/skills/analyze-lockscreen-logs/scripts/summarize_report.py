@@ -93,7 +93,10 @@ def summarize(report):
             retained.setdefault(identity_key(operation), []).append(operation)
     baseline = next((snapshot for snapshot in report.get("Snapshots", [])
                      if snapshot.get("Reason") == "Baseline"), {})
-    old_files = {file["Path"].casefold(): file for file in baseline.get("Files", [])}
+    baseline_files = baseline.get("Files", [])
+    known_lengths = [file["Length"] for file in baseline_files
+                     if type(file.get("Length")) is int and file["Length"] >= 0]
+    old_files = {file["Path"].casefold(): file for file in baseline_files}
     applied = {file["Path"].casefold(): file for file in (report.get("ApplyResult") or {}).get("Files", [])}
     rows = []
     for aggregate in trace.get("Files", []):
@@ -141,6 +144,12 @@ def summarize(report):
         "StartedUtc": iso(timestamp(report.get("StartedAt"))),
         "EndedUtc": iso(timestamp(report.get("EndedAt"))),
         "SourceBytes": (report.get("Gif") or {}).get("SizeBytes"),
+        "BaselineInventory": {
+            "Complete": baseline.get("Complete"), "FileCount": len(baseline_files),
+            "FilesWithKnownSize": len(known_lengths),
+            "TotalKnownBytes": sum(known_lengths) if known_lengths else None,
+            "LargestKnownFileBytes": max(known_lengths, default=None),
+        },
         "ApplySucceeded": (report.get("ApplyResult") or {}).get("Success"),
         "LockObserved": report.get("LockObserved"), "UnlockObserved": report.get("UnlockObserved"),
         "TraceState": trace.get("State"), "TraceReason": trace.get("Reason"),
