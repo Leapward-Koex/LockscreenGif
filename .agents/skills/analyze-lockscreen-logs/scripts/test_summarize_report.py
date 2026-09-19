@@ -114,6 +114,49 @@ class ReportTests(unittest.TestCase):
         report["Snapshots"] = []
         self.assertIsNone(summarize(report)["BaselineInventory"]["LargestKnownFileBytes"])
 
+    def test_shutdown_progress_and_final_hash_boundary_are_separate(self):
+        report = fixture()
+        report["ProcessTrace"]["Shutdown"] = {
+            "StopRequestedAt": "2026-09-19T16:14:06+12:00",
+            "NativeStopStatus": 0,
+            "StageAtDeadline": "Processing", "WorkerStage": "Finished",
+            "AtNativeStopReturn": {"CallbacksStarted": 10, "CallbacksFinished": 10},
+            "AtDrainDeadline": {"CallbacksStarted": 31, "CallbacksFinished": 30},
+            "Current": {"LatestEventTimestamp": "2026-09-19T04:14:09Z",
+                        "LastCallbackFinishedAt": "2026-09-19T04:14:14Z"},
+        }
+        report["Snapshots"].append({"Reason": "AfterUnlock", "Files": [
+            {"HashReadAt": "2026-09-19T04:14:07Z", "HashSource": "Full read", "Stable": True},
+            {"HashReadAt": "2026-09-19T04:14:20Z", "HashSource": "Reused", "Stable": True}]})
+        result = summarize(report)["TraceShutdown"]
+        self.assertTrue(result["Available"])
+        self.assertEqual(result["CallbacksFinishedBetweenNativeStopAndDeadline"], 20)
+        self.assertTrue(result["CallbackInProgressAtDeadline"])
+        self.assertEqual(result["TimesUtc"]["StopRequestedAt"], "2026-09-19T04:14:06Z")
+        self.assertIsNone(result["TimesUtc"]["CleanupCompletedAt"])
+        self.assertEqual(result["LatestConsumerEventUtc"], "2026-09-19T04:14:09Z")
+        self.assertEqual(result["LatestRelevantActivityUtc"], "2026-09-19T04:14:05Z")
+        self.assertEqual(result["FinalHashMinusLatestRelevantSeconds"], 2)
+
+    def test_old_shutdown_measurements_are_unknown_not_zero(self):
+        result = summarize(fixture())["TraceShutdown"]
+        self.assertFalse(result["Available"])
+        self.assertIsNone(result["NativeStopStatus"])
+        self.assertIsNone(result["CallbacksFinishedBetweenNativeStopAndDeadline"])
+        self.assertIsNone(result["CallbackInProgressAtDeadline"])
+
+    def test_shutdown_invalid_counters_or_timestamps_are_not_guessed(self):
+        report = fixture()
+        report["ProcessTrace"]["Shutdown"] = {
+            "StopRequestedAt": "2026-09-19T04:14:00",
+            "AtNativeStopReturn": {"CallbacksFinished": 10},
+            "AtDrainDeadline": {"CallbacksStarted": None, "CallbacksFinished": 5},
+        }
+        result = summarize(report)["TraceShutdown"]
+        self.assertIsNone(result["TimesUtc"]["StopRequestedAt"])
+        self.assertIsNone(result["CallbacksFinishedBetweenNativeStopAndDeadline"])
+        self.assertIsNone(result["CallbackInProgressAtDeadline"])
+
     def test_does_not_mutate_report(self):
         report = fixture()
         original = copy.deepcopy(report)

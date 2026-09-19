@@ -84,6 +84,53 @@ def verification_boundary(file, report):
     return (min(after), "Conservative AfterApply boundary") if after else (None, "Unavailable")
 
 
+def shutdown_summary(report):
+    trace = report.get("ProcessTrace") or {}
+    shutdown = trace.get("Shutdown") or {}
+    current = shutdown.get("Current") or {}
+    at_stop = shutdown.get("AtNativeStopReturn") or {}
+    at_deadline = shutdown.get("AtDrainDeadline") or {}
+    before, after = at_stop.get("CallbacksFinished"), at_deadline.get("CallbacksFinished")
+    callback_delta = (after - before if type(before) is int and type(after) is int
+                      and 0 <= before <= after else None)
+    relevant_times = [timestamp(operation.get(field))
+                      for operation in trace.get("Operations", [])
+                      for field in ("Timestamp", "CompletedAt")]
+    relevant_times += [timestamp(file.get("LastAt")) for file in trace.get("Files", [])]
+    latest_relevant = max((at for at in relevant_times if at), default=None)
+    final_hash_times = [timestamp(file.get("HashReadAt"))
+                        for snapshot in report.get("Snapshots", [])
+                        if snapshot.get("Reason") == "AfterUnlock"
+                        for file in snapshot.get("Files", [])
+                        if file.get("HashSource") == "Full read" and file.get("Stable") is True]
+    latest_hash = max((at for at in final_hash_times if at), default=None)
+    return {
+        "Available": bool(shutdown),
+        "WorkerStage": shutdown.get("WorkerStage"),
+        "StageAtDeadline": shutdown.get("StageAtDeadline"),
+        "NativeStopAttempted": shutdown.get("NativeStopAttempted"),
+        "NativeStopStatus": shutdown.get("NativeStopStatus"),
+        "NativeStopElapsedMilliseconds": shutdown.get("NativeStopElapsedMilliseconds"),
+        "NativeSessionBuffersAtStop": shutdown.get("NativeStopBuffers"),
+        "ConsumerCompletedNormally": shutdown.get("ConsumerCompletedNormally"),
+        "TimesUtc": {key: iso(timestamp(shutdown.get(key))) for key in (
+            "ConsumerStartedAt", "StopRequestedAt", "NativeStopStartedAt", "NativeStopReturnedAt",
+            "DrainWaitStartedAt", "DrainDeadlineExceededAt", "ForceStopRequestedAt",
+            "ForcedStopGraceExceededAt", "ConsumerReturnedAt", "CleanupStartedAt", "CleanupCompletedAt")},
+        "CallbacksFinishedBetweenNativeStopAndDeadline": callback_delta,
+        "CallbackInProgressAtDeadline": (
+            at_deadline.get("CallbacksStarted") > at_deadline.get("CallbacksFinished")
+            if type(at_deadline.get("CallbacksStarted")) is int
+            and type(at_deadline.get("CallbacksFinished")) is int else None),
+        "LatestConsumerEventUtc": iso(timestamp(current.get("LatestEventTimestamp"))),
+        "LastConsumerCallbackFinishedUtc": iso(timestamp(current.get("LastCallbackFinishedAt"))),
+        "LatestRelevantActivityUtc": iso(latest_relevant),
+        "FinalFreshHashReadUtc": iso(latest_hash),
+        "FinalHashMinusLatestRelevantSeconds": (
+            (latest_hash - latest_relevant).total_seconds() if latest_hash and latest_relevant else None),
+    }
+
+
 def summarize(report):
     trace = report.get("ProcessTrace") or {}
     operations = trace.get("Operations") or []
@@ -155,6 +202,7 @@ def summarize(report):
         "TraceState": trace.get("State"), "TraceReason": trace.get("Reason"),
         "Counters": {name: trace.get(name) for name in COUNTERS},
         "RetainedOperations": len(operations),
+        "TraceShutdown": shutdown_summary(report),
         "Timeline": [{"Utc": iso(timestamp(event.get("Timestamp"))), "Category": event.get("Category"),
                       "Message": event.get("Message")}
                      for event in report.get("Events", [])
@@ -162,6 +210,8 @@ def summarize(report):
         "ReadsByAppliedFileAndProcess": rows,
         "Limitations": [
             "Whole-trace totals include baseline reads and previous file contents.",
+            "Shutdown checkpoints describe consumer progress, not image reads; no progress alone cannot identify a stall.",
+            "Worker cleanup time and zero loss counters do not prove complete event coverage.",
             "Retained operations may be incomplete; positive reads survive loss, absence is inconclusive.",
             "System I/O can be caused by app inspection; timing does not identify its initiator.",
             "File access does not prove decoding or animation. Legacy boundaries are labeled in each row.",

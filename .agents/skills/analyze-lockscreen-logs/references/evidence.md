@@ -44,13 +44,26 @@ However, its baseline copies were already 43,495 bytes, whereas the earlier over
 
 ## Drain timeout without a large workload or recorded drops
 
-`Trace draining exceeded five seconds.` originates in `EtwFileCollector.StopCoreAsync`: after calling `NativeTraceSession.Stop()`, it waits up to five seconds for the entire consumer worker. That task includes `source.Process()`, disposal, and final correlation. The message alone does not identify which stage was delayed, prove a full transport queue, or measure five seconds of active event processing. `DiagnosticProcessTrace` final IPC draining is a separate stage with its own failure message.
+The older message `Trace draining exceeded five seconds.` originated in `EtwFileCollector.StopCoreAsync`; the current collector delegates this wait to `TraceWorkerDrain`. After calling `NativeTraceSession.Stop()`, it waits up to five seconds for the entire consumer worker. That task includes `source.Process()`, disposal, and final correlation. The message alone does not identify which stage was delayed, prove a full transport queue, or measure five seconds of active event processing. `DiagnosticProcessTrace` final IPC draining is a separate stage with its own failure message.
 
 A timeout has also occurred with small baseline files and zero recorded ETW/transport loss or retention omissions. Do not reuse the large-baseline diagnosis simply because the warning text matches. Windows documents that a real-time `ProcessTrace` call may take several seconds to return after the session stops; this is a possible contributor, not a report-proven cause. See [ProcessTrace](https://learn.microsoft.com/en-us/windows/win32/api/evntrace/nf-evntrace-processtrace).
 
 Check the latest `Operations.Timestamp` and `CompletedAt`, plus aggregate `LastAt`, against final snapshot `HashReadAt` for fresh hashes. If even the app's final inspection reads are absent from an otherwise untruncated trace, there is evidence that the report lacks activity near shutdown. A quiet interval by itself is not proof of a stall; omissions or unresolved correlation can also remove those records. `ProcessTrace.EndedAt` is assigned during worker cleanup and must not be treated as the last consumed event timestamp or a guarantee of full coverage. Zero loss counters do not establish successful draining.
 
-At the deadline the collector calls `StopProcessing`, so keep tracing incomplete while preserving earlier positive read/copy evidence. Do not claim the timeout is harmless, that animation failed, or that a longer timeout fixes the underlying issue. To isolate its cause, future collector evidence should record stop-request time, native stop return/result, consumer last-event and buffer progress, `Process()` return, and cleanup completion; retain timings/counts without raw unrelated event data. These measurements are currently absent from reports.
+At the deadline the collector calls `StopProcessing`, so keep tracing incomplete while preserving earlier positive read/copy evidence. Do not claim the timeout is harmless, that animation failed, or that a longer timeout fixes the underlying issue. Newer reports describe the same timeout as file activity monitoring not finishing shutdown within five seconds; older reports retain the original message.
+
+### Shutdown measurements in newer schema-2 reports
+
+`ProcessTrace.Shutdown` is optional in older exports. The analysis script's `TraceShutdown` section exposes its presence, lifecycle timestamps, callback progress, and the final fresh-hash boundary. Missing measurements remain null rather than fabricated zeroes.
+
+- `StopRequestedAt`, `NativeStopStartedAt`, `NativeStopReturnedAt`, `DrainWaitStartedAt`, `DrainDeadlineExceededAt`, `ConsumerReturnedAt`, and cleanup times separate the stop call, consumer wait, and disposal/correlation. Native-stop and deadline elapsed milliseconds use a monotonic clock.
+- `NativeStopStatus` is the actual Windows result when a call ran; 0 is success and 4201 means the session was already absent. `NativeStopAttempted=false` means cleanup was already done locally and no native call ran; a missing status is not error code zero.
+- `NativeStopBuffers` holds native session buffer/loss statistics returned by STOP. They are not consumer buffer counts, a queue depth, or proof that callbacks processed every buffer.
+- `Current`, `AtStopRequest`, `AtNativeStopReturn`, and `AtDrainDeadline` are fixed-size progress snapshots. They count all event callbacks, including unrelated events, without retaining payloads. `LatestEventTimestamp` is the newest ETW event time; callback start/finish times are wall-clock delivery/processing times. Do not treat total callbacks as image reads.
+- An increasing finished-callback count between native stop and deadline proves consumer progress in that interval. No increase alone does not distinguish idle native waiting, a blocked callback, or cleanup. `StageAtDeadline` and `CallbackInProgress` narrow that question; they do not provide a thread stack or identify the precise blocking operation.
+- `ConsumerCompletedNormally=false` records `Process()` returning after a stop-processing request. Null plus `ConsumerFailureType` records an exception. `ForcedStopGraceExceededAt` means even the subsequent two-second wait did not finish; the helper allows retrieval of partial evidence instead of discarding these measurements behind a generic stop error.
+
+All checkpoint objects are snapshots. The eventual `WorkerStage=Finished` must not overwrite the recorded stage/progress at the deadline, and completed cleanup must not turn an incomplete trace into a completed one.
 
 ## Code and verification map
 
@@ -63,6 +76,7 @@ Paths below are relative to the repository root.
 | Baseline and final hashes | LockScreenGif/Services/Diagnostics/CacheFileReader.cs, CacheCollector.cs | Tests/Diagnostics.Tests |
 | Polling, bounded details and shutdown | LockScreenGif/Services/Diagnostics/DiagnosticProcessTrace.cs, DiagnosticRun.cs | Tests/Session.Tests |
 | ETW correlation, aggregates and ownership | LockscreenGif.Privileged.Helper/Tracing/ | Tests/ProcessTracing.Tests |
+| Shutdown stages, callback progress and partial drain | LockscreenGif.Privileged.Helper/Tracing/{TraceProgressRecorder,TraceWorkerDrain,EtwFileCollector.Shutdown}.cs; LockScreenGif/Services/Diagnostics/DiagnosticTraceShutdownSummary.cs | Tests/ProcessTracing.Tests/ShutdownProgressTests.cs, Tests/Diagnostics.Tests/ShutdownReportTests.cs |
 | Report schema and redaction | LockscreenGif.Privileged.Contracts/TraceEvidence.cs; LockScreenGif/Services/Diagnostics/DiagnosticReportWriter.cs, DiagnosticRedactor.cs | Tests/Diagnostics.Tests |
 
 Run an isolated project with `dotnet run --project Tests/<project>/<project>.csproj -c Release`. Build the WinUI app with `dotnet build LockScreenGif/LockscreenGif.csproj -c Debug -p:Platform=x64`. The opt-in native harness and real-machine acceptance procedure are in `docs/diagnostics.md`; do not silently trigger elevation/locking when asked only to analyze a report.

@@ -31,7 +31,7 @@ One verified GIF copy being accessed is enough for the access finding. Other var
 
 When comparing collector performance between reports, compare `BaselineInventory` as well as selected source size: a small reference GIF can replace a very large previous GIF, and the baseline hashing workload differs.
 
-For drain timeouts, distinguish the native consumer finishing from the transport queue draining. Compare the last retained operation and aggregate timestamps with final fresh hash reads; `ProcessTrace.EndedAt` is worker cleanup time, not proof of event coverage through that time. See the shutdown guidance in the reference before assigning a cause.
+For drain timeouts, distinguish the native consumer finishing from the transport queue draining. Compare the last retained operation and aggregate timestamps with final fresh hash reads; `ProcessTrace.EndedAt` is worker cleanup time, not proof of event coverage through that time. Use the script's `TraceShutdown` measurements when present, and see the shutdown guidance in the reference before assigning a cause.
 
 Prefer concrete file sizes, byte counts, timestamps, and return statuses over process-name guesses. Identify a collector or presentation defect separately from a lock-screen failure. State uncertainty when evidence is missing; do not dismiss a real queue loss or timeout just because animation worked.
 
