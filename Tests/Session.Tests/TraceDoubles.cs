@@ -15,10 +15,12 @@ public sealed class FakePrivilegedSession : IPrivilegedOperationSession
     public int Starts { get; private set; }
     public int Stops { get; private set; }
     public TimeSpan StopDelay { get; set; }
+    public TaskCompletionSource? StartGate { get; set; }
+    public Func<bool, ProcessTraceEvidence>? EvidenceFactory { get; set; }
     public System.Collections.Concurrent.ConcurrentQueue<TraceBatch> Batches { get; } = new();
     private bool _stopped;
 
-    public Task StartTraceAsync(TraceScope scope, CancellationToken token)
+    public async Task StartTraceAsync(TraceScope scope, CancellationToken token)
     {
         Starts++;
         _stopped = false;
@@ -27,7 +29,10 @@ public sealed class FakePrivilegedSession : IPrivilegedOperationSession
             throw new OperationCanceledException("Synthetic UAC decline");
         }
 
-        return Task.CompletedTask;
+        if (StartGate is not null)
+        {
+            await StartGate.Task.WaitAsync(token);
+        }
     }
 
     public Task<TraceBatch> ReadTraceAsync(CancellationToken token)
@@ -44,12 +49,13 @@ public sealed class FakePrivilegedSession : IPrivilegedOperationSession
 
         return Task.FromResult(
             new TraceBatch(
-                new()
-                {
-                    State = _stopped ? "Completed" : "Recording",
-                    StartedAt = DateTimeOffset.UtcNow,
-                    EndedAt = _stopped ? DateTimeOffset.UtcNow : null,
-                },
+                EvidenceFactory?.Invoke(_stopped)
+                    ?? new()
+                    {
+                        State = _stopped ? "Completed" : "Recording",
+                        StartedAt = DateTimeOffset.UtcNow,
+                        EndedAt = _stopped ? DateTimeOffset.UtcNow : null,
+                    },
                 [],
                 false
             )

@@ -14,6 +14,7 @@ public class PageService : IPageService
     {
         Configure<MainViewModel, MainPage>();
         Configure<DiagnosticsViewModel, DiagnosticsPage>();
+        Configure<SettingsViewModel, SettingsPage>();
     }
 
     public Type GetPageType(string key)

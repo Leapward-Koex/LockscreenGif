@@ -17,6 +17,25 @@ ONLY real .GIF files are supported.
 Videos cannot work and will never work directly, please use the video option to dynamically create a gif to use.
 GIFs created through the video option are created with [FFMPEG](https://www.ffmpeg.org/) and [Gifski](https://gif.ski/) to produce high quality, video like gifs.
 
+# Logs
+
+Open **Settings > Logs** to open the log folder or choose **Save logs as ZIP…**
+and select a destination. The ZIP contains the app's `app_*.log` files, including
+the current log. Export runs in the background and leaves the original logs in
+place. These are copies of the original logs, not the redacted Diagnostics report;
+crash dumps, analytics settings, and other files in the folder are not included.
+
+**Diagnostics > Export report** also includes recent application logs, redacted
+alongside the diagnostic evidence. Its `logs/manifest.json` lists unavailable or
+shortened attachments. See [diagnostics documentation](docs/diagnostics.md).
+
+# Analytics
+
+Usage analytics are enabled on first launch, with a notice and an opt-out under
+**Settings > Analytics**. Events go to PostHog in the EU; filenames, media, and
+diagnostic logs are excluded. See [analytics documentation](docs/analytics.md)
+for events, delivery limits, configuration, and testing.
+
 # C# formatting
 
 Run `dotnet tool restore`, then `./scripts/Format-CSharp.ps1` from the repository

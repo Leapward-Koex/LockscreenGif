@@ -1,5 +1,7 @@
+using System.Diagnostics;
 using LockscreenGif.Helpers;
 using LockscreenGif.Services;
+using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -29,11 +31,17 @@ public sealed partial class MainPage
             OperationStatus.IsOpen = true;
             return;
         }
+        if (changesLockscreen && App.GetService<LockscreenVerificationService>().IsRunning)
+        {
+            OperationStatus.Title = "Checking the applied lock screen";
+            OperationStatus.Message = "Lock and unlock to finish the file-read check before changing the lock screen.";
+            OperationStatus.IsOpen = true;
+            return;
+        }
         _actionPending = true;
         OperationStatus.IsOpen = false;
         ApplyButton.IsEnabled = false;
         SaveGeneratedGifButton.IsEnabled = false;
-        removeAnimatedLockscreen.IsEnabled = false;
         try
         {
             await action();
@@ -50,7 +58,6 @@ public sealed partial class MainPage
             _actionPending = false;
             SaveGeneratedGifButton.IsEnabled = true;
             ApplyButton.IsEnabled = _lockscreenService.CurrentImage is not null;
-            removeAnimatedLockscreen.IsEnabled = true;
             UpdateGenerateEnabled();
         }
     }
@@ -60,40 +67,17 @@ public sealed partial class MainPage
             async () =>
             {
                 Logger.Info("Trying to set lockscreen");
-                var success = await _lockscreenService.ApplyGifAsLockscreenAsync();
+                var sourcePath = _lockscreenService.CurrentImage?.Path ?? string.Empty;
+                var result = await _lockscreenService.ApplyGifAsLockscreenAsync();
                 // Keep the source available for retries and diagnostics until next startup.
-                var key = success ? "AppNotificationSuccess" : "AppNotificationFailure";
-                _notificationService.Show(string.Format(key.GetLocalized(), AppContext.BaseDirectory));
-            },
-            changesLockscreen: true
-        );
-
-    private async void RemoveAnimatedLockscreenButton_click(object sender, RoutedEventArgs e) =>
-        await RunActionAsync(
-            async () =>
-            {
-                var result = await _lockscreenService.RemoveAppliedGif();
-                if (result is null)
+                if (!result.Success)
                 {
-                    _notificationService.Show(string.Format("AppNotificationDeleteFailure".GetLocalized(), AppContext.BaseDirectory));
+                    _notificationService.Show(string.Format("AppNotificationFailure".GetLocalized(), AppContext.BaseDirectory));
+                    return;
                 }
-                else if (result.FailedDeletions != 0)
+                if (App.MainWindow.Content is ShellPage shell)
                 {
-                    _notificationService.Show(
-                        string.Format(
-                            "AppNotificationDeletePartialFailure".GetLocalized(),
-                            AppContext.BaseDirectory,
-                            result.SuccessfulDeletions,
-                            result.FailedDeletions
-                        )
-                    );
-                }
-                else
-                {
-                    _notificationService.Show(string.Format("AppNotificationDeleteSuccess".GetLocalized(), AppContext.BaseDirectory));
-                    OperationStatus.Title = "Animated lock-screen variants removed";
-                    OperationStatus.Message = "You may need to lock and unlock before applying another GIF.";
-                    OperationStatus.IsOpen = true;
+                    await shell.CompleteLockscreenApplyAsync(result, sourcePath);
                 }
             },
             changesLockscreen: true
@@ -114,36 +98,76 @@ public sealed partial class MainPage
     private async void OpenGifButton_click(object sender, RoutedEventArgs e) =>
         await RunActionAsync(async () =>
         {
-            var file = await PickFileAsync(PickerLocationId.PicturesLibrary, ".gif");
-            if (file is null)
+            try
             {
-                return;
-            }
+                var file = await PickFileAsync(PickerLocationId.PicturesLibrary, ".gif");
+                if (file is null)
+                {
+                    _analyticsService.Track(AnalyticsEvent.GifSelected, new AnalyticsProperties { Outcome = AnalyticsOutcome.Cancelled });
+                    return;
+                }
 
-            ClearGeneratedGif();
-            _lockscreenService.CurrentImage = file;
-            currentImage.Source = _lockscreenService.CurrentImageBitmap!;
+                ClearGeneratedGif();
+                _lockscreenService.CurrentImage = file;
+                currentImage.Source = _lockscreenService.CurrentImageBitmap!;
+                _analyticsService.Track(AnalyticsEvent.GifSelected, new AnalyticsProperties { Outcome = AnalyticsOutcome.Succeeded });
+            }
+            catch (Exception ex)
+            {
+                _analyticsService.Track(
+                    AnalyticsEvent.GifSelected,
+                    new AnalyticsProperties
+                    {
+                        Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
+                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
+                    }
+                );
+                throw;
+            }
         });
 
     private async void OpenVideoButton_click(object sender, RoutedEventArgs e) =>
         await RunActionAsync(async () =>
         {
-            var file = await PickFileAsync(PickerLocationId.VideosLibrary, ".mp4", ".mkv");
+            StorageFile? file;
+            try
+            {
+                file = await PickFileAsync(PickerLocationId.VideosLibrary, ".mp4", ".mkv");
+            }
+            catch (Exception ex)
+            {
+                _analyticsService.Track(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    new AnalyticsProperties
+                    {
+                        Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
+                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
+                    }
+                );
+                throw;
+            }
             if (file is null)
             {
+                _analyticsService.Track(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    new AnalyticsProperties { Outcome = AnalyticsOutcome.Cancelled }
+                );
                 return;
             }
 
-            PausePreview();
-            GenerateButton.IsEnabled = false;
-            _videoLoadCts?.Dispose();
-            var loadSource = _videoLoadCts = new CancellationTokenSource();
-            var token = loadSource.Token;
-            BeginVideoLoading(file.Name);
+            var operationId = Guid.NewGuid();
+            var timer = Stopwatch.StartNew();
+            _analyticsService.Track(AnalyticsEvent.VideoLoadStarted, new AnalyticsProperties { OperationId = operationId });
             MediaPlayer? preparedPlayer = null;
             var scanning = false;
             try
             {
+                PausePreview();
+                GenerateButton.IsEnabled = false;
+                _videoLoadCts?.Dispose();
+                var loadSource = _videoLoadCts = new CancellationTokenSource();
+                var token = loadSource.Token;
+                BeginVideoLoading(file.Name);
                 var (fps, width, height) = await Task.Run(() => GetVideoInfoAsync(file), token).WaitAsync(token);
                 if (fps is null || !double.IsFinite(fps.Value) || fps <= 0 || width == 0 || height == 0)
                 {
@@ -209,14 +233,46 @@ public sealed partial class MainPage
                 UpdateEditor();
                 ShowFrame(0);
                 _ = LoadThumbnailsAsync(file.Path, frames, _editorCts.Token);
+                _analyticsService.Track(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    new AnalyticsProperties
+                    {
+                        OperationId = operationId,
+                        Outcome = AnalyticsOutcome.Succeeded,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                    }
+                );
             }
             catch (OperationCanceledException)
             {
+                _analyticsService.Track(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    new AnalyticsProperties
+                    {
+                        OperationId = operationId,
+                        Outcome = AnalyticsOutcome.Cancelled,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                    }
+                );
                 OperationStatus.Title = "Video loading cancelled";
                 OperationStatus.Message = _videoFile is null
                     ? "Choose a video when you're ready."
                     : "Your previous selection has been kept.";
                 OperationStatus.IsOpen = true;
+            }
+            catch (Exception ex)
+            {
+                _analyticsService.Track(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    new AnalyticsProperties
+                    {
+                        OperationId = operationId,
+                        Outcome = AnalyticsOutcome.Failed,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
+                    }
+                );
+                throw;
             }
             finally
             {

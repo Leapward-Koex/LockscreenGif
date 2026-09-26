@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Helpers;
 using LockscreenGif.Services;
+using LockscreenGif.Services.Analytics;
 using LockscreenGif.ViewModels;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
@@ -23,6 +25,7 @@ public sealed partial class MainPage : Page
 
     private readonly ILockscreenService _lockscreenService;
     private readonly IAppNotificationService _notificationService;
+    private readonly AnalyticsService _analyticsService;
 
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _lockscreenModeTimer;
     private LockscreenService.LockScreenMode _lastLockScreenMode = LockscreenService.LockScreenMode.Unknown;
@@ -46,6 +49,7 @@ public sealed partial class MainPage : Page
         ViewModel = App.GetService<MainViewModel>();
         _lockscreenService = App.GetService<ILockscreenService>();
         _notificationService = App.GetService<IAppNotificationService>();
+        _analyticsService = App.GetService<AnalyticsService>();
         InitializeComponent();
 
         NavigationCacheMode = Microsoft.UI.Xaml.Navigation.NavigationCacheMode.Required;
@@ -280,15 +284,26 @@ public sealed partial class MainPage : Page
             return;
         }
 
+        var operation = new AnalyticsProperties { OperationId = Guid.NewGuid() };
+        var timer = Stopwatch.StartNew();
         try
         {
+            var chosenWidth = (int)((ComboBoxItem)ComboResolution.SelectedItem).Tag;
+            var chosenFps = (double)((ComboBoxItem)ComboFps.SelectedItem).Tag;
+            operation = operation with
+            {
+                OutputWidth = chosenWidth,
+                TargetFps = chosenFps,
+                ClipDurationSeconds = _endSec - _startSec,
+                SelectedFrameCount = _endFrame - _startFrame,
+            };
+            _analyticsService.Track(AnalyticsEvent.GifGenerationStarted, operation);
             _actionPending = true;
             PausePreview();
             TrimEditorHost.IsEnabled = false;
             VideoSettingsHost.IsEnabled = false;
             ClearGeneratedGif();
             ApplyButton.IsEnabled = false;
-            removeAnimatedLockscreen.IsEnabled = false;
             GenerateButton.IsEnabled = false;
             GenerateLoading.ShowError = false;
             GenerateLoading.Value = 0;
@@ -315,9 +330,6 @@ public sealed partial class MainPage : Page
                 });
             };
 
-            var chosenWidth = (int)((ComboBoxItem)ComboResolution.SelectedItem).Tag;
-            var chosenFps = (double)((ComboBoxItem)ComboFps.SelectedItem).Tag;
-
             var extracted = await VideoFrameService.ExportAsync(
                 _videoFile.Path,
                 _frames,
@@ -341,9 +353,26 @@ public sealed partial class MainPage : Page
             SaveGeneratedGifPanel.Visibility = Visibility.Visible;
             ApplyButton.IsEnabled = true;
             GenerateLoading.Value = 100;
+            _analyticsService.Track(
+                AnalyticsEvent.GifGenerationCompleted,
+                operation with
+                {
+                    Outcome = AnalyticsOutcome.Succeeded,
+                    DurationMs = timer.Elapsed.TotalMilliseconds,
+                }
+            );
         }
         catch (Exception ex)
         {
+            _analyticsService.Track(
+                AnalyticsEvent.GifGenerationCompleted,
+                operation with
+                {
+                    Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
+                    DurationMs = timer.Elapsed.TotalMilliseconds,
+                    ErrorKind = AnalyticsProperties.ClassifyError(ex),
+                }
+            );
             GenerateLoading.ShowError = true;
             OperationStatus.Title = "GIF generation failed";
             OperationStatus.Message = "The selected clip could not be converted. Try another selection or video.";
@@ -354,7 +383,6 @@ public sealed partial class MainPage : Page
         {
             _actionPending = false;
             ApplyButton.IsEnabled = _lockscreenService.CurrentImage is not null;
-            removeAnimatedLockscreen.IsEnabled = true;
             FfmpegService.CleanupTempDirectories();
             TrimEditorHost.IsEnabled = true;
             VideoSettingsHost.IsEnabled = true;

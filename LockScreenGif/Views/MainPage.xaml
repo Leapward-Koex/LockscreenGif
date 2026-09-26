@@ -19,8 +19,6 @@
             <RowDefinition Height="*" />
             <!--  Pivot content  -->
             <RowDefinition Height="Auto" />
-            <!--  Remove section  -->
-            <RowDefinition Height="Auto" />
             <!--  Apply button  -->
         </Grid.RowDefinitions>
 
@@ -453,37 +451,9 @@
             </Grid>
         </ScrollView>
 
-        <!--  3) Remove Section: Clear saved animated GIFs and revert to default  -->
-        <Grid
-            Grid.Row="3"
-            Margin="0,12,0,12"
-            Padding="16"
-            Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
-            CornerRadius="{StaticResource ControlCornerRadius}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0" Spacing="4">
-                <TextBlock FontWeight="SemiBold" Text="Remove Animated Lockscreen" />
-                <TextBlock
-                    Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                    Text="This will clear any saved animated GIFs and revert back to your existing lockscreen"
-                    TextWrapping="Wrap" />
-            </StackPanel>
-
-            <Button
-                x:Name="removeAnimatedLockscreen"
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                Click="RemoveAnimatedLockscreenButton_click"
-                Content="Remove" />
-        </Grid>
-
-        <!--  4) Bottom Row: Apply button  -->
+        <!--  3) Bottom Row: Apply button  -->
         <StackPanel
-            Grid.Row="4"
+            Grid.Row="3"
             HorizontalAlignment="Right"
             Orientation="Horizontal"
             Spacing="8">

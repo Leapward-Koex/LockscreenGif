@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Diagnostics;
 using LockscreenGif.Models;
 using Windows.Storage;
@@ -21,12 +22,27 @@ internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheW
             // Hold the source open throughout the operation. All target copies and the
             // optional Windows API call then use the exact source whose hash was recorded.
             await using var source = VerifiedCacheWriter.OpenRead(sourcePath);
-            var header = new byte[6];
+            var sourceLength = source.Length;
+            var header = new byte[sourceLength >= 10 ? 10 : 6];
             await source.ReadExactlyAsync(header, cancellationToken);
-            var signature = System.Text.Encoding.ASCII.GetString(header);
+            var signature = System.Text.Encoding.ASCII.GetString(header, 0, 6);
             if (signature is not "GIF87a" and not "GIF89a")
             {
                 throw new InvalidDataException("The selected source is not a GIF file.");
+            }
+
+            result.SourceSizeBytes = sourceLength;
+            if (header.Length >= 10)
+            {
+                // GIF logical-screen dimensions follow the six-byte signature, as little-endian unsigned words.
+                // Reuse the header read; do not decode or reopen the source just for analytics.
+                var width = BinaryPrimitives.ReadUInt16LittleEndian(header.AsSpan(6, 2));
+                var height = BinaryPrimitives.ReadUInt16LittleEndian(header.AsSpan(8, 2));
+                if (width > 0 && height > 0)
+                {
+                    result.SourceWidth = width;
+                    result.SourceHeight = height;
+                }
             }
 
             source.Position = 0;

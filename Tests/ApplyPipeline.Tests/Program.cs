@@ -15,6 +15,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Cancellation before commit preserves the previous image", CancelBeforeCommit),
     ("Cancellation while staging preserves the previous image", CancelDuringStaging),
     ("Invalid source format is rejected", InvalidSource),
+    ("Source size uses GIF canvas dimensions and omits unknown dimensions", SourceSize),
     ("Source cannot change while it is being applied", SourceIsStable),
     ("Targets outside the cache are rejected", OutsideRoot),
     ("Structured apply outcomes survive JSON round trip", Serialization),
@@ -58,12 +59,18 @@ static async Task CompleteApply()
     );
     Assert(result.Files.Select(file => file.Sha256).Distinct().Count() == 1, "All hashes must match.");
     Assert(!result.ApiRequested && !result.ApiCompleted, "Normal apply must not request Windows image API.");
+    Assert(result.SourceSizeBytes == new FileInfo(fixture.Source).Length, "Size describes one source GIF, not all cache copies.");
+    Assert(result.SourceWidth == 1 && result.SourceHeight == 1, "GIF logical-screen dimensions are read from the source header.");
 }
 
 static async Task EmptyCache()
 {
     using var fixture = new CacheFixture(createFolder: false);
     var result = await fixture.Apply();
+    Assert(
+        result.SourceSizeBytes == new FileInfo(fixture.Source).Length && result.SourceWidth == 1,
+        "Source metadata survives a later apply failure."
+    );
     Assert(
         !result.Success && result.Files.Count == 0 && result.Error!.Contains("No lock-screen cache"),
         "An empty cache must not report success."
@@ -100,6 +107,10 @@ static async Task CancelledBeforeApply()
     using var cancellation = new CancellationTokenSource();
     cancellation.Cancel();
     var result = await fixture.Apply(token: cancellation.Token);
+    Assert(
+        result.SourceSizeBytes is null && result.SourceWidth is null && result.SourceHeight is null,
+        "Precancelled work invents no metadata."
+    );
     Assert(
         result.Cancelled && !result.Success && Directory.GetFiles(fixture.Folder).Length == 0,
         "Pre-cancelled apply must not write cache files."
@@ -175,8 +186,43 @@ static async Task InvalidSource()
     using var fixture = new CacheFixture();
     await File.WriteAllTextAsync(fixture.Source, "not a GIF file");
     var result = await fixture.Apply();
+    Assert(
+        result.SourceSizeBytes is null && result.SourceWidth is null && result.SourceHeight is null,
+        "Invalid GIF signatures produce no GIF size properties."
+    );
     Assert(!result.Success && result.Error!.Contains("InvalidDataException"), "Invalid source must fail before writes.");
     Assert(Directory.GetFiles(fixture.Folder).Length == 0, "Invalid source should not affect the cache.");
+}
+
+static async Task SourceSize()
+{
+    using var fixture = new CacheFixture(createFolder: false);
+    var bytes = await File.ReadAllBytesAsync(fixture.Source);
+    bytes[6] = 0x80;
+    bytes[7] = 0x07;
+    bytes[8] = 0x38;
+    bytes[9] = 0x04;
+    await File.WriteAllBytesAsync(fixture.Source, bytes);
+    var sized = await fixture.Apply();
+    Assert(
+        sized.SourceSizeBytes == bytes.Length && sized.SourceWidth == 1920 && sized.SourceHeight == 1080,
+        "Canvas dimensions must use little-endian words and remain distinct from frame dimensions."
+    );
+
+    bytes[6] = bytes[7] = 0;
+    await File.WriteAllBytesAsync(fixture.Source, bytes);
+    var zero = await fixture.Apply();
+    Assert(
+        zero.SourceSizeBytes == bytes.Length && zero.SourceWidth is null && zero.SourceHeight is null,
+        "An invalid zero canvas leaves dimensions unknown while retaining file size."
+    );
+
+    await File.WriteAllBytesAsync(fixture.Source, bytes[..9]);
+    var truncated = await fixture.Apply();
+    Assert(
+        truncated.SourceSizeBytes == 9 && truncated.SourceWidth is null && truncated.SourceHeight is null,
+        "An incomplete descriptor must not invent dimensions."
+    );
 }
 
 static async Task SourceIsStable()
@@ -219,6 +265,12 @@ static async Task Serialization()
     using var fixture = new CacheFixture();
     var result = await fixture.Apply();
     var restored = JsonSerializer.Deserialize<LockscreenApplyResult>(JsonSerializer.Serialize(result))!;
+    Assert(
+        restored.SourceSizeBytes == result.SourceSizeBytes
+            && restored.SourceWidth == result.SourceWidth
+            && restored.SourceHeight == result.SourceHeight,
+        "Source size metadata survives result serialization."
+    );
     Assert(
         restored.Files.Count == result.Files.Count && restored.Files.All(file => file.Verified),
         "Cloning a report must preserve file outcomes."

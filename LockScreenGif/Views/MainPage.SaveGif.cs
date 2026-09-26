@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using LockscreenGif.Services.Analytics;
 using Microsoft.UI.Xaml;
 using Windows.Storage;
 using Windows.Storage.Pickers;
@@ -26,39 +28,65 @@ public sealed partial class MainPage
                 return;
             }
 
-            var picker = new FileSavePicker
+            Stopwatch? timer = null;
+            try
             {
-                SuggestedStartLocation = PickerLocationId.Downloads,
-                SuggestedFileName = _generatedGifName,
-                DefaultFileExtension = ".gif",
-            };
-            picker.FileTypeChoices.Add("GIF image", new List<string> { ".gif" });
-            InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
-            var destination = await picker.PickSaveFileAsync();
-            if (destination is null)
-            {
-                return;
-            }
-
-            if (!string.Equals(source.Path, destination.Path, StringComparison.OrdinalIgnoreCase))
-            {
-                CachedFileManager.DeferUpdates(destination);
-                try
+                var picker = new FileSavePicker
                 {
-                    await source.CopyAndReplaceAsync(destination);
+                    SuggestedStartLocation = PickerLocationId.Downloads,
+                    SuggestedFileName = _generatedGifName,
+                    DefaultFileExtension = ".gif",
+                };
+                picker.FileTypeChoices.Add("GIF image", new List<string> { ".gif" });
+                InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
+                var destination = await picker.PickSaveFileAsync();
+                if (destination is null)
+                {
+                    _analyticsService.Track(
+                        AnalyticsEvent.GifSaveCompleted,
+                        new AnalyticsProperties { Outcome = AnalyticsOutcome.Cancelled }
+                    );
+                    return;
                 }
-                finally
+
+                timer = Stopwatch.StartNew();
+                if (!string.Equals(source.Path, destination.Path, StringComparison.OrdinalIgnoreCase))
                 {
-                    var status = await CachedFileManager.CompleteUpdatesAsync(destination);
-                    if (status != FileUpdateStatus.Complete && status != FileUpdateStatus.CompleteAndRenamed)
+                    CachedFileManager.DeferUpdates(destination);
+                    try
                     {
-                        throw new IOException($"The selected location could not finish saving the GIF ({status}).");
+                        await source.CopyAndReplaceAsync(destination);
+                    }
+                    finally
+                    {
+                        var status = await CachedFileManager.CompleteUpdatesAsync(destination);
+                        if (status != FileUpdateStatus.Complete && status != FileUpdateStatus.CompleteAndRenamed)
+                        {
+                            throw new IOException($"The selected location could not finish saving the GIF ({status}).");
+                        }
                     }
                 }
-            }
 
-            OperationStatus.Title = "GIF saved";
-            OperationStatus.Message = "You can select the saved copy with Browse GIF whenever you want to use it again.";
-            OperationStatus.IsOpen = true;
+                OperationStatus.Title = "GIF saved";
+                OperationStatus.Message = "You can select the saved copy with Browse GIF whenever you want to use it again.";
+                OperationStatus.IsOpen = true;
+                _analyticsService.Track(
+                    AnalyticsEvent.GifSaveCompleted,
+                    new AnalyticsProperties { Outcome = AnalyticsOutcome.Succeeded, DurationMs = timer.Elapsed.TotalMilliseconds }
+                );
+            }
+            catch (Exception ex)
+            {
+                _analyticsService.Track(
+                    AnalyticsEvent.GifSaveCompleted,
+                    new AnalyticsProperties
+                    {
+                        Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
+                        DurationMs = timer?.Elapsed.TotalMilliseconds,
+                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
+                    }
+                );
+                throw;
+            }
         });
 }

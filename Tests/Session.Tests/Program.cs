@@ -20,6 +20,7 @@ internal static class Program
             await TracingLifecycleTests.RunAsync(directory);
             await TraceRetentionTests.RunAsync();
             await TracePollingTests.RunAsync();
+            await LockscreenVerificationTests.RunAsync();
             Console.WriteLine($"All {_checks} session lifecycle checks passed. No native lock-screen APIs were called.");
         }
         finally

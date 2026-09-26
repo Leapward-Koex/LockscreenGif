@@ -213,11 +213,11 @@
                     Content="Export report"
                     IsEnabled="{x:Bind ViewModel.CanExport, Mode=OneWay}"
                     Style="{StaticResource AccentButtonStyle}"
-                    ToolTipService.ToolTip="Export the timeline, file checks, and app details as a ZIP report." />
+                    ToolTipService.ToolTip="Export the timeline, file checks, app details, and recent application logs as a ZIP report." />
                 <TextBlock
                     FontSize="12"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="Personal paths are redacted. Source media and screenshots are excluded. Review the report before sharing it."
+                    Text="Includes recent application logs. Personal paths are redacted. Source media and screenshots are excluded. Review the report before sharing it."
                     TextWrapping="Wrap" />
                 <TextBlock
                     FontSize="12"

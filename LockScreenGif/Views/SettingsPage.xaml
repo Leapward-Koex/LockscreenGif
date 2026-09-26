@@ -1,0 +1,69 @@
+<Page
+    x:Class="LockscreenGif.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:helpers="using:LockscreenGif.Helpers">
+    <ScrollViewer>
+        <StackPanel Margin="32" Spacing="20" MaxWidth="760" HorizontalAlignment="Left">
+            <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock Text="Logs" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Padding="24" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="16">
+                    <TextBlock TextWrapping="Wrap" Text="Open the application logs or save a ZIP copy for troubleshooting." />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="OpenLogFolderButton" Content="Open log folder" Click="OpenLogFolder_Click" />
+                        <Button x:Name="SaveLogsButton" Content="Save logs as ZIP…" Click="SaveLogs_Click" />
+                    </StackPanel>
+                    <StackPanel x:Name="LogExportProgress" Orientation="Horizontal" Spacing="12" Visibility="Collapsed">
+                        <ProgressRing x:Name="LogExportRing" Width="20" Height="20" IsActive="False" />
+                        <TextBlock Text="Saving logs…" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <InfoBar x:Name="LogsStatus" IsOpen="False" IsClosable="True" />
+                </StackPanel>
+            </Border>
+            <TextBlock Text="Analytics" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Padding="24" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="16">
+                    <ToggleSwitch x:Name="AnalyticsToggle" Header="Share usage analytics"
+                        OnContent="Enabled" OffContent="Disabled" Toggled="AnalyticsToggle_Toggled" />
+                    <TextBlock TextWrapping="Wrap"
+                        Text="Help improve Lockscreen Gif by sharing which features are used, whether operations succeed, how long they take, and compatibility details: app and Windows versions, Windows edition, languages and locales, system and app architecture, and whether the app runs as administrator or in a remote session." />
+                    <TextBlock TextWrapping="Wrap"
+                        Text="Events are sent to PostHog in the EU with a random installation ID. Filenames, file paths, media, diagnostic logs, and exception messages are never included." />
+                    <TextBlock TextWrapping="Wrap"
+                        Text="Turning this off stops new analytics requests and discards pending events on this PC. Data already sent is not removed. Turning it back on creates a new installation ID." />
+                    <InfoBar x:Name="AnalyticsStatus" IsOpen="False" IsClosable="False" Severity="Informational" />
+                    <InfoBar x:Name="AnalyticsSettingsError" IsOpen="False" Severity="Warning"
+                        Title="Could not save the analytics preference"
+                        Message="Sharing is off for this session, but the preference could not be saved. Try again before closing the app." />
+                </StackPanel>
+            </Border>
+            <Grid Padding="16" ColumnSpacing="16"
+                Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
+                CornerRadius="{StaticResource ControlCornerRadius}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Spacing="4">
+                    <TextBlock FontWeight="SemiBold" Text="Remove Animated Lockscreen" />
+                    <TextBlock Foreground="{StaticResource TextFillColorSecondaryBrush}"
+                        Text="This will clear any saved animated GIFs and revert back to your existing lockscreen"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+                <Button x:Name="RemoveLockscreenButton" Grid.Column="1" VerticalAlignment="Center"
+                    Click="RemoveLockscreen_Click" Content="Remove" />
+            </Grid>
+            <InfoBar x:Name="RemovalStatus" IsOpen="False" IsClosable="True" />
+            <TextBlock Text="About" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Padding="24" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="{x:Bind helpers:BuildInfo.DisplayVersion, Mode=OneTime}"
+                        TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                    <HyperlinkButton Content="GitHub repository" HorizontalAlignment="Left" Padding="0"
+                        NavigateUri="https://github.com/Leapward-Koex/LockscreenGif" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

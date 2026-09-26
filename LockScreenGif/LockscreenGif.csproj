@@ -21,6 +21,8 @@
 
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
+    <!-- Captured at compile time: local Debug and Release builds always use development analytics. -->
+    <AssemblyMetadata Include="GitHubActionsBuild" Value="true" Condition="'$(GITHUB_ACTIONS)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup>

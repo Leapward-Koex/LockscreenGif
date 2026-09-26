@@ -7,7 +7,7 @@ namespace LockscreenGif.Contracts.Services;
 
 public interface ILockscreenService
 {
-    Task<bool> ApplyGifAsLockscreenAsync();
+    Task<LockscreenApplyResult> ApplyGifAsLockscreenAsync();
     Task<LockscreenApplyResult> ApplyAsync(
         string sourcePath,
         bool useWindowsApi,

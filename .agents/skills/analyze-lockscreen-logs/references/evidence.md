@@ -42,6 +42,14 @@ Sidecar and temporary paths may have no applied-file verification boundary. Thei
 
 The diagnostic page intentionally omits playback-observation controls. Ask for the visible result and surface alongside a ZIP when not already supplied. An empty exported observation is not a failed test. Short lock/unlock tests also cannot establish the cause of next-day cache reversion; that needs evidence captured during the later event.
 
+## Regular apply verification
+
+`LockscreenVerificationService` reuses the diagnostic trace collector for the regular apply flow, without reapplying or running full cache inventories. Monitoring begins only after **Lock now** is selected, before requesting the lock. The result requires a successfully verified target and a completed positive-byte read started after that target's `VerifiedAt`, attributed to `LogonUI.exe` in the app's Windows session. Other readers can qualify for the diagnostic page's broader external-read finding but cannot qualify for the regular flow's LogonUI confirmation. Retained operations can establish a read even when their aggregate was omitted.
+
+Process names have two native sources: the startup `Process.GetProcesses()` snapshot uses `ProcessName` (for example, `LogonUI`), while ETW process events supply an image filename (for example, `LogonUI.exe`). Match those exact names case-insensitively while still requiring resolved process/session attribution. Requiring the extension alone can miss an already-running LogonUI process.
+
+**Later** completes the apply without collecting evidence. The normal check stops and drains after the observed unlock; if its five-minute capture limit expires while locked, it releases the collector and retains the session listener until unlock or app closure. No captured read remains inconclusive, including when Windows reused an image or tracing was unavailable. A positive read survives collection gaps. The short result describes file access, while the subsequent Windows notification confirms only that the GIF was applied. This check has no fresh after-unlock hash inventory and is not a diagnostic export.
+
 ## Coverage counters
 
 - `EventsLost`: ETW collection loss.
