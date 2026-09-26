@@ -65,6 +65,20 @@ At the deadline the collector calls `StopProcessing`, so keep tracing incomplete
 
 All checkpoint objects are snapshots. The eventual `WorkerStage=Finished` must not overwrite the recorded stage/progress at the deadline, and completed cleanup must not turn an incomplete trace into a completed one.
 
+## Warnings in successful cycles
+
+Two user-confirmed successful cycles, one using the reference GIF and one a selected GIF, produced access-failure and external-modification warnings despite verified copies, independent post-verification reads, and matching fresh final hashes. These warnings need temporal and attribution context:
+
+- All retained external failure operations in these examples finished before the first destination was verified. Compare `Timestamp` and `CompletedAt` with the Windows API events and each file's `VerifiedAt`; a whole-trace failure total is not evidence that the applied GIF could not be read. Missing-file and privilege failures remain real operation results, but do not establish an unresolved apply or playback failure when later operations succeed.
+- `STATUS_FLT_DISALLOW_FAST_IO` (`0xC01C0004`) selects an I/O fallback path, not necessarily a terminal write failure. In these examples, such statuses were followed by successful writes on the same path and process lifetime. Preserve the raw status and look for subsequent outcomes; do not automatically treat fallback as successful either. Microsoft documents that the I/O manager may reissue the operation through the IRP path: [Fast I/O fallback](https://learn.microsoft.com/en-us/windows-hardware/drivers/ifs/disallowing-a-fast-i-o-operation-in-a-preoperation-callback-routine), [NTSTATUS values](https://learn.microsoft.com/en-us/openspecs/windows_protocols/ms-erref/596a1078-e883-4972-9bbc-49e60bebca55).
+- Post-verification modifications in these examples were System writes, with byte counts consistent with the selected GIF and matching hashes afterward. Cache writeback is a plausible explanation, not a proven initiator. The same PID-4 attribution caution used for reads applies to writes; do not label them as proof of another application overwriting the GIF.
+- `DiagnosticTraceFindings` currently summarizes whole-trace failures/modifications. Aggregate `LastAt` is the last activity of any kind, not a failure/write timestamp. `TraceHashCorrelation` can describe the expected Baseline-to-AfterApply hash change. Distinguish that change from a replacement after verification; neither temporal association establishes causation. If detailed operations are omitted, retain uncertainty rather than assigning an aggregate to a phase.
+- Multiple processes named LogonUI can belong to different Windows sessions. Compare process lifetime and `SessionId` with the app session before connecting an operation to the observed lock cycle; a process name alone is insufficient.
+
+Both cycles also supplied normal shutdown checkpoints: native STOP succeeded in about 120 ms, the consumer returned normally about 160 ms later, and final inspection activity was present. This validates the instrumentation for these cycles, not the cause or resolution of a previous timeout. Their baseline files were small, so they do not exercise the previously problematic large-baseline workload.
+
+For reports from affected machines, obtain the visible symptom and surface in accompanying text if observation controls are absent. Use a selected/reference GIF pair to narrow source-specific versus machine-wide behavior. Both runs with the API enabled cannot isolate the API's effect; an API-on run can change the next run's baseline. Normal monitoring stops shortly after unlock, so a report cannot attribute a next-day reset that falls outside its capture window.
+
 ## Code and verification map
 
 Paths below are relative to the repository root.

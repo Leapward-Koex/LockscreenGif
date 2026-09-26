@@ -35,6 +35,10 @@ For drain timeouts, distinguish the native consumer finishing from the transport
 
 Prefer concrete file sizes, byte counts, timestamps, and return statuses over process-name guesses. Identify a collector or presentation defect separately from a lock-screen failure. State uncertainty when evidence is missing; do not dismiss a real queue loss or timeout just because animation worked.
 
+For access-error and modification warnings, inspect operation timing separately from read findings. Whole-trace warnings can include pre-copy Windows API activity, Fast I/O fallback statuses, and System writes with an unknown initiator. Compare against each target's verification boundary and fresh final hashes before suggesting a playback cause. See the successful-cycle warning guidance in the reference.
+
+The visual-observation UI may intentionally be absent. A null observation is not a failed test: use the user's description alongside the ZIP, and keep reported playback separate from measured file access. Successful examples validate collection for those cycles; they do not reproduce another machine's failure.
+
 When fixing a confirmed defect, add a small synthetic regression reproducing the important relationship, not a copy of the user's report. Run the relevant isolated console test project. Native/elevated harnesses and real lock/unlock tests are separate acceptance checks; never describe isolated tests as proving a real Windows cycle.
 
 ## Maintain this skill
