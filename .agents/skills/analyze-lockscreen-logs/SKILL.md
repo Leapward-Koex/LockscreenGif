@@ -29,6 +29,10 @@ Separate these questions:
 
 One verified GIF copy being accessed is enough for the access finding. Other variants are optional, and reads never establish decoding or animation. User observation is separate playback evidence.
 
+Check `ActivityByFileAndProcess` before treating process errors or modifications as a lock-screen failure. Preparation-time probes, normal read EOF, and `STATUS_FLT_DISALLOW_FAST_IO` fallback attempts can occur in working cycles. An independent genuine failure becomes an access warning only with valid evidence that it started after that intended copy's successful `VerifiedAt`. Missing reads, uncertain timing/attribution, System I/O, and observed modifications are information; apply failures, fresh hash mismatches, and collection gaps remain separate warnings. Do not infer exact post-apply counts from whole-test totals or a latest-event witness.
+
+Playback observations are deliberately kept outside the diagnostic page. A ZIP should be accompanied by the reported outcome (animated, selected GIF but still, previous image, blank, or uncertain) and surface (initial lock screen, sign-in background, or after waking). Empty observation fields are not evidence of failed playback and do not justify restoring removed UI.
+
 When comparing collector performance between reports, compare `BaselineInventory` as well as selected source size: a small reference GIF can replace a very large previous GIF, and the baseline hashing workload differs.
 
 For drain timeouts, distinguish the native consumer finishing from the transport queue draining. Compare the last retained operation and aggregate timestamps with final fresh hash reads; `ProcessTrace.EndedAt` is worker cleanup time, not proof of event coverage through that time. Use the script's `TraceShutdown` measurements when present, and see the shutdown guidance in the reference before assigning a cause.
