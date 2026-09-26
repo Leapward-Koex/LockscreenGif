@@ -1,11 +1,7 @@
-﻿using System.Diagnostics;
-using System.Reflection;
-using FFMpegCore;
-using FFMpegCore.Enums;
 using GifskiNet;
-using WindowsDisplayAPI;
 
 namespace LockscreenGif.Services;
+
 public class GifSkiService
 {
     private static readonly List<string> _tracked = [];
@@ -48,8 +44,12 @@ public class GifSkiService
                 Logger.Info($"Deleted {path}");
             }
         }
-        catch (IOException) { /* in‐use → ignore/log */ }
-        catch (UnauthorizedAccessException) { /* perms → ignore/log */ }
+        catch (IOException)
+        { /* in‐use → ignore/log */
+        }
+        catch (UnauthorizedAccessException)
+        { /* perms → ignore/log */
+        }
         catch (Exception ex)
         {
             Logger.Error($"Failed to delete {path}", ex);
@@ -59,20 +59,25 @@ public class GifSkiService
     public static async Task<string> CreateGif(
         string inputDirectory,
         Action<double> onPercentageProgress,
-        double frameRate)
+        IReadOnlyList<double> presentationTimes,
+        double duration
+    )
     {
-        Logger.Info($"Going to create gif with {inputDirectory}, framerate {frameRate}");
+        Logger.Info($"Going to create gif with {inputDirectory}, duration {duration}");
 
         return await Task.Run(() =>
         {
             var baseDir = AppContext.BaseDirectory;
             var gifskiDll = Path.Combine(baseDir, "Vendor", "gifski", "gifski.dll");
 
-            using var gifski = Gifski.Create(gifskiDll, settings =>
-            {
-                settings.Quality = 100;
-                settings.Extra = true;
-            });
+            using var gifski = Gifski.Create(
+                gifskiDll,
+                settings =>
+                {
+                    settings.Quality = 100;
+                    settings.Extra = true;
+                }
+            );
 
             var outputFolder = CreateTempDirectory();
 
@@ -86,11 +91,7 @@ public class GifSkiService
                     var name = Path.GetFileNameWithoutExtension(path);
                     // e.g. name = "frame_000123"
                     var numPart = name.Substring(name.LastIndexOf('_') + 1);
-                    return new
-                    {
-                        Path = path,
-                        Index = int.TryParse(numPart, out var n) ? n : 0
-                    };
+                    return new { Path = path, Index = int.TryParse(numPart, out var n) ? n : 0 };
                 })
                 .OrderBy(x => x.Index)
                 .ToArray();
@@ -100,16 +101,20 @@ public class GifSkiService
                 throw new InvalidOperationException("No frames found in " + inputDirectory);
             }
 
+            if (frames.Length != presentationTimes.Count || duration <= presentationTimes[^1])
+            {
+                throw new InvalidDataException("Extracted frame timing does not match the selected clip.");
+            }
+            // Gifski uses a positive first timestamp as the final frame delay.
+            // Offset every PTS equally to retain all intermediate (including VFR) delays.
+            var finalDelay = duration - presentationTimes[^1];
+
             for (var i = 0; i < frames.Length; i++)
             {
-                var timestamp = i / frameRate;
-                gifski.AddFramePngFile(
-                    frameNumber: (uint)i,
-                    presentationTimestamp: timestamp,
-                    filePath: frames[i].Path);
+                var timestamp = presentationTimes[i] + finalDelay;
+                gifski.AddFramePngFile(frameNumber: (uint)i, presentationTimestamp: timestamp, filePath: frames[i].Path);
                 onPercentageProgress(((double)i / frames.Length) * 100);
             }
-
 
             var err = gifski.Finish();
             if (err != GifskiError.OK)
@@ -119,6 +124,5 @@ public class GifSkiService
 
             return outputFile;
         });
-
     }
 }

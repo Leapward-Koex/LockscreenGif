@@ -1,19 +1,14 @@
 ﻿using LockscreenGif.Contracts.Services;
 using LockscreenGif.Helpers;
-
 using Microsoft.UI.Xaml;
 
 namespace LockscreenGif.Services;
 
 public class ThemeSelectorService : IThemeSelectorService
 {
-
     public ElementTheme Theme { get; set; } = ElementTheme.Default;
 
-
-    public ThemeSelectorService()
-    {
-    }
+    public ThemeSelectorService() { }
 
     public async Task InitializeAsync()
     {
@@ -42,8 +37,6 @@ public class ThemeSelectorService : IThemeSelectorService
 
     private Task<ElementTheme> LoadThemeFromSettingsAsync()
     {
-
         return Task.FromResult(ElementTheme.Default);
     }
-
 }

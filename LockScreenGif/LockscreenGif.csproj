@@ -1,8 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
     <RootNamespace>LockscreenGif</RootNamespace>
+    <Version Condition="'$(Version)' == ''">3.0.0-local</Version>
     <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x64</Platforms>
@@ -24,7 +25,6 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="CommunityToolkit.WinUI.Controls.RangeSelector" Version="8.2.251219" />
     <PackageReference Include="FFMpegCore" Version="5.4.0" />
     <PackageReference Include="Gifski.Net" Version="1.2.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.2" />
@@ -73,4 +73,21 @@
   <PropertyGroup Condition="'$(DisableHasPackageAndPublishMenuAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
     <HasPackageAndPublishMenu>true</HasPackageAndPublishMenu>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../LockscreenGif.Privileged.Contracts/LockscreenGif.Privileged.Contracts.csproj" />
+    <ProjectReference Include="../LockscreenGif.Privileged.Helper/LockscreenGif.Privileged.Helper.csproj" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="Platform;PublishProfile;PublishSingleFile" />
+  </ItemGroup>
+  <Target Name="CopyPrivilegedHelper" AfterTargets="Build">
+    <ItemGroup><HelperFiles Include="../LockscreenGif.Privileged.Helper/bin/$(Configuration)/net9.0-windows/win-x64/**/*" /></ItemGroup>
+    <Copy SourceFiles="@(HelperFiles)" DestinationFiles="@(HelperFiles->'$(OutDir)Helpers/Privileged/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="PublishPrivilegedHelper" BeforeTargets="ComputeFilesToPublish" DependsOnTargets="CopyPrivilegedHelper">
+    <ItemGroup>
+      <ResolvedFileToPublish Include="@(HelperFiles)">
+        <RelativePath>Helpers/Privileged/%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
 </Project>

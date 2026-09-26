@@ -1,14 +1,15 @@
-﻿<Page
+<Page
     x:Class="LockscreenGif.Views.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:controls="using:CommunityToolkit.WinUI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:LockscreenGif.CustomControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:winui="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
 
+    <Grid>
+    <ContentControl x:Name="PageContent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
     <Grid MaxWidth="1000" Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -24,11 +25,10 @@
         </Grid.RowDefinitions>
 
         <!--  1) Title  -->
-        <TextBlock
-            Grid.Row="0"
-            Margin="0,0,0,12"
-            Style="{ThemeResource TitleTextBlockStyle}"
-            Text="Lockscreen Gif" />
+        <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,12">
+            <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="Lockscreen Gif" />
+            <InfoBar x:Name="OperationStatus" Severity="Informational" IsOpen="False" />
+        </StackPanel>
 
         <!--  2) Prerequisites Section  -->
         <Expander
@@ -264,69 +264,99 @@
                                 <Button
                                     Grid.Column="2"
                                     Padding="32,8"
+                                    x:Name="BrowseVideoButton"
                                     Click="OpenVideoButton_click"
                                     Content="Browse Video" />
                             </Grid>
 
-                            <!--  Video preview  -->
-                            <MediaPlayerElement
-                                x:Name="VideoPreview"
-                                MaxWidth="560"
-                                AreTransportControlsEnabled="True"
-                                Visibility="Collapsed">
-                                <MediaPlayerElement.TransportControls>
-                                    <MediaTransportControls
-                                        IsCompact="True"
-                                        IsVolumeButtonVisible="False"
-                                        IsVolumeEnabled="False"
-                                        IsZoomButtonVisible="False" />
-
-                                </MediaPlayerElement.TransportControls>
-                            </MediaPlayerElement>
-
-                            <!--  Scrub controls  -->
-                            <StackPanel
-                                x:Name="TrimControlsPanel"
-                                Spacing="8"
-                                Visibility="Collapsed">
-                                <TextBlock FontWeight="SemiBold" Text="Trim range:" />
-                                <local:CustomRangeSelector
-                                    x:Name="TrimSelector"
-                                    Maximum="1"
-                                    Minimum="0"
-                                    RangeDragging="TrimSelector_RangeDragging"
-                                    RangeEnd="1"
-                                    RangeStart="0"
-                                    StepFrequency="1"
-                                    ThumbDragCompleted="TrimSelector_ThumbDragCompleted"
-                                    ThumbDragStarted="TrimSelector_ThumbDragStarted"
-                                    ValueChanged="TrimSelector_ValueChanged" />
-
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-
-                                    <TextBox
-                                        x:Name="StartTimeTextBox"
-                                        Grid.Column="0"
-                                        Width="100"
-                                        LostFocus="StartTimeTextBox_LostFocus"
-                                        PlaceholderText="mm:ss.f"
-                                        Text="00:00.0" />
-
-                                    <TextBox
-                                        x:Name="EndTimeTextBox"
-                                        Grid.Column="2"
-                                        Width="100"
-                                        LostFocus="EndTimeTextBox_LostFocus"
-                                        PlaceholderText="mm:ss.f"
-                                        Text="00:00.0" />
+                            <Grid x:Name="VideoPreviewPanel" Visibility="Collapsed" MaxWidth="560">
+                                <MediaPlayerElement x:Name="VideoPreview" AreTransportControlsEnabled="False" />
+                                <Image x:Name="PreviewStill" Stretch="Uniform" Visibility="Collapsed" IsHitTestVisible="False" />
+                                <Border x:Name="PreviewLoadingPanel" Visibility="Collapsed" Background="#99000000" IsHitTestVisible="False">
+                                    <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="16">
+                                        <ProgressRing x:Name="PreviewLoadingRing" Width="32" Height="32" IsActive="False" Foreground="White" />
+                                        <TextBlock x:Name="PreviewLoadingText" Text="Loading frame…" Foreground="White" TextAlignment="Center" TextWrapping="Wrap" />
+                                        <TextBlock Text="You can keep adjusting the clip." Foreground="White" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                            <ContentControl x:Name="TrimEditorHost" HorizontalContentAlignment="Stretch">
+                            <StackPanel x:Name="TrimControlsPanel" Spacing="12" Visibility="Collapsed" SizeChanged="TrimControlsPanel_SizeChanged">
+                                <Grid Margin="0,4,0,0" ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="4" VerticalAlignment="Center">
+                                        <TextBlock Text="Choose your clip" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <TextBlock x:Name="SelectionSummary" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Reset trim" Click="ResetTrim_Click" VerticalAlignment="Center"
+                                            ToolTipService.ToolTip="Select the full video and return the preview to its first frame" />
                                 </Grid>
-                            </StackPanel>
+                                <local:VideoTimeline x:Name="TrimTimeline"
+                                    InteractionStarted="Timeline_InteractionStarted"
+                                    InteractionCompleted="Timeline_InteractionCompleted"
+                                    FrameChanged="Timeline_FrameChanged" />
+                                <Button x:Name="PlaySelectionButton" Content="Play" Click="PlaySelection_Click" MinWidth="96" HorizontalAlignment="Center"
+                                        ToolTipService.ToolTip="Play or pause the selected clip. Playback loops automatically." />
+                                <TextBlock x:Name="PreviewStatus" Visibility="Collapsed" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                           TextWrapping="Wrap" FontSize="12" AutomationProperties.LiveSetting="Polite" />
+                                <Grid x:Name="TrimBoundaryGrid">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <Border x:Name="StartBoundaryCard" Padding="16" CornerRadius="8"
+                                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="8">
+                                            <Grid ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="StartTimeHeading" Text="Start" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock x:Name="StartFrameLabel" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap" />
+                                            </Grid>
+                                            <TextBox x:Name="StartTimeTextBox" AutomationProperties.Name="Clip start time" AutomationProperties.LabeledBy="{Binding ElementName=StartTimeHeading}"
+                                                LostFocus="TimeTextBox_LostFocus" KeyDown="TimeTextBox_KeyDown" PlaceholderText="Seconds or mm:ss.fff" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <RepeatButton x:Name="StartBackButton" Content="−1 frame" Tag="StartBack" Click="NudgeBoundary_Click"
+                                                    AutomationProperties.Name="Move start one frame earlier" ToolTipService.ToolTip="Move start exactly one frame earlier" />
+                                                <RepeatButton x:Name="StartForwardButton" Content="+1 frame" Tag="StartForward" Click="NudgeBoundary_Click"
+                                                    AutomationProperties.Name="Move start one frame later" ToolTipService.ToolTip="Move start exactly one frame later" />
+                                            </StackPanel>
+                                            <Button Click="StartHere_Click" ToolTipService.ToolTip="Use the current preview frame as the first included frame">
+                                                <TextBlock Text="Set start to current frame" TextWrapping="Wrap" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border x:Name="EndBoundaryCard" Grid.Column="2" Padding="16" CornerRadius="8"
+                                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                                        <StackPanel Spacing="8">
+                                            <Grid ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <TextBlock x:Name="EndTimeHeading" Text="End" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                                <TextBlock x:Name="EndFrameLabel" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap" />
+                                            </Grid>
+                                            <TextBox x:Name="EndTimeTextBox" AutomationProperties.Name="Clip end time" AutomationProperties.LabeledBy="{Binding ElementName=EndTimeHeading}"
+                                                ToolTipService.ToolTip="End time is just after the last included frame."
+                                                LostFocus="TimeTextBox_LostFocus" KeyDown="TimeTextBox_KeyDown" PlaceholderText="Seconds or mm:ss.fff" />
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <RepeatButton x:Name="EndBackButton" Content="−1 frame" Tag="EndBack" Click="NudgeBoundary_Click"
+                                                    AutomationProperties.Name="Move end one frame earlier" ToolTipService.ToolTip="Move end exactly one frame earlier" />
+                                                <RepeatButton x:Name="EndForwardButton" Content="+1 frame" Tag="EndForward" Click="NudgeBoundary_Click"
+                                                    AutomationProperties.Name="Move end one frame later" ToolTipService.ToolTip="Move end exactly one frame later" />
+                                            </StackPanel>
+                                            <Button Click="EndHere_Click" ToolTipService.ToolTip="Include the current preview frame as the last frame">
+                                                <TextBlock Text="Set end to current frame" TextWrapping="Wrap" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                                <TextBlock x:Name="TrimError" Visibility="Collapsed" Foreground="{ThemeResource SystemFillColorCriticalBrush}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" />
 
+                            </StackPanel>
+                            </ContentControl>
+                            <ContentControl x:Name="VideoSettingsHost" HorizontalContentAlignment="Stretch">
                             <StackPanel
                                 x:Name="ComboSettingsStack"
                                 Margin="0,16,0,0"
@@ -345,13 +375,14 @@
                                         <TextBlock FontWeight="SemiBold" Text="Frame rate" />
                                         <ComboBox
                                             x:Name="ComboFps"
-                                            Width="100"
+                                            Width="200"
                                             SelectionChanged="ComboResolution_SelectionChanged" />
                                     </StackPanel>
                                 </StackPanel>
                             </StackPanel>
 
 
+                            </ContentControl>
                             <!--  Generate button  -->
                             <InfoBar
                                 x:Name="FileSizeWarning"
@@ -370,6 +401,19 @@
                                 x:Name="GenerateLoading"
                                 Visibility="Collapsed"
                                 Value="0" />
+                            <StackPanel x:Name="SaveGeneratedGifPanel" Spacing="8" Visibility="Collapsed">
+                                <Button x:Name="SaveGeneratedGifButton"
+                                        Click="SaveGeneratedGifButton_Click"
+                                        ToolTipService.ToolTip="Save a copy of the generated GIF to a folder you choose">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon Glyph="&#xE74E;" FontSize="16" />
+                                        <TextBlock Text="Save GIF…" />
+                                    </StackPanel>
+                                </Button>
+                                <TextBlock Text="Keep a copy to reuse later with Browse GIF."
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
 
                         </StackPanel>
                     </winui:PivotItem>
@@ -490,5 +534,29 @@
             </Button>
 
         </StackPanel>
+    </Grid>
+    </ContentControl>
+    <!-- Outside the ScrollView so loading is always visible and blocks inactive controls. -->
+    <Grid x:Name="VideoLoadPanel" Visibility="Collapsed" Background="#99000000"
+          KeyDown="VideoLoadPanel_KeyDown" TabFocusNavigation="Cycle">
+        <Border MaxWidth="440" Margin="24" Padding="28" HorizontalAlignment="Center" VerticalAlignment="Center"
+                Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
+                BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="12">
+            <StackPanel Spacing="16">
+                <ProgressRing x:Name="VideoLoadRing" Width="44" Height="44" IsActive="False"
+                              AutomationProperties.Name="Preparing video" />
+                <TextBlock Text="Preparing your video" Style="{ThemeResource SubtitleTextBlockStyle}"
+                           TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock x:Name="VideoLoadFileName" TextTrimming="CharacterEllipsis" TextAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                <TextBlock Text="Reading the video so you can select exact frames. Editing will be available when this finishes. Longer videos can take a little while."
+                           TextWrapping="Wrap" TextAlignment="Center" />
+                <TextBlock x:Name="VideoLoadStatus" Text="Reading video details…" TextWrapping="Wrap"
+                           TextAlignment="Center" AutomationProperties.LiveSetting="Polite" />
+                <Button x:Name="CancelVideoLoadButton" Content="Cancel" Click="CancelVideoLoad_Click"
+                        HorizontalAlignment="Center" MinWidth="120" AutomationProperties.Name="Cancel video loading" />
+            </StackPanel>
+        </Border>
+    </Grid>
     </Grid>
 </Page>

@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Enforce the explicit code-style severities from .editorconfig in builds. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+</Project>

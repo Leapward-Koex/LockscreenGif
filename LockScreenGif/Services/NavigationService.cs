@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Contracts.ViewModels;
 using LockscreenGif.Helpers;
-
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 
@@ -31,7 +29,6 @@ public class NavigationService : INavigationService
 
             return _frame;
         }
-
         set
         {
             UnregisterFrameEvents();

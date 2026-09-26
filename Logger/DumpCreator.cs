@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Runtime.InteropServices;
-using System.IO;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
 
 public class DumpCreator
 {
@@ -15,6 +15,13 @@ public class DumpCreator
     }
 
     [DllImport("DbgHelp.dll")]
-    public static extern bool MiniDumpWriteDump(IntPtr hProcess, uint ProcessId, SafeHandle hFile, Typ DumpType,
-        IntPtr ExceptionParam, IntPtr UserStreamParam, IntPtr CallbackParam);
+    public static extern bool MiniDumpWriteDump(
+        IntPtr hProcess,
+        uint ProcessId,
+        SafeHandle hFile,
+        Typ DumpType,
+        IntPtr ExceptionParam,
+        IntPtr UserStreamParam,
+        IntPtr CallbackParam
+    );
 }
