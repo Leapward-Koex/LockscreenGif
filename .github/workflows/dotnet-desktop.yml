@@ -1,136 +1,162 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# This workflow will build, test, sign and package a WPF or Windows Forms desktop application
-# built on .NET Core.
-# To learn how to migrate your existing application to .NET Core,
-# refer to https://docs.microsoft.com/en-us/dotnet/desktop-wpf/migration/convert-project-from-net-framework
-#
-# To configure this workflow:
-#
-# 1. Configure environment variables
-# GitHub sets default environment variables for every workflow run.
-# Replace the variables relative to your project in the "env" section below.
-#
-# 2. Signing
-# Generate a signing certificate in the Windows Application
-# Packaging Project or add an existing signing certificate to the project.
-# Next, use PowerShell to encode the .pfx file using Base64 encoding
-# by running the following Powershell script to generate the output string:
-#
-# $pfx_cert = Get-Content '.\SigningCertificate.pfx' -Encoding Byte
-# [System.Convert]::ToBase64String($pfx_cert) | Out-File 'SigningCertificate_Encoded.txt'
-#
-# Open the output file, SigningCertificate_Encoded.txt, and copy the
-# string inside. Then, add the string to the repo as a GitHub secret
-# and name it "Base64_Encoded_Pfx."
-# For more information on how to configure your signing certificate for
-# this workflow, refer to https://github.com/microsoft/github-actions-for-desktop-apps#signing
-#
-# Finally, add the signing certificate password to the repo as a secret and name it "Pfx_Key".
-# See "Build the Windows Application Packaging project" below to see how the secret is used.
-#
-# For more information on GitHub Actions, refer to https://github.com/features/actions
-# For a complete CI/CD sample to get started with GitHub Action workflows for Desktop Applications,
-# refer to https://github.com/microsoft/github-actions-for-desktop-apps
-
 name: .NET Core Desktop
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  queue: max
 
 jobs:
   build:
-    strategy:
-      matrix:
-        configuration: [Release]
-
     runs-on: windows-latest
-
-    env:
-      Solution_Name: LockscreenGif.sln
-      Project_Directory: LockscreenGif
-
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 1
-        
-    - name: File Regex Replace
-      uses: mingjun97/file-regex-replace@v1
-      with:
-        regex: 'Version="([0-9\.]*)"'
-        replacement: 'Version="0.${{ github.run_number }}.${{ github.run_attempt }}.0"'
-        include: Package.appxmanifest
+      - uses: actions/checkout@v4
 
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
 
-    # Install the .NET Core workload
-    - name: Install .NET Core
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 9.0.x
+      - uses: microsoft/setup-msbuild@v2
 
-    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
-    - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v2
+      - name: Compute build identity
+        id: version
+        shell: pwsh
+        run: ./scripts/Get-BuildVersion.ps1 -RunNumber $env:GITHUB_RUN_NUMBER -RunAttempt $env:GITHUB_RUN_ATTEMPT -Commit $env:GITHUB_SHA -OutputPath $env:GITHUB_OUTPUT
 
-    - name: Decode the pfx
-      run: |
-        $pfx_cert_byte = [System.Convert]::FromBase64String("${{ secrets.BASE64_ENCODED_PFX }}")
-        $certificatePath = "GitHubActionsWorkflow.pfx"
-        [IO.File]::WriteAllBytes("$certificatePath", $pfx_cert_byte)
-  
-    - name: Publish the application
-      run: |
-        cd LockScreenGif
-        dotnet publish -c Release -p:PublishProfile=FolderProfile.pubxml
+      - name: Test versioning
+        shell: pwsh
+        run: ./Tests/BuildVersion.Tests.ps1
 
-    - name: Build AIP
-      uses: caphyon/advinst-github-action@v2.0
-      with:
-        advinst-version: '23.3'
-        advinst-enable-automation: 'true'
-        aip-path: ${{ github.workspace }}\Installer\LockscreenGif.aip
-        aip-build-name: DefaultBuild
-        aip-package-name: installLockscreenGif.msi
-        aip-output-dir:  ${{ github.workspace }}\setup
-        aip-commands: |
-          SetVersion 2.1.${{ github.run_number }}
-        
-    # Remove the pfx
-    - name: Remove the pfx
-      run: Remove-Item -path GitHubActionsWorkflow.pfx
-        
-    - name: Upload unpackaged app
-      uses: actions/upload-artifact@v4
-      with:
-        name: 'Lockscreen Gif Unpackaged App ${{ github.run_number }}.${{ github.run_attempt }}'
-        path: './LockScreenGif/bin/Release/net9.0-windows10.0.26100.0/win-x64/'
+      - name: Run regression checks
+        shell: pwsh
+        run: |
+          Get-ChildItem Tests -Recurse -Filter *.csproj | ForEach-Object {
+            dotnet run --project $_.FullName -c Release
+            if ($LASTEXITCODE -ne 0) { throw "Regression checks failed: $($_.Name)" }
+          }
 
-    - name: Upload MSI installer
-      uses: actions/upload-artifact@v4
-      with:
-        name: 'Lockscreen Gif Installer ${{ github.run_number }}.${{ github.run_attempt }}'
-        path: '${{ github.workspace }}/setup/installLockscreenGif.msi'
-        
+      - name: Publish the application
+        working-directory: LockScreenGif
+        env:
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
+          BUILD_IDENTITY: ${{ steps.version.outputs.informational_version }}
+        shell: pwsh
+        run: |
+          dotnet publish -c Release -p:PublishProfile=FolderProfile.pubxml "-p:Version=$env:BUILD_VERSION" "-p:AssemblyVersion=$env:BUILD_VERSION.0" "-p:FileVersion=$env:BUILD_VERSION.0" "-p:InformationalVersion=$env:BUILD_IDENTITY" -p:IncludeSourceRevisionInInformationalVersion=false
+          if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
+          $exe = Get-Item 'bin/Release/net9.0-windows10.0.26100.0/win-x64/LockscreenGif.exe'
+          if ($exe.VersionInfo.ProductVersion -ne $env:BUILD_IDENTITY) { throw 'Built app version does not match this run' }
 
-    # - name: Create GH release
-    #   if: github.ref_name == 'main'
-    #   uses: softprops/action-gh-release@v1
-    #   with:
-    #     draft: false
-    #     prerelease: false
-    #     name: '0.${{ github.run_number }}.${{ github.run_attempt }}.0'
-    #     tag_name: 'v0.${{ github.run_number }}.${{ github.run_attempt }}.0'
-    #     body: 'To install the MSIX version, you first have to add the certificate included in the MSIX (only need to do that once). To install the unpackaged version, you need to install the x64 WinAppRuntime Installer.'
-    #     files: |
-    #       WindowsAppSDKGallery/Packages/**/WindowsAppSDKGallery*.msix
-    #       WindowsAppSDKGallery-unpackaged-*.zip
-    #     fail_on_unmatched_files: true
+      - name: Verify privileged helper packaging
+        shell: pwsh
+        run: ./scripts/Test-PrivilegedPackaging.ps1
+
+      - name: Build MSI installer
+        uses: caphyon/advinst-github-action@v2.0
+        with:
+          advinst-version: '23.3'
+          advinst-enable-automation: 'true'
+          aip-path: ${{ github.workspace }}\Installer\LockscreenGif.aip
+          aip-build-name: DefaultBuild
+          aip-package-name: installLockscreenGif.msi
+          aip-output-dir: ${{ github.workspace }}\setup
+          aip-commands: |
+            SetVersion ${{ steps.version.outputs.version }}
+
+      - name: Package release assets
+        env:
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force release-assets | Out-Null
+          Compress-Archive -Path 'LockScreenGif/bin/Release/net9.0-windows10.0.26100.0/win-x64/*' -DestinationPath "release-assets/LockscreenGif-$env:BUILD_VERSION-win-x64.zip"
+          Copy-Item 'setup/installLockscreenGif.msi' "release-assets/LockscreenGif-$env:BUILD_VERSION-x64.msi"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: release-assets/*
+          if-no-files-found: error
+          overwrite: true
+          compression-level: 0
+          retention-days: 14
+
+  prerelease:
+    if: github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows-release
+          path: release-assets
+          merge-multiple: true
+      - name: Generate changelog and publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_VERSION: ${{ needs.build.outputs.version }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # A rerun must not replace assets after master has moved on.
+          if [[ "$GITHUB_RUN_ATTEMPT" != '1' ]]; then
+            git fetch --no-tags origin '+refs/heads/master:refs/remotes/origin/master'
+            if [[ "$(git rev-parse refs/remotes/origin/master)" != "$GITHUB_SHA" ]]; then
+              echo "::notice::Skipping stale release rerun for $GITHUB_SHA"
+              exit 0
+            fi
+          fi
+          # Never repoint an existing build tag to a different checkout.
+          if git rev-parse --verify "refs/tags/$RELEASE_TAG" >/dev/null 2>&1; then
+            test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$GITHUB_SHA"
+          fi
+          previous_tag="$(git tag --merged "$GITHUB_SHA" --list 'build-*' --sort=-version:refname |
+            grep -E '^build-[0-9]+$' | grep -Fvx "$RELEASE_TAG" | head -n 1 || true)"
+          if [[ -n "$previous_tag" && "${previous_tag#build-}" -gt "$GITHUB_RUN_NUMBER" ]]; then
+            echo "::notice::Skipping build older than $previous_tag"
+            exit 0
+          fi
+          commit_range="$GITHUB_SHA"
+          if [[ -n "$previous_tag" ]]; then commit_range="$previous_tag..$GITHUB_SHA"; fi
+          notes="$RUNNER_TEMP/lockscreen-release-notes.md"
+          {
+            printf 'Automated build **%s**, app version **%s**.\n\n' "$GITHUB_RUN_NUMBER" "$BUILD_VERSION"
+            printf 'Source: [`%s`](%s/%s/commit/%s).\n\n' "${GITHUB_SHA::12}" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_SHA"
+            if [[ -n "$previous_tag" ]]; then
+              printf 'Changes since [%s](%s/%s/compare/%s...%s):\n\n' "$previous_tag" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$previous_tag" "$GITHUB_SHA"
+            fi
+            git log "$commit_range" --first-parent --pretty=format:'- %s (`%h`)'
+            printf '\n\n### Downloads\n\n- Windows x64 MSI installer\n- Windows x64 app ZIP (requires .NET 9 Desktop Runtime)\n- SHA256SUMS for verification\n'
+            printf '\nThe app logs its version, commit and build attempt at startup and displays them on the Diagnostics screen.\n'
+          } > "$notes"
+          (cd release-assets && sha256sum *.zip *.msi > SHA256SUMS)
+          assets=("release-assets/LockscreenGif-$BUILD_VERSION-win-x64.zip" "release-assets/LockscreenGif-$BUILD_VERSION-x64.msi" release-assets/SHA256SUMS)
+          for asset in "${assets[@]}"; do test -s "$asset"; done
+          title="Lockscreen Gif build $GITHUB_RUN_NUMBER (${GITHUB_SHA::12})"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
+            gh release edit "$RELEASE_TAG" --prerelease --latest=false --title "$title" --notes-file "$notes"
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --prerelease --latest=false \
+              --target "$GITHUB_SHA" --title "$title" --notes-file "$notes"
+          fi

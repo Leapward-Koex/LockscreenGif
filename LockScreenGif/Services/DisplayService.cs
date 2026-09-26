@@ -1,6 +1,7 @@
 ﻿using WindowsDisplayAPI;
 
 namespace LockscreenGif.Services;
+
 public class DisplayService
 {
     public static IEnumerable<string> GetDisplayResolutions()

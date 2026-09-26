@@ -1,0 +1,286 @@
+using System.Security.AccessControl;
+using System.Security.Principal;
+using System.Text.Json;
+using LockscreenGif.Models;
+using LockscreenGif.Services.Lockscreen;
+
+var tests = new (string Name, Func<Task> Run)[]
+{
+    ("All destinations are copied and hash verified", CompleteApply),
+    ("Empty cache is a failed apply", EmptyCache),
+    ("A locked destination produces a partial failure", PartialFailure),
+    ("Existing read-only files do not require elevation", ReadOnlyFile),
+    ("Cancellation before apply makes no changes", CancelledBeforeApply),
+    ("Cancellation at a copy boundary preserves remaining destinations", CancelBetweenCopies),
+    ("Cancellation before commit preserves the previous image", CancelBeforeCommit),
+    ("Cancellation while staging preserves the previous image", CancelDuringStaging),
+    ("Invalid source format is rejected", InvalidSource),
+    ("Source cannot change while it is being applied", SourceIsStable),
+    ("Targets outside the cache are rejected", OutsideRoot),
+    ("Structured apply outcomes survive JSON round trip", Serialization),
+    ("Invalid staging hash preserves the previous image", InvalidStagingHash),
+    ("Isolated operations reject all permission elevation", ElevationGate),
+    ("Removal preserves the main image and reports locked variants", RemoveVariants),
+    ("Atomic replacement preserves the destination ACL", PreserveDestinationAcl),
+    ("Permission helper retains exact paths and operation lifetime", PermissionSessionTests.ScopeAndLifetime),
+    ("Declined elevation is not repeated", PermissionSessionTests.DeclinedElevationIsNotRepeated),
+    ("Failed helper launch is not repeated", PermissionSessionTests.FailedLaunchIsNotRepeated),
+    ("Precancelled permission repair does not launch", PermissionSessionTests.PrecancelledRepairDoesNotLaunch),
+    ("Many path repairs share one helper process", PermissionTransportTests.ReusesOneProcess),
+    ("Disconnected helper never relaunches", PermissionTransportTests.DisconnectedHelperDoesNotRelaunch),
+    ("Trace startup failure and cancelled draining preserve the session", PermissionTransportTests.TraceFailureAndCancelledRead),
+};
+foreach (var test in tests)
+{
+    await test.Run();
+    Console.WriteLine($"PASS {test.Name}");
+}
+Console.WriteLine($"{tests.Length} apply pipeline tests passed.");
+
+static void Assert(bool condition, string message)
+{
+    if (!condition)
+    {
+        throw new InvalidOperationException(message);
+    }
+}
+
+static async Task CompleteApply()
+{
+    using var fixture = new CacheFixture();
+    var oddVariant = Path.Combine(fixture.Folder, "LockScreen___1919_1080_notdimmed.jpg");
+    await File.WriteAllTextAsync(oddVariant, "old image");
+    var result = await fixture.Apply();
+    Assert(result.Success && result.Files.Count == 3, "Expected main, display and existing variant targets.");
+    Assert(
+        result.Files.All(file => file.Copied && file.Verified && file.VerifiedAt is not null && file.Error is null),
+        "Every destination must verify with a completion timestamp."
+    );
+    Assert(result.Files.Select(file => file.Sha256).Distinct().Count() == 1, "All hashes must match.");
+    Assert(!result.ApiRequested && !result.ApiCompleted, "Normal apply must not request Windows image API.");
+}
+
+static async Task EmptyCache()
+{
+    using var fixture = new CacheFixture(createFolder: false);
+    var result = await fixture.Apply();
+    Assert(
+        !result.Success && result.Files.Count == 0 && result.Error!.Contains("No lock-screen cache"),
+        "An empty cache must not report success."
+    );
+}
+
+static async Task PartialFailure()
+{
+    using var fixture = new CacheFixture();
+    await File.WriteAllTextAsync(fixture.MainImage, "old image");
+    await using var locked = new FileStream(fixture.MainImage, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var result = await fixture.Apply();
+    Assert(!result.Success && result.Files.Any(file => file.Verified), "Other destinations should still be attempted.");
+    Assert(result.Files.Single(file => file.Path == fixture.MainImage).VerifiedAt is null, "A failed copy has no verification timestamp.");
+    Assert(
+        result.Files.Single(file => file.Path == fixture.MainImage).Error!.Contains("in use"),
+        "Locked file must retain its exception type."
+    );
+}
+
+static async Task ReadOnlyFile()
+{
+    using var fixture = new CacheFixture();
+    await File.WriteAllTextAsync(fixture.MainImage, "old image");
+    File.SetAttributes(fixture.MainImage, FileAttributes.ReadOnly);
+    var events = new List<LockscreenApplyEvent>();
+    var result = await fixture.Apply(events.Add);
+    Assert(result.Success && events.All(item => item.Stage != "Permissions"), "A writable read-only attribute needs no UAC.");
+}
+
+static async Task CancelledBeforeApply()
+{
+    using var fixture = new CacheFixture();
+    using var cancellation = new CancellationTokenSource();
+    cancellation.Cancel();
+    var result = await fixture.Apply(token: cancellation.Token);
+    Assert(
+        result.Cancelled && !result.Success && Directory.GetFiles(fixture.Folder).Length == 0,
+        "Pre-cancelled apply must not write cache files."
+    );
+}
+
+static async Task CancelBetweenCopies()
+{
+    using var fixture = new CacheFixture();
+    using var cancellation = new CancellationTokenSource();
+    var result = await fixture.Apply(
+        item =>
+        {
+            if (item.Stage == "Verification")
+            {
+                cancellation.Cancel();
+            }
+        },
+        cancellation.Token
+    );
+    Assert(
+        result.Cancelled && !result.Success && result.Files.Count(file => file.Verified) == 1,
+        "One completed copy and the cancellation must be retained."
+    );
+    Assert(result.Files.Count(file => file.Error == "Not attempted.") == 1, "Unattempted destination should be explicit.");
+}
+
+static async Task CancelBeforeCommit()
+{
+    using var fixture = new CacheFixture();
+    await File.WriteAllTextAsync(fixture.MainImage, "previous image");
+    using var cancellation = new CancellationTokenSource();
+    var result = await fixture.Apply(
+        item =>
+        {
+            if (item.Stage == "Staged")
+            {
+                cancellation.Cancel();
+            }
+        },
+        cancellation.Token
+    );
+    Assert(
+        result.Cancelled && await File.ReadAllTextAsync(fixture.MainImage) == "previous image",
+        "A verified but uncommitted staging file must leave the old image unchanged."
+    );
+    Assert(!Directory.GetFiles(fixture.Folder, "*.tmp").Any(), "Staged file must be removed after cancellation.");
+}
+
+static async Task CancelDuringStaging()
+{
+    using var fixture = new CacheFixture();
+    await File.WriteAllTextAsync(fixture.MainImage, "previous image");
+    using (var source = new FileStream(fixture.Source, FileMode.Open, FileAccess.Write))
+    {
+        source.SetLength(64 * 1024 * 1024);
+    }
+
+    using var cancellation = new CancellationTokenSource();
+    using var watcher = new FileSystemWatcher(fixture.Folder, "*.lockscreen.tmp");
+    watcher.Created += (_, _) => cancellation.Cancel();
+    watcher.EnableRaisingEvents = true;
+    var result = await fixture.Apply(token: cancellation.Token);
+    Assert(
+        result.Cancelled && await File.ReadAllTextAsync(fixture.MainImage) == "previous image",
+        "Cancellation during staging must preserve the previous image."
+    );
+    Assert(!Directory.GetFiles(fixture.Folder, "*.tmp").Any(), "Partial staging file must be removed.");
+}
+
+static async Task InvalidSource()
+{
+    using var fixture = new CacheFixture();
+    await File.WriteAllTextAsync(fixture.Source, "not a GIF file");
+    var result = await fixture.Apply();
+    Assert(!result.Success && result.Error!.Contains("InvalidDataException"), "Invalid source must fail before writes.");
+    Assert(Directory.GetFiles(fixture.Folder).Length == 0, "Invalid source should not affect the cache.");
+}
+
+static async Task SourceIsStable()
+{
+    using var fixture = new CacheFixture();
+    var blockedWrite = false;
+    var result = await fixture.Apply(item =>
+    {
+        if (item.Stage != "Source")
+        {
+            return;
+        }
+
+        try
+        {
+            File.WriteAllText(fixture.Source, "changed");
+        }
+        catch (IOException)
+        {
+            blockedWrite = true;
+        }
+    });
+    Assert(result.Success && blockedWrite, "Source must remain immutable while applying.");
+}
+
+static Task OutsideRoot()
+{
+    using var fixture = new CacheFixture();
+    try
+    {
+        fixture.Permissions.ValidatePath(Path.Combine(fixture.Root, "..", "outside.jpg"));
+        throw new InvalidOperationException("An escaped path was accepted.");
+    }
+    catch (InvalidOperationException ex) when (ex.Message.Contains("outside the current user's")) { }
+    return Task.CompletedTask;
+}
+
+static async Task Serialization()
+{
+    using var fixture = new CacheFixture();
+    var result = await fixture.Apply();
+    var restored = JsonSerializer.Deserialize<LockscreenApplyResult>(JsonSerializer.Serialize(result))!;
+    Assert(
+        restored.Files.Count == result.Files.Count && restored.Files.All(file => file.Verified),
+        "Cloning a report must preserve file outcomes."
+    );
+}
+
+static async Task InvalidStagingHash()
+{
+    using var fixture = new CacheFixture();
+    await File.WriteAllTextAsync(fixture.MainImage, "previous image");
+    var result = new LockscreenFileResult { Path = fixture.MainImage };
+    await new VerifiedCacheWriter(fixture.Permissions).WriteAsync(
+        fixture.Source,
+        "incorrect hash",
+        result,
+        new ApplyProgress(null),
+        CancellationToken.None
+    );
+    Assert(
+        !result.Copied && !result.Verified && await File.ReadAllTextAsync(fixture.MainImage) == "previous image",
+        "Failed staging verification must preserve the previous image."
+    );
+    Assert(!Directory.GetFiles(fixture.Folder, "*.tmp").Any(), "Rejected staging file must be removed.");
+}
+
+static async Task ElevationGate()
+{
+    using var fixture = new CacheFixture();
+    try
+    {
+        await fixture.Permissions.GrantAsync(fixture.Folder, true, new ApplyProgress(null), CancellationToken.None);
+        throw new InvalidOperationException("The isolated-operation elevation gate was bypassed.");
+    }
+    catch (UnauthorizedAccessException ex) when (ex.Message.Contains("disabled for this isolated operation")) { }
+}
+
+static async Task RemoveVariants()
+{
+    using var fixture = new CacheFixture();
+    await fixture.Apply();
+    var lockedPath = Path.Combine(fixture.Folder, "locked_notdimmed.jpg");
+    await File.WriteAllTextAsync(lockedPath, "locked image");
+    await using var locked = new FileStream(lockedPath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+    var result = await fixture.Remove();
+    Assert(
+        result.SuccessfulDeletions == 1 && result.FailedDeletions == 1,
+        "Removal should delete the available variant and report the locked variant."
+    );
+    Assert(File.Exists(fixture.MainImage), "Removing variants must preserve the main image.");
+}
+
+static async Task PreserveDestinationAcl()
+{
+    using var fixture = new CacheFixture();
+    await File.WriteAllTextAsync(fixture.MainImage, "previous image");
+    var info = new FileInfo(fixture.MainImage);
+    var acl = info.GetAccessControl(AccessControlSections.Access);
+    using var user = WindowsIdentity.GetCurrent();
+    acl.AddAccessRule(new FileSystemAccessRule(user.User!, FileSystemRights.ReadData, AccessControlType.Allow));
+    info.SetAccessControl(acl);
+    var before = info.GetAccessControl(AccessControlSections.Access).GetSecurityDescriptorSddlForm(AccessControlSections.Access);
+    var result = await fixture.Apply();
+    var after = info.GetAccessControl(AccessControlSections.Access).GetSecurityDescriptorSddlForm(AccessControlSections.Access);
+    Assert(result.Success && before == after, "Replacing cache contents must preserve the destination ACL.");
+}

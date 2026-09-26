@@ -38,6 +38,7 @@
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1" DirectoryOptions="3"/>
     <ROW Directory="Assets_1_Dir" Directory_Parent="Microsoft.UI.Xaml_Dir" DefaultDir="Assets" DirectoryOptions="3"/>
     <ROW Directory="Assets_Dir" Directory_Parent="APPDIR" DefaultDir="Assets" DirectoryOptions="3"/>
+    <ROW Directory="CustomControls_Dir" Directory_Parent="APPDIR" DefaultDir="CUSTOM~1|CustomControls" DirectoryOptions="3"/>
     <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="DESKTO~1|DesktopFolder" IsPseudoRoot="1"/>
     <ROW Directory="FFMPEG_Dir" Directory_Parent="Vendor_Dir" DefaultDir="FFMPEG" DirectoryOptions="3"/>
     <ROW Directory="Microsoft.UI.Xaml_Dir" Directory_Parent="APPDIR" DefaultDir="MICROS~1.XAM|Microsoft.UI.Xaml" DirectoryOptions="3"/>
@@ -134,6 +135,9 @@
     <ROW Directory="viVN_Dir" Directory_Parent="APPDIR" DefaultDir="vi-VN" DirectoryOptions="3"/>
     <ROW Directory="zhCN_Dir" Directory_Parent="APPDIR" DefaultDir="zh-CN" DirectoryOptions="3"/>
     <ROW Directory="zhTW_Dir" Directory_Parent="APPDIR" DefaultDir="zh-TW" DirectoryOptions="3"/>
+      <ROW DirectoryOptions="3" Directory_Parent="APPDIR" Directory="Helpers_Dir" DefaultDir="Helpers"/>
+      <ROW DirectoryOptions="3" Directory_Parent="Helpers_Dir" Directory="Privileged_Dir" DefaultDir="Privileged"/>
+      <ROW DirectoryOptions="3" Directory_Parent="Privileged_Dir" Directory="PrivilegedAmd64_Dir" DefaultDir="amd64"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.SideBySideGuidComponent">
     <ROW Component="APPDIR" Value="{9A510946-CD52-4703-9030-410EC5E47B53}"/>
@@ -143,10 +147,7 @@
     <ROW Component="AI_IA_ENABLE" ComponentId="{DDFA8C50-ADD2-45A0-9747-25BB39A38F82}" Directory_="APPDIR" Attributes="4" KeyPath="AI_IA_ENABLE" Options="1"/>
     <ROW Component="APPDIR" ComponentId="{9A510946-CD52-4703-9030-410EC5E47B53}" Directory_="APPDIR" Attributes="0"/>
     <ROW Component="App.xbf" ComponentId="{187D676C-D0C8-45B4-B08B-286C1767AB1E}" Directory_="APPDIR" Attributes="0" KeyPath="appsettings.json" Type="0"/>
-    <ROW Component="CommunityToolkit.Common.dll" ComponentId="{10B94199-ACD8-4271-ABC0-F822A30A48D7}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.Common.dll"/>
     <ROW Component="CommunityToolkit.Mvvm.dll" ComponentId="{28EE97B2-4AB1-42B4-8A3D-72C724ADEA90}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.Mvvm.dll"/>
-    <ROW Component="CommunityToolkit.WinUI.Controls.RangeSelector.dll" ComponentId="{E73F2329-A2C5-431A-A14A-DB46AA8EC4A8}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.WinUI.Controls.RangeSelector.dll"/>
-    <ROW Component="CommunityToolkit.WinUI.Extensions.dll" ComponentId="{2B65B2E8-0EBA-4B9E-9CDE-30CB8BDD3241}" Directory_="APPDIR" Attributes="0" KeyPath="CommunityToolkit.WinUI.Extensions.dll"/>
     <ROW Component="CoreMessagingXP.dll" ComponentId="{DB5740C3-CD27-4E9B-97A2-47A8BC5B7A62}" Directory_="APPDIR" Attributes="256" KeyPath="CoreMessagingXP.dll"/>
     <ROW Component="DWriteCore.dll" ComponentId="{DDE84A0A-B034-4563-91EC-9C241D4761A6}" Directory_="APPDIR" Attributes="256" KeyPath="DWriteCore.dll"/>
     <ROW Component="DirectML.dll" ComponentId="{8E48096C-6F40-45CB-B3E9-BD77AF23B3BA}" Directory_="APPDIR" Attributes="256" KeyPath="DirectML.dll"/>
@@ -356,6 +357,7 @@
     <ROW Component="System.Security.Cryptography.ProtectedData.dll" ComponentId="{B26F761A-32F1-4039-9BBB-F76740739DAC}" Directory_="APPDIR" Attributes="0" KeyPath="System.Security.Cryptography.ProtectedData.dll"/>
     <ROW Component="System.Text.Encodings.Web.dll" ComponentId="{71AAE5CD-931A-47F7-91B1-FBDA9C124D81}" Directory_="APPDIR" Attributes="0" KeyPath="System.Text.Encodings.Web.dll"/>
     <ROW Component="System.Text.Json.dll" ComponentId="{0B6BF523-8099-4630-AF03-8A0A1E47D47A}" Directory_="APPDIR" Attributes="0" KeyPath="System.Text.Json.dll"/>
+    <ROW Component="VideoTimeline.xbf" ComponentId="{66092DC2-1E05-454E-AE52-E536B71012A9}" Directory_="CustomControls_Dir" Attributes="0" KeyPath="VideoTimeline.xbf" Type="0"/>
     <ROW Component="WebView2Loader.dll" ComponentId="{B4FFA72D-5B4A-47EA-B7E2-842FFEC7A30C}" Directory_="APPDIR" Attributes="256" KeyPath="WebView2Loader.dll"/>
     <ROW Component="WinRT.Runtime.dll" ComponentId="{22E1E78E-BD22-413F-99F2-4D20D5E4B844}" Directory_="APPDIR" Attributes="0" KeyPath="WinRT.Runtime.dll"/>
     <ROW Component="WinUIEdit.dll" ComponentId="{077C7087-EE08-431F-9E8D-EABAEC6C4C39}" Directory_="APPDIR" Attributes="256" KeyPath="WinUIEdit.dll"/>
@@ -373,6 +375,25 @@
     <ROW Component="onnxruntime.dll" ComponentId="{A4A61ED0-A8E6-460B-9E5D-5C78F49D983F}" Directory_="APPDIR" Attributes="256" KeyPath="onnxruntime.dll"/>
     <ROW Component="onnxruntime_providers_shared.dll" ComponentId="{88F9692C-3947-4AF6-BA20-F64E3671B360}" Directory_="APPDIR" Attributes="256" KeyPath="onnxruntime_providers_shared.dll"/>
     <ROW Component="wuceffectsi.dll" ComponentId="{03BCCEB9-655F-4AFB-A431-5F2ABDA075D4}" Directory_="APPDIR" Attributes="256" KeyPath="wuceffectsi.dll"/>
+      <ROW Component="PrivHelper_Dia2Lib_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{8AC7E47A-36BB-4083-A1E6-6ED4A091F3AF}" KeyPath="PrivHelper_Dia2Lib_dll"/>
+      <ROW Component="PrivHelper_LockscreenGif_Privileged_Contracts_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{11BD9676-065A-4FF9-A3BA-E8C3356F4812}" KeyPath="PrivHelper_LockscreenGif_Privileged_Contracts_dll"/>
+      <ROW Component="PrivHelper_LockscreenGif_Privileged_Helper_deps_json" Attributes="256" Directory_="Privileged_Dir" ComponentId="{26D13345-2F2E-42E6-81FC-C40205195C14}" KeyPath="PrivHelper_LockscreenGif_Privileged_Helper_deps_json"/>
+      <ROW Component="PrivHelper_LockscreenGif_Privileged_Helper_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{1373BF1E-216C-4A81-82D4-1D582E230257}" KeyPath="PrivHelper_LockscreenGif_Privileged_Helper_dll"/>
+      <ROW Component="PrivHelper_LockscreenGif_Privileged_Helper_exe" Attributes="256" Directory_="Privileged_Dir" ComponentId="{A61D425C-A594-4852-B4EA-B1E5F60A93E2}" KeyPath="PrivHelper_LockscreenGif_Privileged_Helper_exe"/>
+      <ROW Component="PrivHelper_LockscreenGif_Privileged_Helper_runtimeconfig_json" Attributes="256" Directory_="Privileged_Dir" ComponentId="{A44AC449-1799-453A-95C0-8E576EF0DD75}" KeyPath="PrivHelper_LockscreenGif_Privileged_Helper_runtimeconfig_json"/>
+      <ROW Component="PrivHelper_Microsoft_Diagnostics_FastSerialization_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{ECA7E255-F61B-44CB-B6CB-6C849FDDE909}" KeyPath="PrivHelper_Microsoft_Diagnostics_FastSerialization_dll"/>
+      <ROW Component="PrivHelper_Microsoft_Diagnostics_NETCore_Client_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{02F39967-DB6E-46D0-9005-D069BC266BA4}" KeyPath="PrivHelper_Microsoft_Diagnostics_NETCore_Client_dll"/>
+      <ROW Component="PrivHelper_Microsoft_Diagnostics_Tracing_TraceEvent_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{7AA6D5C4-06D1-4D95-A1C2-CD0495F09F7F}" KeyPath="PrivHelper_Microsoft_Diagnostics_Tracing_TraceEvent_dll"/>
+      <ROW Component="PrivHelper_Microsoft_Extensions_DependencyInjection_Abstractions_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{8C932BB7-B4C7-4438-9EFB-A00BC1DCA672}" KeyPath="PrivHelper_Microsoft_Extensions_DependencyInjection_Abstractions_dll"/>
+      <ROW Component="PrivHelper_Microsoft_Extensions_DependencyInjection_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{92D63BE8-6AB1-4994-8674-A96A38A2E94F}" KeyPath="PrivHelper_Microsoft_Extensions_DependencyInjection_dll"/>
+      <ROW Component="PrivHelper_Microsoft_Extensions_Logging_Abstractions_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{6F9F5511-CA6F-4147-BF34-987D18CC02C8}" KeyPath="PrivHelper_Microsoft_Extensions_Logging_Abstractions_dll"/>
+      <ROW Component="PrivHelper_Microsoft_Extensions_Logging_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{F7F1C371-4EA3-4370-9E04-FE99C3CFE766}" KeyPath="PrivHelper_Microsoft_Extensions_Logging_dll"/>
+      <ROW Component="PrivHelper_Microsoft_Extensions_Options_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{9C8039E3-995E-4152-A34D-8A3EB77D4FBE}" KeyPath="PrivHelper_Microsoft_Extensions_Options_dll"/>
+      <ROW Component="PrivHelper_Microsoft_Extensions_Primitives_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{C0563C55-1B14-49AA-8C4F-4033BB6E1A79}" KeyPath="PrivHelper_Microsoft_Extensions_Primitives_dll"/>
+      <ROW Component="PrivHelper_TraceReloggerLib_dll" Attributes="256" Directory_="Privileged_Dir" ComponentId="{D604EE96-A304-4699-9DC9-8338FF8125C5}" KeyPath="PrivHelper_TraceReloggerLib_dll"/>
+      <ROW Component="PrivHelper_amd64_KernelTraceControl_dll" Attributes="256" Directory_="PrivilegedAmd64_Dir" ComponentId="{EFECCADB-CC1E-42A9-A5F1-27AD481F818F}" KeyPath="PrivHelper_amd64_KernelTraceControl_dll"/>
+      <ROW Component="PrivHelper_amd64_msdia140_dll" Attributes="256" Directory_="PrivilegedAmd64_Dir" ComponentId="{985B6B70-10F8-467E-B997-C91C4CDB4002}" KeyPath="PrivHelper_amd64_msdia140_dll"/>
+      <ROW Component="PrivilegedContractsMain" Attributes="256" Directory_="APPDIR" ComponentId="{DB4AB00F-F31E-4ED7-9546-EF0B68ED5216}" KeyPath="PrivilegedContractsMain"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiFeatsComponent">
     <ROW Feature="MainFeature" Title="MainFeature" Description="Description" Display="1" Level="1" Directory_="APPDIR" Attributes="0"/>
@@ -409,10 +430,7 @@
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_8" Component_="Microsoft.ui.xaml.dll.mui_8" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ca-ES\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_9" Component_="Microsoft.ui.xaml.dll.mui_9" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ca-Es-VALENCIA\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_9" Component_="Microsoft.ui.xaml.dll.mui_9" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\ca-Es-VALENCIA\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
-    <ROW File="CommunityToolkit.Common.dll" Component_="CommunityToolkit.Common.dll" FileName="COMMUN~1.DLL|CommunityToolkit.Common.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\CommunityToolkit.Common.dll" SelfReg="false"/>
     <ROW File="CommunityToolkit.Mvvm.dll" Component_="CommunityToolkit.Mvvm.dll" FileName="COMMUN~2.DLL|CommunityToolkit.Mvvm.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\CommunityToolkit.Mvvm.dll" SelfReg="false"/>
-    <ROW File="CommunityToolkit.WinUI.Controls.RangeSelector.dll" Component_="CommunityToolkit.WinUI.Controls.RangeSelector.dll" FileName="COMMUN~3.DLL|CommunityToolkit.WinUI.Controls.RangeSelector.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\CommunityToolkit.WinUI.Controls.RangeSelector.dll" SelfReg="false"/>
-    <ROW File="CommunityToolkit.WinUI.Extensions.dll" Component_="CommunityToolkit.WinUI.Extensions.dll" FileName="COMMUN~4.DLL|CommunityToolkit.WinUI.Extensions.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\CommunityToolkit.WinUI.Extensions.dll" SelfReg="false"/>
     <ROW File="CoreMessagingXP.dll" Component_="CoreMessagingXP.dll" FileName="COREME~1.DLL|CoreMessagingXP.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\CoreMessagingXP.dll" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_10" Component_="Microsoft.ui.xaml.dll.mui_10" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\cs-CZ\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_10" Component_="Microsoft.ui.xaml.dll.mui_10" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\cs-CZ\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
@@ -770,6 +788,28 @@
     <ROW File="System.Text.Json.dll" Component_="System.Text.Json.dll" FileName="SYSTE~12.DLL|System.Text.Json.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\System.Text.Json.dll" SelfReg="false"/>
     <ROW File="NPUDetect.dll" Component_="NPUDetect.dll" FileName="NPUDET~1.DLL|NPUDetect.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\NpuDetect\NPUDetect.dll" SelfReg="false"/>
     <ROW File="App.xbf" Component_="App.xbf" FileName="App.xbf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\App.xbf" SelfReg="false"/>
+    <ROW File="DiagnosticsPage.xbf" Component_="MainPage.xbf" FileName="DIAGNO~1.XBF|DiagnosticsPage.xbf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Views\DiagnosticsPage.xbf" SelfReg="false"/>
+    <ROW File="ShellPage.xbf" Component_="MainPage.xbf" FileName="SHELLP~1.XBF|ShellPage.xbf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Views\ShellPage.xbf" SelfReg="false"/>
+    <ROW File="VideoTimeline.xbf" Component_="VideoTimeline.xbf" FileName="VIDEOT~1.XBF|VideoTimeline.xbf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\CustomControls\VideoTimeline.xbf" SelfReg="false"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000001.DLL|Dia2Lib.dll" SelfReg="false" Component_="PrivHelper_Dia2Lib_dll" File="PrivHelper_Dia2Lib_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Dia2Lib.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000002.DLL|LockscreenGif.Privileged.Contracts.dll" SelfReg="false" Component_="PrivHelper_LockscreenGif_Privileged_Contracts_dll" File="PrivHelper_LockscreenGif_Privileged_Contracts_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\LockscreenGif.Privileged.Contracts.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000003.JSO|LockscreenGif.Privileged.Helper.deps.json" SelfReg="false" Component_="PrivHelper_LockscreenGif_Privileged_Helper_deps_json" File="PrivHelper_LockscreenGif_Privileged_Helper_deps_json" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\LockscreenGif.Privileged.Helper.deps.json"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000004.DLL|LockscreenGif.Privileged.Helper.dll" SelfReg="false" Component_="PrivHelper_LockscreenGif_Privileged_Helper_dll" File="PrivHelper_LockscreenGif_Privileged_Helper_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\LockscreenGif.Privileged.Helper.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000005.EXE|LockscreenGif.Privileged.Helper.exe" SelfReg="false" Component_="PrivHelper_LockscreenGif_Privileged_Helper_exe" File="PrivHelper_LockscreenGif_Privileged_Helper_exe" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\LockscreenGif.Privileged.Helper.exe"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000006.JSO|LockscreenGif.Privileged.Helper.runtimeconfig.json" SelfReg="false" Component_="PrivHelper_LockscreenGif_Privileged_Helper_runtimeconfig_json" File="PrivHelper_LockscreenGif_Privileged_Helper_runtimeconfig_json" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\LockscreenGif.Privileged.Helper.runtimeconfig.json"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000007.DLL|Microsoft.Diagnostics.FastSerialization.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Diagnostics_FastSerialization_dll" File="PrivHelper_Microsoft_Diagnostics_FastSerialization_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Diagnostics.FastSerialization.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000008.DLL|Microsoft.Diagnostics.NETCore.Client.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Diagnostics_NETCore_Client_dll" File="PrivHelper_Microsoft_Diagnostics_NETCore_Client_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Diagnostics.NETCore.Client.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000009.DLL|Microsoft.Diagnostics.Tracing.TraceEvent.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Diagnostics_Tracing_TraceEvent_dll" File="PrivHelper_Microsoft_Diagnostics_Tracing_TraceEvent_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Diagnostics.Tracing.TraceEvent.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000010.DLL|Microsoft.Extensions.DependencyInjection.Abstractions.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Extensions_DependencyInjection_Abstractions_dll" File="PrivHelper_Microsoft_Extensions_DependencyInjection_Abstractions_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Extensions.DependencyInjection.Abstractions.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000011.DLL|Microsoft.Extensions.DependencyInjection.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Extensions_DependencyInjection_dll" File="PrivHelper_Microsoft_Extensions_DependencyInjection_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Extensions.DependencyInjection.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000012.DLL|Microsoft.Extensions.Logging.Abstractions.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Extensions_Logging_Abstractions_dll" File="PrivHelper_Microsoft_Extensions_Logging_Abstractions_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Extensions.Logging.Abstractions.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000013.DLL|Microsoft.Extensions.Logging.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Extensions_Logging_dll" File="PrivHelper_Microsoft_Extensions_Logging_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Extensions.Logging.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000014.DLL|Microsoft.Extensions.Options.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Extensions_Options_dll" File="PrivHelper_Microsoft_Extensions_Options_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Extensions.Options.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000015.DLL|Microsoft.Extensions.Primitives.dll" SelfReg="false" Component_="PrivHelper_Microsoft_Extensions_Primitives_dll" File="PrivHelper_Microsoft_Extensions_Primitives_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\Microsoft.Extensions.Primitives.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000016.DLL|TraceReloggerLib.dll" SelfReg="false" Component_="PrivHelper_TraceReloggerLib_dll" File="PrivHelper_TraceReloggerLib_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\TraceReloggerLib.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000017.DLL|KernelTraceControl.dll" SelfReg="false" Component_="PrivHelper_amd64_KernelTraceControl_dll" File="PrivHelper_amd64_KernelTraceControl_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\amd64\KernelTraceControl.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000018.DLL|msdia140.dll" SelfReg="false" Component_="PrivHelper_amd64_msdia140_dll" File="PrivHelper_amd64_msdia140_dll" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\Helpers\Privileged\amd64\msdia140.dll"/>
+      <ROW Version="65535.65535.65535.65535" FileName="PH000019.DLL|LockscreenGif.Privileged.Contracts.dll" SelfReg="false" Component_="PrivilegedContractsMain" File="PrivilegedContractsMain" Attributes="0" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\LockscreenGif.Privileged.Contracts.dll"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.AiPersistentPropComponent">
     <ROW Property="AI_IA_ENABLE" Registry="AI_IA_ENABLE" HklmSearch="AI_IA_ENABLE" HkcuSearch="AI_IA_ENABLE_1"/>
@@ -888,10 +928,7 @@
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_7"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_8"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_9"/>
-    <ROW Feature_="MainFeature" Component_="CommunityToolkit.Common.dll"/>
     <ROW Feature_="MainFeature" Component_="CommunityToolkit.Mvvm.dll"/>
-    <ROW Feature_="MainFeature" Component_="CommunityToolkit.WinUI.Controls.RangeSelector.dll"/>
-    <ROW Feature_="MainFeature" Component_="CommunityToolkit.WinUI.Extensions.dll"/>
     <ROW Feature_="MainFeature" Component_="CoreMessagingXP.dll"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_10"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_11"/>
@@ -1106,6 +1143,26 @@
     <ROW Feature_="MainFeature" Component_="System.Text.Encodings.Web.dll"/>
     <ROW Feature_="MainFeature" Component_="System.Text.Json.dll"/>
     <ROW Feature_="MainFeature" Component_="NPUDetect.dll"/>
+    <ROW Feature_="MainFeature" Component_="VideoTimeline.xbf"/>
+      <ROW Component_="PrivHelper_Dia2Lib_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_LockscreenGif_Privileged_Contracts_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_LockscreenGif_Privileged_Helper_deps_json" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_LockscreenGif_Privileged_Helper_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_LockscreenGif_Privileged_Helper_exe" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_LockscreenGif_Privileged_Helper_runtimeconfig_json" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Diagnostics_FastSerialization_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Diagnostics_NETCore_Client_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Diagnostics_Tracing_TraceEvent_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Extensions_DependencyInjection_Abstractions_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Extensions_DependencyInjection_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Extensions_Logging_Abstractions_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Extensions_Logging_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Extensions_Options_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_Microsoft_Extensions_Primitives_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_TraceReloggerLib_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_amd64_KernelTraceControl_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivHelper_amd64_msdia140_dll" Feature_="MainFeature"/>
+      <ROW Component_="PrivilegedContractsMain" Feature_="MainFeature"/>
   </COMPONENT>
   <COMPONENT cid="caphyon.advinst.msicomp.MsiIconsComponent">
     <ROW Name="LockscreenGif.exe" SourcePath="..\LockScreenGif\bin\Release\net9.0-windows10.0.26100.0\win-x64\LockscreenGif.exe" Index="0"/>

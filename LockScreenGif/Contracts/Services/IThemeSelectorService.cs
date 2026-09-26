@@ -4,10 +4,7 @@ namespace LockscreenGif.Contracts.Services;
 
 public interface IThemeSelectorService
 {
-    ElementTheme Theme
-    {
-        get;
-    }
+    ElementTheme Theme { get; }
 
     Task InitializeAsync();
 

@@ -1,4 +1,4 @@
-﻿using System.Text;
+using System.Text;
 
 public static class Logger
 {
@@ -25,12 +25,9 @@ public static class Logger
         return logFilePath;
     }
 
-
     public static void CleanupOldLogFiles()
     {
-        var oldFiles = new DirectoryInfo(GetLogPath()).GetFiles("app_*.log")
-                                 .Where(f => f.CreationTime < DateTime.Now.AddDays(-7))
-                                 .ToList();
+        var oldFiles = new DirectoryInfo(GetLogPath()).GetFiles("app_*.log").Where(f => f.CreationTime < DateTime.Now.AddDays(-7)).ToList();
 
         foreach (var file in oldFiles)
         {
@@ -44,7 +41,6 @@ public static class Logger
             }
         }
     }
-
 
     public static void Info(string? message)
     {
@@ -73,7 +69,7 @@ public static class Logger
         if (ex != null)
         {
             logMessage.AppendLine(); // Ensure the exception starts on a new line
-            logMessage.AppendLine($"Exception: {ex.Message}");
+            logMessage.AppendLine($"Exception: {ex.GetType().FullName} (HRESULT 0x{ex.HResult:X8}): {ex.Message}");
             logMessage.AppendLine($"StackTrace: {ex.StackTrace}");
         }
 
@@ -86,7 +82,7 @@ public static class Logger
         if (ex != null)
         {
             logMessage.AppendLine(); // Ensure the exception starts on a new line
-            logMessage.AppendLine($"Exception: {ex.Message}");
+            logMessage.AppendLine($"Exception: {ex.GetType().FullName} (HRESULT 0x{ex.HResult:X8}): {ex.Message}");
             logMessage.AppendLine($"StackTrace: {ex.StackTrace}");
         }
         Log("FATAL", logMessage.ToString());
@@ -102,8 +98,6 @@ public static class Logger
                 sw.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss} [{level}] {message}");
             }
         }
-        catch
-        {
-        }
+        catch { }
     }
 }

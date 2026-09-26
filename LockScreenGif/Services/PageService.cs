@@ -1,9 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-
+using CommunityToolkit.Mvvm.ComponentModel;
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.ViewModels;
 using LockscreenGif.Views;
-
 using Microsoft.UI.Xaml.Controls;
 
 namespace LockscreenGif.Services;
@@ -15,6 +13,7 @@ public class PageService : IPageService
     public PageService()
     {
         Configure<MainViewModel, MainPage>();
+        Configure<DiagnosticsViewModel, DiagnosticsPage>();
     }
 
     public Type GetPageType(string key)

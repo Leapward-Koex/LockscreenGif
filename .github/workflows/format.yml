@@ -1,0 +1,23 @@
+name: C# formatting
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - name: Restore the pinned formatter
+        run: dotnet tool restore
+      - name: Check C# formatting
+        run: dotnet csharpier check .

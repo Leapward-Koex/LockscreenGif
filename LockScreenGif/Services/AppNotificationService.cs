@@ -1,9 +1,7 @@
 ﻿using System.Collections.Specialized;
 using System.Web;
-
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.ViewModels;
-
 using Microsoft.Windows.AppNotifications;
 
 namespace LockscreenGif.Notifications;
@@ -25,7 +23,6 @@ public class AppNotificationService : IAppNotificationService
     public void Initialize()
     {
         AppNotificationManager.Default.NotificationInvoked += OnNotificationInvoked;
-
 
         AppNotificationManager.Default.Register();
     }

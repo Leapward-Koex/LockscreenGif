@@ -4,7 +4,5 @@ namespace LockscreenGif.ViewModels;
 
 public partial class MainViewModel : ObservableRecipient
 {
-    public MainViewModel()
-    {
-    }
+    public MainViewModel() { }
 }

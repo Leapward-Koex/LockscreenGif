@@ -1,6 +1,5 @@
 ﻿using LockscreenGif.Contracts.Services;
 using LockscreenGif.ViewModels;
-
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
@@ -24,7 +23,7 @@ public class AppNotificationActivationHandler : ActivationHandler<LaunchActivate
         return AppInstance.GetCurrent().GetActivatedEventArgs()?.Kind == ExtendedActivationKind.AppNotification;
     }
 
-    protected async override Task HandleInternalAsync(LaunchActivatedEventArgs args)
+    protected override async Task HandleInternalAsync(LaunchActivatedEventArgs args)
     {
         await Task.CompletedTask;
     }

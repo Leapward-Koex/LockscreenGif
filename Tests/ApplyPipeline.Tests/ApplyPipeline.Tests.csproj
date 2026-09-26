@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../LockScreenGif/Models/LockscreenApplyResult.cs" Link="Production/LockscreenApplyResult.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/ApplyProgress.cs" Link="Production/ApplyProgress.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/CachePermissions.cs" Link="Production/CachePermissions.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/CacheLayout.cs" Link="Production/CacheLayout.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/CacheRemover.cs" Link="Production/CacheRemover.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/DeleteFilesResult.cs" Link="Production/DeleteFilesResult.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/CacheDeleteAccess.cs" Link="Production/CacheDeleteAccess.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/CacheFileCommitter.cs" Link="Production/CacheFileCommitter.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/VerifiedCacheWriter.cs" Link="Production/VerifiedCacheWriter.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/LockscreenApplyPipeline.cs" Link="Production/LockscreenApplyPipeline.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/CachePermissionSession.cs" Link="Production/CachePermissionSession.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/PermissionWorkerCommand.cs" Link="Production/PermissionWorkerCommand.cs" />
+    <ProjectReference Include="../../LockscreenGif.Privileged.Contracts/LockscreenGif.Privileged.Contracts.csproj" />
+  </ItemGroup>
+</Project>

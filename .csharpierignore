@@ -1,0 +1,12 @@
+# Format C# only. Keep XAML, project files, resources, and other XML as authored.
+*.config
+*.csproj
+*.props
+*.slnx
+*.targets
+*.xaml
+*.axaml
+*.xml
+
+# CSharpier also respects .gitignore and skips generated C# automatically.
+LockScreenGif/Vendor/

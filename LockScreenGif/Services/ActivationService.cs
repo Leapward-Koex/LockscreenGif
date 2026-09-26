@@ -1,7 +1,6 @@
-﻿using LockscreenGif.Activation;
+using LockscreenGif.Activation;
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Views;
-
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -14,7 +13,11 @@ public class ActivationService : IActivationService
     private readonly IThemeSelectorService _themeSelectorService;
     private UIElement? _shell = null;
 
-    public ActivationService(ActivationHandler<LaunchActivatedEventArgs> defaultHandler, IEnumerable<IActivationHandler> activationHandlers, IThemeSelectorService themeSelectorService)
+    public ActivationService(
+        ActivationHandler<LaunchActivatedEventArgs> defaultHandler,
+        IEnumerable<IActivationHandler> activationHandlers,
+        IThemeSelectorService themeSelectorService
+    )
     {
         _defaultHandler = defaultHandler;
         _activationHandlers = activationHandlers;
@@ -29,7 +32,7 @@ public class ActivationService : IActivationService
         // Set the MainWindow Content.
         if (App.MainWindow.Content == null)
         {
-            App.MainWindow.Content = _shell ?? new Frame();
+            App.MainWindow.Content = _shell ?? new ShellPage();
         }
 
         // Handle activation via ActivationHandlers.
