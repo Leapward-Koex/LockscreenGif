@@ -38,7 +38,7 @@ Only a genuine failure after verification on an intended path from an independen
 
 Whole-test counters are labeled as such. A latest witness proves an event in a phase, not how many events occurred there. The analyzer keeps read and shutdown analysis separate and does not reconstruct totals from retained operations.
 
-Two working reference-animation cycles demonstrated the noise pattern: DLL host/LogonUI failures and modifications occurred during preparation before successful verification, and later raw `0xC01C0004` records represented fallback attempts. Treating every external error or modification as a warning misrepresented those cycles. This does not establish that the same process/status is harmless in every report; use operation, timing, attribution, content evidence, and collector completeness each time.
+Working reference and selected-GIF cycles demonstrated the noise pattern: DLL host/LogonUI failures and modifications occurred during preparation before successful verification, and raw `0xC01C0004` records represented fallback attempts. Treating every external error or modification as a warning misrepresented those cycles. This does not establish that the same process/status is harmless in every report; use operation, timing, attribution, content evidence, and collector completeness each time.
 
 The diagnostic page intentionally omits playback-observation controls. Ask for the visible result and surface alongside a ZIP when not already supplied. An empty exported observation is not a failed test. Short lock/unlock tests also cannot establish the cause of next-day cache reversion; that needs evidence captured during the later event.
 
@@ -103,6 +103,14 @@ Two user-confirmed successful cycles, one using the reference GIF and one a sele
 Both cycles also supplied normal shutdown checkpoints: native STOP succeeded in about 120 ms, the consumer returned normally about 160 ms later, and final inspection activity was present. This validates the instrumentation for these cycles, not the cause or resolution of a previous timeout. Their baseline files were small, so they do not exercise the previously problematic large-baseline workload.
 
 For reports from affected machines, obtain the visible symptom and surface in accompanying text if observation controls are absent. Use a selected/reference GIF pair to narrow source-specific versus machine-wide behavior. Both runs with the API enabled cannot isolate the API's effect; an API-on run can change the next run's baseline. Normal monitoring stops shortly after unlock, so a report cannot attribute a next-day reset that falls outside its capture window.
+
+### Real-cycle acceptance of the revised findings
+
+Three subsequent user-confirmed animated cycles exercised the reference and selected GIF with the API off, and the reference with the API on. Every intended copy matched fresh AfterApply and AfterUnlock reads, independent post-verification reads were captured, and collection stopped normally without recorded losses or omissions. Exported findings and replay through the current analyzer both contained zero warnings. This is acceptance evidence for those cycles, with playback established separately by the user's observation.
+
+All aggregates contained the new optional fields, and their failure/modification witnesses, untimed counts, and fallback totals reconciled with retained operations. Check this on new-build acceptance reports; zero warnings alone does not prove that the helper supplied the new evidence. Replay reports with `dotnet run --no-build --project Tests/Diagnostics.Tests/Diagnostics.Tests.csproj -c Release -- --analyze-report "path/to/report.zip"` after building the current test executable.
+
+The API-on cycle retained setup failures, one fallback with `Succeeded=false`, and a later System write while keeping its activity group informational. Sidecar and temporary paths had no applied-file verification boundary: their `Unknown` phase did not mean operation timestamps or collection were missing. The API-off cycles had no external failure/modification/fallback activity and appropriately omitted the empty group. These sequential runs do not establish the API's general necessity or isolate its causal effect; inspect configuration and baseline contents as well as observed output.
 
 ## Code and verification map
 
