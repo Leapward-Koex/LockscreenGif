@@ -18,6 +18,7 @@ internal static class Program
         GenerationFailureAndStaleCompletion();
         BusyGuards();
         ApplyOutcomes();
+        ApplyRecoveryMessages();
         ResetReadiness();
         InvalidOperationTokens();
         Console.WriteLine($"All {_checks} main flow checks passed. No files, native APIs, or analytics transports were used.");
@@ -358,6 +359,78 @@ internal static class Program
                 );
             }
         }
+    }
+
+    private static void ApplyRecoveryMessages()
+    {
+        const string recovery = "Windows denied access to the lock-screen cache. Retry and allow the administrator prompt.";
+        var flow = PreparedVideo();
+        var failedToken = Begin(flow, MainFlowOperation.Applying);
+        Check(flow.TryCompleteApply(failedToken, new() { Error = recovery }), "cache access failure completes");
+        Check(flow.LastApplyError == recovery && flow.CanApply, "cache recovery instruction is retained with a retryable GIF");
+
+        var retryToken = Begin(flow, MainFlowOperation.Applying);
+        Check(flow.LastApplyError is null, "retry clears the previous recovery instruction");
+        Check(
+            !flow.TryCompleteApply(failedToken, new() { Error = recovery }) && flow.LastApplyError is null,
+            "stale failure cannot restore an old recovery instruction during retry"
+        );
+        Check(
+            flow.TryCompleteApply(retryToken, Success()) && flow.LastApplyError is null,
+            "successful retry leaves no stale recovery instruction"
+        );
+
+        Check(flow.TryNavigate(MainFlowStage.Set), "return to Set after a successful retry");
+        var token = Begin(flow, MainFlowOperation.Applying);
+        Check(
+            flow.TryCompleteApply(token, new() { Error = recovery, Files = [new() { Copied = true }] })
+                && flow.LastApplyOutcome == MainFlowApplyOutcome.Partial
+                && flow.LastApplyError == recovery,
+            "partial apply retains its recovery instruction alongside the changed-files outcome"
+        );
+        Check(
+            flow.TryGoBack() && flow.TryUpdateEdit(true) && flow.LastApplyError is null,
+            "committed edits clear the prior recovery instruction"
+        );
+        token = Begin(flow, MainFlowOperation.Generating);
+        Check(flow.TryCompleteGeneration(token, true), "updated draft can prepare again");
+        token = Begin(flow, MainFlowOperation.Applying);
+        Check(flow.TryCompleteApply(token, new() { Error = recovery }), "updated draft can report a new failure");
+        token = Begin(flow, MainFlowOperation.Selecting);
+        Check(
+            flow.TryCommitSelection(token, MainFlowSource.Gif) && flow.LastApplyError is null,
+            "replacement source cannot inherit an old recovery instruction"
+        );
+
+        foreach (var error in new string?[] { null, "", "   " })
+        {
+            token = Begin(flow, MainFlowOperation.Applying);
+            Check(
+                flow.TryCompleteApply(token, new() { Error = error })
+                    && flow.LastApplyOutcome == MainFlowApplyOutcome.Failed
+                    && flow.LastApplyError is null,
+                "failure without a useful error retains the generic recovery fallback"
+            );
+        }
+        token = Begin(flow, MainFlowOperation.Applying);
+        Check(
+            flow.TryCompleteApply(
+                token,
+                new()
+                {
+                    Cancelled = true,
+                    Error = recovery,
+                    Files = [new() { Copied = true }],
+                }
+            )
+                && flow.LastApplyOutcome == MainFlowApplyOutcome.Cancelled
+                && flow.LastApplyChangedFiles
+                && flow.LastApplyError is null,
+            "cancellation retains changed-files semantics without presenting a failure recovery instruction"
+        );
+        token = Begin(flow, MainFlowOperation.Applying);
+        Check(flow.TryCompleteApply(token, new() { Error = recovery }), "failure before reset reports recovery");
+        Check(flow.TryReset() && flow.LastApplyError is null, "reset clears recovery instructions");
     }
 
     private static void ResetReadiness()

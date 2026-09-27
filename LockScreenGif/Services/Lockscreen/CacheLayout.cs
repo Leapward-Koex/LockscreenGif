@@ -7,6 +7,7 @@ internal sealed class CacheLayout(string directory, CachePermissions permissions
 
     public async Task<string[]> FindFoldersAsync(ApplyProgress progress, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             return ReadFolders();
@@ -30,16 +31,22 @@ internal sealed class CacheLayout(string directory, CachePermissions permissions
 
     public async Task<string[]> FindVariantsAsync(string folder, ApplyProgress progress, CancellationToken cancellationToken)
     {
-        permissions.ValidatePath(folder);
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            return Directory.GetFiles(folder, "*" + VariantSuffix);
+            return ReadVariants(folder);
         }
         catch (Exception ex) when (CachePermissions.IsAccessDenied(ex))
         {
             await permissions.GrantAsync(folder, false, progress, cancellationToken);
-            return Directory.GetFiles(folder, "*" + VariantSuffix);
+            return ReadVariants(folder);
         }
+    }
+
+    private string[] ReadVariants(string folder)
+    {
+        permissions.ValidatePath(folder);
+        return Directory.GetFiles(folder, "*" + VariantSuffix);
     }
 
     public async Task<List<string>> FindDestinationsAsync(ApplyProgress progress, CancellationToken cancellationToken)
@@ -59,14 +66,14 @@ internal sealed class CacheLayout(string directory, CachePermissions permissions
         foreach (var folder in folders)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            permissions.ValidatePath(folder);
+            var variants = await FindVariantsAsync(folder, progress, cancellationToken);
             destinations.Add(Path.Combine(folder, MainImageName));
             foreach (var resolution in resolutions)
             {
                 destinations.Add(Path.Combine(folder, $"LockScreen___{resolution}{VariantSuffix}"));
             }
 
-            foreach (var existing in await FindVariantsAsync(folder, progress, cancellationToken))
+            foreach (var existing in variants)
             {
                 destinations.Add(existing);
             }

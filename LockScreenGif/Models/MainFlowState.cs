@@ -55,6 +55,7 @@ public sealed class MainFlowState
     public bool HasPendingEdits { get; private set; }
     public MainFlowApplyOutcome LastApplyOutcome { get; private set; }
     public bool LastApplyChangedFiles { get; private set; }
+    public string? LastApplyError { get; private set; }
     public bool IsBusy => Operation != MainFlowOperation.None;
 
     public bool HasCurrentPreparedOutput =>
@@ -278,6 +279,10 @@ public sealed class MainFlowState
         EndOperation();
         LastApplyOutcome = ClassifyApplyOutcome(result);
         LastApplyChangedFiles = result.Files.Any(file => file.Copied || file.Verified);
+        LastApplyError =
+            LastApplyOutcome is MainFlowApplyOutcome.Failed or MainFlowApplyOutcome.Partial && !string.IsNullOrWhiteSpace(result.Error)
+                ? result.Error
+                : null;
         Stage = LastApplyOutcome == MainFlowApplyOutcome.Succeeded ? MainFlowStage.Done : MainFlowStage.Set;
         return true;
     }
@@ -318,5 +323,6 @@ public sealed class MainFlowState
     {
         LastApplyOutcome = MainFlowApplyOutcome.None;
         LastApplyChangedFiles = false;
+        LastApplyError = null;
     }
 }

@@ -21,15 +21,17 @@ internal sealed class VerifiedCacheWriter(CachePermissions permissions)
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            permissions.ValidatePath(result.Path);
-            permissions.ValidatePath(stagedPath);
+            await permissions.ValidateWithRepairAsync(result.Path, true, progress, cancellationToken);
             try
             {
+                permissions.ValidatePath(stagedPath);
                 await StageAsync(sourcePath, stagedPath, sourceHash, cancellationToken);
             }
             catch (Exception ex) when (CachePermissions.IsAccessDenied(ex))
             {
                 await permissions.GrantAsync(Path.GetDirectoryName(result.Path)!, true, progress, cancellationToken);
+                permissions.ValidatePath(result.Path);
+                permissions.ValidatePath(stagedPath);
                 await StageAsync(sourcePath, stagedPath, sourceHash, cancellationToken);
             }
             progress.Report("Staged", "The staged GIF matches the source. Committing the replacement.", result.Path);

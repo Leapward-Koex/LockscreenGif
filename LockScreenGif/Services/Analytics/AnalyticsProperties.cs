@@ -60,6 +60,8 @@ public sealed record AnalyticsProperties
 
     public bool? ApiCompleted { get; init; }
 
+    public LockscreenApplyFailureReason? ApplyFailureReason { get; init; }
+
     public AnalyticsErrorKind? ErrorKind { get; init; }
 
     public AnalyticsExceptionType? ExceptionType { get; init; }

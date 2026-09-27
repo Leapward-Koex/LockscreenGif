@@ -6,8 +6,8 @@ internal sealed class CacheFileCommitter(CachePermissions permissions)
     public async Task CommitAsync(string stagedPath, string destinationPath, ApplyProgress progress, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        await permissions.ValidateWithRepairAsync(destinationPath, true, progress, cancellationToken);
         permissions.ValidatePath(stagedPath);
-        permissions.ValidatePath(destinationPath);
         try
         {
             Move(stagedPath, destinationPath, cancellationToken);
@@ -31,6 +31,8 @@ internal sealed class CacheFileCommitter(CachePermissions permissions)
             }
 
             await permissions.GrantAsync(destinationPath, true, progress, cancellationToken);
+            permissions.ValidatePath(stagedPath);
+            permissions.ValidatePath(destinationPath);
             Move(stagedPath, destinationPath, cancellationToken);
         }
     }

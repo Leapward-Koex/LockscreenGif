@@ -93,6 +93,25 @@ Properties use a fixed typed allowlist:
 | `gif_size_bytes`, `gif_width`, `gif_height` | Source GIF file size in bytes and logical-screen width/height in pixels on `lockscreen_apply_completed`, for normal and diagnostic applies. These describe one source file, not total cache storage or monitor resolution. |
 | `target_count`, `copied_count`, `verified_count`, `failed_count` | Cache operation counts. Cancelled applies omit `failed_count` because some destinations may not have been attempted. |
 | `api_requested`, `api_completed` | Whether the Windows lockscreen API was requested and completed. |
+| `apply_failure_reason` | Typed failure category on failed or partial `lockscreen_apply_completed` events and their companion `$exception`, when present. Values are `source_read_failed`, `invalid_source`, `windows_api_failed`, `cache_inaccessible`, `cache_missing`, `no_destinations`, `cache_discovery_failed`, `copy_failed`, `verification_failed`, and `unknown`. Success and cancellation omit this field. |
+
+Apply failure reasons describe the stage and evidence available to the app.
+`cache_inaccessible` means discovery or pre-copy cache access was denied, including
+when permission repair was rejected. `cache_missing` means a required
+cache directory was absent. `no_destinations` means cache discovery completed
+without finding a supported destination. These can all have `target_count=0`
+and `failed_count=0`: file failure counts cover discovered targets, not errors
+that prevent discovery. Use `outcome` to identify a failed operation. A completed
+Windows API call does not establish that the animated cache apply succeeded.
+
+Other discovery errors use `cache_discovery_failed`; uncategorized results or
+exceptions outside a known apply stage use `unknown`. A reason is never inferred
+from a raw exception message, filename, or path. Missing reasons on older events
+mean unrecorded, not a successful operation. These categories explain cache
+writes and verification, not whether Windows displayed the animation.
+For partial results, the first unsuccessful destination supplies the reason;
+failures after a committed copy use `verification_failed`. Detailed exception
+families and codes remain available on the companion error event.
 
 Common properties are app version, Windows version, platform, environment,
 random installation ID, and `$session_id`. No paths, filenames, media, hashes,
@@ -330,6 +349,7 @@ for individual events would count the same installation several times.
 | Which attempts lack a completion? | Pair `video_load_started`, `gif_generation_started`, or `lockscreen_apply_started` with the corresponding terminal event by `operation_id` in a SQL insight. Do not join IDs across different operation types. Missing completion means unobserved, not necessarily failed. |
 | How often does normal apply succeed? | Count `lockscreen_apply_completed` with `workflow=lockscreen`. Use `succeeded / (succeeded + partial + failed)`; exclude cancellations. Show the denominator and break down by `app_version` and `windows_version`. |
 | Does apply reliability differ by source? | Break the same normal-apply success rate down by `lockscreen_source` (`video` versus `user_gif`). Use `workflow=diagnostics` separately for bundled-reference comparisons. Join start/completion by `operation_id`; missing source on older events means unrecorded, not `user_gif`. |
+| Why do applies fail before finding targets? | Filter `lockscreen_apply_completed` to `outcome=failed` or `partial`, break down by `apply_failure_reason`, and inspect `target_count=0` separately. Distinguish `cache_inaccessible`, `cache_missing`, and `no_destinations`; compare app/Windows versions and API options. Keep `workflow=diagnostics` separate from `workflow=lockscreen`, exclude cancellations, and treat missing reasons as unrecorded. Companion `$exception` events share the operation ID and reason when an exception is available. |
 | What makes operations slow? | Median and p95 of `duration_ms` for successful generation/apply. Compare generation's completed extraction, encoding, and preview durations. Break down by requested width, FPS mode, source/target FPS, and clip duration; show sample counts. |
 | Where does GIF generation fail? | Filter `gif_generation_completed` to `outcome=failed`, break down by `failure_stage`, then `error_kind` and native component/code or exception family/HRESULT. Compare versions and requested settings; exclude cancellations. Missing fields on older events mean unknown, not success. |
 | Do installations return? | Retention: successful normal apply as the start event and **Meaningful app use** as the return action, weekly periods across eight weeks. Use **On or after** for this occasional-use utility; distinguish first-use and recurring retention. |

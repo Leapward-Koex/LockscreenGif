@@ -132,8 +132,10 @@ public sealed partial class MainPage
             MainFlowApplyOutcome.Cancelled when Flow.LastApplyChangedFiles =>
                 "Some lock-screen files have already changed. Your GIF is still ready to retry.",
             MainFlowApplyOutcome.Cancelled => "Your GIF is still ready to retry.",
+            MainFlowApplyOutcome.Partial when Flow.LastApplyError is not null =>
+                $"Some lock-screen files were updated, but the operation did not finish. {Flow.LastApplyError}",
             MainFlowApplyOutcome.Partial => "Some lock-screen files were updated, but the operation did not finish. Try again.",
-            _ => "Your GIF is still ready. Try again or open Diagnostics.",
+            _ => Flow.LastApplyError ?? "Your GIF is still ready. Try again or open Diagnostics.",
         };
         OperationStatus.Severity =
             Flow.LastApplyOutcome == MainFlowApplyOutcome.Cancelled ? InfoBarSeverity.Warning : InfoBarSeverity.Error;

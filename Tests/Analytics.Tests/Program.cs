@@ -30,6 +30,7 @@ internal static class AnalyticsTests
         await GenerationErrorTests.RunAsync();
         await ErrorTrackingTests.RunAsync();
         await ApplySourceTests.RunAsync();
+        await ApplyFailureTests.RunAsync();
         Console.WriteLine("All analytics checks passed. Every request used a fake HTTP transport.");
     }
 

@@ -40,6 +40,8 @@ internal static class LockscreenApplyAnalytics
                 FailedCount = result.Cancelled ? null : result.Files.Count(file => !file.Copied || !file.Verified),
                 ApiRequested = result.ApiRequested,
                 ApiCompleted = result.ApiCompleted,
+                ApplyFailureReason =
+                    result.Cancelled || result.Success ? null : result.FailureReason ?? LockscreenApplyFailureReason.Unknown,
                 GifSizeBytes = result.SourceSizeBytes,
                 GifWidth = result.SourceWidth,
                 GifHeight = result.SourceHeight,
@@ -59,6 +61,9 @@ internal static class LockscreenApplyAnalytics
                 operation with
                 {
                     DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+                    // The outer boundary does not know which apply stage threw. Do not guess from exception type alone.
+                    ApplyFailureReason =
+                        AnalyticsProperties.ClassifyError(ex) == AnalyticsErrorKind.Cancelled ? null : LockscreenApplyFailureReason.Unknown,
                 }
             );
             throw;

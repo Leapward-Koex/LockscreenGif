@@ -486,6 +486,23 @@ public sealed class AnalyticsService : IDisposable, IErrorReporter
         Add("failed_count", NonNegative(values.FailedCount));
         Add("api_requested", values.ApiRequested);
         Add("api_completed", values.ApiCompleted);
+        Add(
+            "apply_failure_reason",
+            values.ApplyFailureReason switch
+            {
+                LockscreenApplyFailureReason.SourceReadFailed => "source_read_failed",
+                LockscreenApplyFailureReason.InvalidSource => "invalid_source",
+                LockscreenApplyFailureReason.WindowsApiFailed => "windows_api_failed",
+                LockscreenApplyFailureReason.CacheInaccessible => "cache_inaccessible",
+                LockscreenApplyFailureReason.CacheMissing => "cache_missing",
+                LockscreenApplyFailureReason.NoDestinations => "no_destinations",
+                LockscreenApplyFailureReason.CacheDiscoveryFailed => "cache_discovery_failed",
+                LockscreenApplyFailureReason.CopyFailed => "copy_failed",
+                LockscreenApplyFailureReason.VerificationFailed => "verification_failed",
+                LockscreenApplyFailureReason.Unknown => "unknown",
+                _ => null,
+            }
+        );
         Add("operation_id", values.OperationId is { } operationId && operationId != Guid.Empty ? operationId.ToString("D") : null);
         Add("workflow", WorkflowName(values.Workflow));
         Add(

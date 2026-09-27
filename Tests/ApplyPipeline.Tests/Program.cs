@@ -28,6 +28,18 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Removal preserves the main image and reports locked variants", RemoveVariants),
     ("Atomic replacement preserves the destination ACL", PreserveDestinationAcl),
     ("Permission helper retains exact paths and operation lifetime", PermissionSessionTests.ScopeAndLifetime),
+    ("Denied cache-root attributes can reach scoped repair", PermissionRecoveryTests.DeniedRootAttributesRecover),
+    ("Denied cache-folder attributes can reach scoped repair", PermissionRecoveryTests.DeniedFolderAttributesRecover),
+    ("Denied cache-file attributes can reach scoped repair", PermissionRecoveryTests.DeniedFileAttributesRecover),
+    ("Denied staging attributes can reach scoped folder repair", PermissionRecoveryTests.DeniedStagingAttributesRecover),
+    ("Denied attributes at commit can reach scoped destination repair", PermissionRecoveryTests.DeniedCommitAttributesRecover),
+    ("Destination repair revalidates staged links before committing", PermissionRecoveryTests.CommitRepairRevalidatesStagedPath),
+    ("Rejected permission repair never writes cache files", PermissionRecoveryTests.RejectedRepairMakesNoWrites),
+    ("Unreadable ancestors still fail closed after scoped repair", PermissionRecoveryTests.StillDeniedAncestorFailsClosed),
+    ("Unsafe paths never reach permission repair", PermissionRecoveryTests.UnsafePathsNeverReachHelper),
+    ("Helper success still requires client link validation", PermissionRecoveryTests.RepairSuccessStillRejectsLinks),
+    ("Cancellation at a denied attribute check never starts repair", PermissionRecoveryTests.CancellationNeverStartsRepair),
+    ("Apply failures retain actionable typed reasons", FailureReasonTests.RunAsync),
     ("Declined elevation is not repeated", PermissionSessionTests.DeclinedElevationIsNotRepeated),
     ("Failed helper launch is not repeated", PermissionSessionTests.FailedLaunchIsNotRepeated),
     ("Precancelled permission repair does not launch", PermissionSessionTests.PrecancelledRepairDoesNotLaunch),
@@ -226,7 +238,10 @@ static async Task InvalidSource()
         result.SourceSizeBytes is null && result.SourceWidth is null && result.SourceHeight is null,
         "Invalid GIF signatures produce no GIF size properties."
     );
-    Assert(!result.Success && result.Error!.Contains("InvalidDataException"), "Invalid source must fail before writes.");
+    Assert(
+        !result.Success && result.FailureReason == LockscreenApplyFailureReason.InvalidSource,
+        "Invalid source must fail before writes."
+    );
     Assert(result.FailureException is InvalidDataException, "Invalid input preserves the original source validation exception.");
     Assert(Directory.GetFiles(fixture.Folder).Length == 0, "Invalid source should not affect the cache.");
 }
