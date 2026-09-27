@@ -2,21 +2,40 @@
     x:Class="LockscreenGif.Views.ShellPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <NavigationView
-        x:Name="Navigation"
-        PaneDisplayMode="Top"
-        IsBackButtonVisible="Collapsed"
-        IsSettingsVisible="False"
-        IsPaneToggleButtonVisible="False"
-        SelectionChanged="Navigation_SelectionChanged">
-        <NavigationView.MenuItems>
-            <NavigationViewItem x:Name="LockscreenItem" Content="Lockscreen" Tag="Lockscreen">
-                <NavigationViewItem.Icon><SymbolIcon Symbol="Pictures" /></NavigationViewItem.Icon>
-            </NavigationViewItem>
-            <NavigationViewItem x:Name="DiagnosticsItem" Content="Diagnostics" Tag="Diagnostics">
-                <NavigationViewItem.Icon><FontIcon Glyph="&#xE9D9;" /></NavigationViewItem.Icon>
-            </NavigationViewItem>
-        </NavigationView.MenuItems>
-        <Frame x:Name="ContentFrame" Navigated="ContentFrame_Navigated" />
-    </NavigationView>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <InfoBar x:Name="AnalyticsNotice" Margin="24,12,24,0" IsOpen="False" Severity="Informational"
+            Title="Usage analytics are enabled"
+            Message="Lockscreen Gif shares feature use and operation outcomes with PostHog in the EU to help improve the app. You can opt out in Settings > Analytics. Filenames, media, and diagnostic logs are never included.">
+            <InfoBar.ActionButton>
+                <Button Content="Open settings" Click="OpenAnalyticsSettings_Click" />
+            </InfoBar.ActionButton>
+        </InfoBar>
+        <InfoBar x:Name="LockscreenVerificationStatus" Grid.Row="1" Margin="24,12,24,0"
+            IsOpen="False" Severity="Informational" />
+        <NavigationView Grid.Row="2"
+            x:Name="Navigation"
+            PaneDisplayMode="Top"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False"
+            IsPaneToggleButtonVisible="False"
+            SelectionChanged="Navigation_SelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="LockscreenItem" Content="Lockscreen" Tag="Lockscreen">
+                    <NavigationViewItem.Icon><SymbolIcon Symbol="Pictures" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="DiagnosticsItem" Content="Diagnostics" Tag="Diagnostics">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9D9;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="SettingsItem" Content="Settings" Tag="Settings">
+                    <NavigationViewItem.Icon><SymbolIcon Symbol="Setting" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <Frame x:Name="ContentFrame" Navigated="ContentFrame_Navigated" />
+        </NavigationView>
+    </Grid>
 </Page>

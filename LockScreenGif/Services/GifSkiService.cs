@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using GifskiNet;
 
 namespace LockscreenGif.Services;
@@ -67,23 +68,6 @@ public class GifSkiService
 
         return await Task.Run(() =>
         {
-            var baseDir = AppContext.BaseDirectory;
-            var gifskiDll = Path.Combine(baseDir, "Vendor", "gifski", "gifski.dll");
-
-            using var gifski = Gifski.Create(
-                gifskiDll,
-                settings =>
-                {
-                    settings.Quality = 100;
-                    settings.Extra = true;
-                }
-            );
-
-            var outputFolder = CreateTempDirectory();
-
-            var outputFile = Path.Combine(outputFolder, "output.gif");
-            gifski.SetFileOutput(outputFile);
-
             var frames = Directory
                 .EnumerateFiles(inputDirectory, "frame_*.png")
                 .Select(path =>
@@ -105,6 +89,25 @@ public class GifSkiService
             {
                 throw new InvalidDataException("Extracted frame timing does not match the selected clip.");
             }
+
+            var (width, height) = ReadPngDimensions(frames[0].Path);
+            var gifskiDll = Path.Combine(AppContext.BaseDirectory, "Vendor", "gifski", "gifski.dll");
+            using var gifski = Gifski.Create(
+                gifskiDll,
+                settings =>
+                {
+                    // FFmpeg has already applied the selected resolution. Gifski's
+                    // unspecified dimensions automatically shrink large images.
+                    settings.Width = width;
+                    settings.Height = height;
+                    settings.Quality = 100;
+                    settings.Extra = true;
+                }
+            );
+
+            var outputFile = Path.Combine(CreateTempDirectory(), "output.gif");
+            gifski.SetFileOutput(outputFile);
+
             // Gifski uses a positive first timestamp as the final frame delay.
             // Offset every PTS equally to retain all intermediate (including VFR) delays.
             var finalDelay = duration - presentationTimes[^1];
@@ -124,5 +127,25 @@ public class GifSkiService
 
             return outputFile;
         });
+    }
+
+    private static (uint Width, uint Height) ReadPngDimensions(string path)
+    {
+        Span<byte> header = stackalloc byte[24];
+        using var stream = File.OpenRead(path);
+        stream.ReadExactly(header);
+        if (!header[..8].SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }) || !header[12..16].SequenceEqual("IHDR"u8))
+        {
+            throw new InvalidDataException("The exported frame is not a PNG image.");
+        }
+
+        var width = BinaryPrimitives.ReadUInt32BigEndian(header[16..20]);
+        var height = BinaryPrimitives.ReadUInt32BigEndian(header[20..24]);
+        if (width is 0 or > ushort.MaxValue || height is 0 or > ushort.MaxValue)
+        {
+            throw new InvalidDataException("The exported frame dimensions cannot be represented by a GIF.");
+        }
+
+        return (width, height);
     }
 }

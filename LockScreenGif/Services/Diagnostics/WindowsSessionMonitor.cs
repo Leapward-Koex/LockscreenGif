@@ -13,6 +13,7 @@ public sealed class WindowsSessionMonitor : IDisposable
     private IntPtr _window;
     private IntPtr _powerRegistration;
     public bool IsRegistered { get; private set; }
+    public int SessionId => _sessionId;
     public string? Error { get; private set; }
     public bool PowerNotificationsAvailable { get; private set; }
     public string? PowerError { get; private set; }

@@ -5,271 +5,155 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:local="using:LockscreenGif.CustomControls"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:winui="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
-
+    <Page.Resources>
+        <Style x:Key="CurrentStepStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+            <Setter Property="CornerRadius" Value="6" />
+            <Setter Property="Padding" Value="12,7" />
+        </Style>
+        <Style x:Key="CurrentStepTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Page.Resources>
     <Grid>
-    <ContentControl x:Name="PageContent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
-    <Grid MaxWidth="1000" Margin="24">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <!--  Header  -->
-            <RowDefinition Height="Auto" />
-            <!--  Prerequisites  -->
-            <RowDefinition Height="*" />
-            <!--  Pivot content  -->
-            <RowDefinition Height="Auto" />
-            <!--  Remove section  -->
-            <RowDefinition Height="Auto" />
-            <!--  Apply button  -->
-        </Grid.RowDefinitions>
-
-        <!--  1) Title  -->
-        <StackPanel Grid.Row="0" Spacing="12" Margin="0,0,0,12">
-            <TextBlock Style="{ThemeResource TitleTextBlockStyle}" Text="Lockscreen Gif" />
-            <InfoBar x:Name="OperationStatus" Severity="Informational" IsOpen="False" />
-        </StackPanel>
-
-        <!--  2) Prerequisites Section  -->
-        <Expander
-            Grid.Row="1"
-            Margin="0,0,0,16"
-            HorizontalAlignment="Stretch"
-            HorizontalContentAlignment="Stretch">
-            <Expander.Header>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <FontIcon
-                        x:Name="PrereqWarningIcon"
-                        Grid.Column="0"
-                        Margin="0,0,8,0"
-                        FontSize="16"
-                        Foreground="{StaticResource SystemFillColorCautionBrush}"
-                        Glyph="&#xE7BA;"
-                        Visibility="Collapsed" />
-                    <TextBlock Grid.Column="1" Text="Getting Started" />
-                </Grid>
-            </Expander.Header>
-            <StackPanel Margin="0,8,0,0" Spacing="12">
-                <TextBlock
-                    x:Name="PrereqIntroText"
-                    Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                    Text="Follow these steps before using the application:"
-                    TextWrapping="Wrap" />
-
-                <!--  Step 1 warning  -->
-                <InfoBar
-                    x:Name="LockscreenModeWarning"
-                    Title="Lock screen must be set to Picture"
-                    Margin="0,0,0,4"
-                    IsClosable="False"
-                    IsOpen="False"
-                    Severity="Warning">
-                    <InfoBar.Message>
-                        Your current lock screen mode is not compatible (Slideshow/Spotlight). Switch to 'Picture' in Windows Settings.
-                    </InfoBar.Message>
-                </InfoBar>
-
-                <!--  Step 1  -->
-                <Grid x:Name="PrereqStep1Root">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border
-                        x:Name="PrereqStep1Badge"
-                        Grid.Column="0"
-                        Width="32"
-                        Height="32"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Top"
-                        Background="{StaticResource AccentFillColorDefaultBrush}"
-                        CornerRadius="16">
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource TextOnAccentFillColorPrimaryBrush}"
-                            Text="1" />
-                    </Border>
-                    <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock
-                            x:Name="PrereqStep1Title"
-                            FontWeight="SemiBold"
-                            Text="Set a default lockscreen in Windows Settings (Only required for the first time)" />
-                        <TextBlock
-                            x:Name="PrereqStep1Body"
-                            Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                            Text="Open Windows Settings → Personalization → Lock screen, change lockscreen type to 'Picture' and browse to select an initial image (actual image in unimportant, but it should be a picture on your computer)."
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-
-                <!--  Step 2  -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border
-                        Grid.Column="0"
-                        Width="32"
-                        Height="32"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Top"
-                        Background="{StaticResource AccentFillColorDefaultBrush}"
-                        CornerRadius="16">
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource TextOnAccentFillColorPrimaryBrush}"
-                            Text="1" />
-                    </Border>
-                    <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock FontWeight="SemiBold" Text="Generate the required image cache for your screens" />
-                        <TextBlock
-                            Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                            Text="Lock your screen once to generate the required image cache for your screens, then unlock and proceed with the next step."
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-
-                <!--  Step 3  -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border
-                        Grid.Column="0"
-                        Width="32"
-                        Height="32"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Top"
-                        Background="{StaticResource AccentFillColorDefaultBrush}"
-                        CornerRadius="16">
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource TextOnAccentFillColorPrimaryBrush}"
-                            Text="2" />
-                    </Border>
-                    <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock FontWeight="SemiBold" Text="Choose your GIF source" />
-                        <TextBlock
-                            Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                            Text="Either choose a video to convert to a GIF or select an existing GIF file from your device."
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-
-                <!--  Step 4  -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border
-                        Grid.Column="0"
-                        Width="32"
-                        Height="32"
-                        Margin="0,0,12,0"
-                        VerticalAlignment="Top"
-                        Background="{StaticResource AccentFillColorDefaultBrush}"
-                        CornerRadius="16">
-                        <TextBlock
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            FontWeight="SemiBold"
-                            Foreground="{StaticResource TextOnAccentFillColorPrimaryBrush}"
-                            Text="3" />
-                    </Border>
-                    <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock FontWeight="SemiBold" Text="Apply and enjoy" />
-                        <TextBlock
-                            Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                            Text="Click the Apply button to set your animated GIF as your lockscreen."
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-
-                <!--  Resetting  -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="1" Spacing="4">
-                        <TextBlock FontWeight="SemiBold" Text="Resetting back to a regular lockscreen if you want to remove the GIF" />
-                        <TextBlock
-                            Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                            Text="Click the 'Remove' button in the app to reset to the image you previously selected as your lockscreen."
-                            TextWrapping="Wrap" />
-                    </StackPanel>
-                </Grid>
-            </StackPanel>
-        </Expander>
-
-        <ScrollView
-            Grid.Row="2"
-            IsTabStop="True"
-            VerticalScrollBarVisibility="Auto">
-            <Grid MaxWidth="1000" Margin="24">
+        <ContentControl x:Name="PageContent" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <Grid MaxWidth="1000" Margin="20" RowSpacing="16">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <!--  GIF preview  -->
+                    <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
-                    <!--  Pivot content  -->
                 </Grid.RowDefinitions>
-                <!--  GIF preview  -->
-                <Border
-                    Grid.Row="0"
-                    Width="533"
-                    Height="300"
-                    Background="{StaticResource SystemFillColorAttentionBackground}"
-                    BorderBrush="{StaticResource SystemAltLowColor}"
-                    BorderThickness="4"
-                    CornerRadius="{StaticResource ControlCornerRadius}">
-                    <Image x:Name="currentImage" Stretch="Fill" />
-                </Border>
 
-                <!--  2) Pivot: two tabs, one for GIF, one for Video  -->
-                <winui:Pivot Grid.Row="1">
-                    <!--  2a) Convert Video  -->
-                    <winui:PivotItem Header="Video to GIF">
-                        <StackPanel Spacing="16">
+                <StackPanel Grid.Row="0" Spacing="10">
+                    <StackPanel Orientation="Horizontal" Spacing="8" AutomationProperties.Name="Animation setup steps">
+                        <Grid>
+                            <Button x:Name="ChooseStepButton" Content="1 · Choose" Click="ChooseStep_Click"
+                                    AutomationProperties.Name="Choose source" Visibility="Collapsed" IsEnabled="False" />
+                            <Border x:Name="ChooseStepCurrent" Style="{StaticResource CurrentStepStyle}">
+                                <TextBlock x:Name="ChooseStepCurrentText" Text="1 · Choose" Style="{StaticResource CurrentStepTextStyle}"
+                                           AutomationProperties.Name="Choose, current step" />
+                            </Border>
+                        </Grid>
+                        <Grid x:Name="EditStepItem" Visibility="Collapsed">
+                            <Button x:Name="EditStepButton" Content="2 · Edit" Click="EditStep_Click"
+                                    AutomationProperties.Name="Edit video" IsEnabled="False" />
+                            <Border x:Name="EditStepCurrent" Style="{StaticResource CurrentStepStyle}" Visibility="Collapsed">
+                                <TextBlock x:Name="EditStepCurrentText" Text="2 · Edit" Style="{StaticResource CurrentStepTextStyle}"
+                                           AutomationProperties.Name="Edit, current step" />
+                            </Border>
+                        </Grid>
+                        <Grid>
+                            <Button x:Name="SetStepButton" Content="Set" Click="SetStep_Click"
+                                    AutomationProperties.Name="Preview and set lock screen" IsEnabled="False" />
+                            <Border x:Name="SetStepCurrent" Style="{StaticResource CurrentStepStyle}" Visibility="Collapsed">
+                                <TextBlock x:Name="SetStepCurrentText" Style="{StaticResource CurrentStepTextStyle}"
+                                           AutomationProperties.Name="Set, current step" />
+                            </Border>
+                        </Grid>
+                        <Border x:Name="AppliedStepCurrent" Style="{StaticResource CurrentStepStyle}" Visibility="Collapsed">
+                            <TextBlock Text="✓ Applied" Style="{StaticResource CurrentStepTextStyle}"
+                                       AutomationProperties.Name="Applied, current step" />
+                        </Border>
+                    </StackPanel>
+                    <ContentControl x:Name="StageFocusTarget" IsTabStop="True" HorizontalContentAlignment="Stretch">
+                        <TextBlock x:Name="StageHeading" Text="Choose your animation" Style="{ThemeResource TitleTextBlockStyle}"
+                                   TextWrapping="Wrap" AutomationProperties.HeadingLevel="Level1" />
+                    </ContentControl>
+                    <TextBlock x:Name="StageDescription" Text="Start with a video or an existing GIF."
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
 
-                            <!--  Browse Video panel  -->
-                            <Grid
-                                Padding="24"
-                                Background="{StaticResource SystemFillColorNeutralBackgroundBrush}"
-                                CornerRadius="{StaticResource ControlCornerRadius}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <FontIcon
-                                    Grid.Column="0"
-                                    Margin="0,0,24,0"
-                                    Glyph="&#xE714;" />
-                                <TextBlock
-                                    Grid.Column="1"
-                                    Style="{ThemeResource BodyStrongTextBlockStyle}"
-                                    Text="Select a video to convert" />
-                                <Button
-                                    Grid.Column="2"
-                                    Padding="32,8"
-                                    x:Name="BrowseVideoButton"
-                                    Click="OpenVideoButton_click"
-                                    Content="Browse Video" />
-                            </Grid>
+                <ScrollViewer x:Name="StageScrollViewer" Grid.Row="1" IsTabStop="False" HorizontalContentAlignment="Stretch"
+                            HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Spacing="16" Padding="0,0,4,8">
+                        <InfoBar x:Name="OperationStatus" Severity="Informational" IsOpen="False"
+                                 AutomationProperties.LiveSetting="Polite" />
 
-                            <Grid x:Name="VideoPreviewPanel" Visibility="Collapsed" MaxWidth="560">
+                        <StackPanel x:Name="ChooseStagePanel" Spacing="16">
+                            <Button x:Name="BrowseVideoButton" Click="OpenVideoButton_click" Padding="20"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE714;" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <TextBlock Text="Choose video" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <TextBlock Text="Trim an MP4 or MKV video and turn it into a GIF."
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                            <Button x:Name="BrowseGifButton" Click="OpenGifButton_click" Padding="20"
+                                    HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Glyph="&#xE8B9;" VerticalAlignment="Center" />
+                                    <StackPanel Grid.Column="1" Spacing="4">
+                                        <TextBlock Text="Choose GIF" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <TextBlock Text="Preview and use a GIF from your device."
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </Button>
+                            <TextBlock x:Name="CurrentSelectionSummary" Visibility="Collapsed" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Expander IsExpanded="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                                <Expander.Header>
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <FontIcon x:Name="PrereqWarningIcon" FontSize="16" Glyph="&#xE7BA;"
+                                                  Foreground="{ThemeResource SystemFillColorCautionBrush}" Visibility="Collapsed" />
+                                        <TextBlock Text="Getting Started" />
+                                    </StackPanel>
+                                </Expander.Header>
+                                <StackPanel Spacing="16" Margin="0,8,0,0">
+                                    <TextBlock x:Name="PrereqIntroText" Text="Prepare Windows once, then choose an animation."
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                    <InfoBar x:Name="LockscreenModeWarning" Title="Check your lock screen mode"
+                                             IsClosable="False" IsOpen="False" Severity="Warning"
+                                             Message="Windows may be using Slideshow or Spotlight. Choose Picture in Windows Settings before applying an animation." />
+                                    <Grid x:Name="PrereqStep1Root" ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border x:Name="PrereqStep1Badge" Width="28" Height="28" CornerRadius="14"
+                                                VerticalAlignment="Top" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                                            <TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold"
+                                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Spacing="4">
+                                            <TextBlock x:Name="PrereqStep1Title" Text="Choose a picture in Windows Settings"
+                                                       FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock x:Name="PrereqStep1Body" Text="Open Settings → Personalization → Lock screen, choose Picture, and browse to an image on your computer. This is only needed for initial setup."
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="2. Lock and unlock once" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="This lets Windows prepare the lock-screen image cache for your screens."
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="3. Choose, edit, and set" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="Choose a video or GIF. For video, select a clip and continue to generate a preview. Check the animation, then select Set lock screen. Lock your PC to check playback."
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Expander>
+                            <HyperlinkButton x:Name="RemoveAnimationLink" Content="Remove animation in Settings"
+                                             Click="OpenSettings_Click" HorizontalAlignment="Left" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="EditStagePanel" Spacing="16" Visibility="Collapsed">
+                            <Grid x:Name="VideoPreviewPanel" Visibility="Collapsed" MaxWidth="800" MaxHeight="340">
                                 <MediaPlayerElement x:Name="VideoPreview" AreTransportControlsEnabled="False" />
                                 <Image x:Name="PreviewStill" Stretch="Uniform" Visibility="Collapsed" IsHitTestVisible="False" />
                                 <Border x:Name="PreviewLoadingPanel" Visibility="Collapsed" Background="#99000000" IsHitTestVisible="False">
@@ -295,8 +179,26 @@
                                     InteractionStarted="Timeline_InteractionStarted"
                                     InteractionCompleted="Timeline_InteractionCompleted"
                                     FrameChanged="Timeline_FrameChanged" />
-                                <Button x:Name="PlaySelectionButton" Content="Play" Click="PlaySelection_Click" MinWidth="96" HorizontalAlignment="Center"
-                                        ToolTipService.ToolTip="Play or pause the selected clip. Playback loops automatically." />
+                                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                                    <Button x:Name="SelectionStartButton" Click="SkipToSelectionBoundary_Click" MinWidth="88"
+                                            AutomationProperties.Name="Jump to start of selection"
+                                            ToolTipService.ToolTip="Jump to the first frame of the selection">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <SymbolIcon Symbol="Previous" />
+                                            <TextBlock Text="Start" VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </Button>
+                                    <Button x:Name="PlaySelectionButton" Content="Play" Click="PlaySelection_Click" MinWidth="96"
+                                            ToolTipService.ToolTip="Play or pause the selected clip. Playback loops automatically." />
+                                    <Button x:Name="SelectionEndButton" Click="SkipToSelectionBoundary_Click" MinWidth="88"
+                                            AutomationProperties.Name="Jump to end of selection"
+                                            ToolTipService.ToolTip="Jump to the last frame of the selection">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <TextBlock Text="End" VerticalAlignment="Center" />
+                                            <SymbolIcon Symbol="Next" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                                 <TextBlock x:Name="PreviewStatus" Visibility="Collapsed" Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                                            TextWrapping="Wrap" FontSize="12" AutomationProperties.LiveSetting="Polite" />
                                 <Grid x:Name="TrimBoundaryGrid">
@@ -315,7 +217,7 @@
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" FontSize="12" TextWrapping="Wrap" />
                                             </Grid>
                                             <TextBox x:Name="StartTimeTextBox" AutomationProperties.Name="Clip start time" AutomationProperties.LabeledBy="{Binding ElementName=StartTimeHeading}"
-                                                LostFocus="TimeTextBox_LostFocus" KeyDown="TimeTextBox_KeyDown" PlaceholderText="Seconds or mm:ss.fff" />
+                                                TextChanged="TimeTextBox_TextChanged" LostFocus="TimeTextBox_LostFocus" KeyDown="TimeTextBox_KeyDown" PlaceholderText="Seconds or mm:ss.fff" />
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <RepeatButton x:Name="StartBackButton" Content="−1 frame" Tag="StartBack" Click="NudgeBoundary_Click"
                                                     AutomationProperties.Name="Move start one frame earlier" ToolTipService.ToolTip="Move start exactly one frame earlier" />
@@ -339,7 +241,7 @@
                                             </Grid>
                                             <TextBox x:Name="EndTimeTextBox" AutomationProperties.Name="Clip end time" AutomationProperties.LabeledBy="{Binding ElementName=EndTimeHeading}"
                                                 ToolTipService.ToolTip="End time is just after the last included frame."
-                                                LostFocus="TimeTextBox_LostFocus" KeyDown="TimeTextBox_KeyDown" PlaceholderText="Seconds or mm:ss.fff" />
+                                                TextChanged="TimeTextBox_TextChanged" LostFocus="TimeTextBox_LostFocus" KeyDown="TimeTextBox_KeyDown" PlaceholderText="Seconds or mm:ss.fff" />
                                             <StackPanel Orientation="Horizontal" Spacing="8">
                                                 <RepeatButton x:Name="EndBackButton" Content="−1 frame" Tag="EndBack" Click="NudgeBoundary_Click"
                                                     AutomationProperties.Name="Move end one frame earlier" ToolTipService.ToolTip="Move end exactly one frame earlier" />
@@ -356,186 +258,118 @@
 
                             </StackPanel>
                             </ContentControl>
+
                             <ContentControl x:Name="VideoSettingsHost" HorizontalContentAlignment="Stretch">
-                            <StackPanel
-                                x:Name="ComboSettingsStack"
-                                Margin="0,16,0,0"
-                                Spacing="8"
-                                Visibility="Collapsed">
-                                <!--  Settings row  -->
-                                <StackPanel Orientation="Horizontal" Spacing="16">
-                                    <StackPanel>
-                                        <TextBlock FontWeight="SemiBold" Text="Resolution" />
-                                        <ComboBox
-                                            x:Name="ComboResolution"
-                                            Width="160"
-                                            SelectionChanged="ComboResolution_SelectionChanged" />
+                                <Expander x:Name="OutputSettingsExpander" IsExpanded="False" HorizontalAlignment="Stretch"
+                                          HorizontalContentAlignment="Stretch">
+                                    <Expander.Header>
+                                        <StackPanel Spacing="4">
+                                            <TextBlock Text="Output settings" />
+                                            <TextBlock x:Name="OutputSettingsSummary" Text="Original resolution and frame rate"
+                                                       FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Expander.Header>
+                                    <StackPanel x:Name="ComboSettingsStack" Spacing="12" Visibility="Collapsed">
+                                        <ComboBox x:Name="ComboResolution" Header="Resolution" HorizontalAlignment="Stretch"
+                                                  SelectionChanged="ComboResolution_SelectionChanged" />
+                                        <ComboBox x:Name="ComboFps" Header="Frame rate" HorizontalAlignment="Stretch"
+                                                  SelectionChanged="ComboResolution_SelectionChanged" />
                                     </StackPanel>
-                                    <StackPanel>
-                                        <TextBlock FontWeight="SemiBold" Text="Frame rate" />
-                                        <ComboBox
-                                            x:Name="ComboFps"
-                                            Width="200"
-                                            SelectionChanged="ComboResolution_SelectionChanged" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </StackPanel>
-
-
+                                </Expander>
                             </ContentControl>
-                            <!--  Generate button  -->
-                            <InfoBar
-                                x:Name="FileSizeWarning"
-                                Title="Free space requirement"
-                                IsClosable="False"
-                                IsOpen="False"
-                                Message=""
-                                Severity="Warning" />
-                            <Button
-                                x:Name="GenerateButton"
-                                HorizontalAlignment="Right"
-                                Click="GenerateButton_Click"
-                                Content="Generate GIF"
-                                IsEnabled="False" />
-                            <ProgressBar
-                                x:Name="GenerateLoading"
-                                Visibility="Collapsed"
-                                Value="0" />
-                            <StackPanel x:Name="SaveGeneratedGifPanel" Spacing="8" Visibility="Collapsed">
-                                <Button x:Name="SaveGeneratedGifButton"
-                                        Click="SaveGeneratedGifButton_Click"
+                            <InfoBar x:Name="FileSizeWarning" Title="Free space requirement" IsClosable="False"
+                                     IsOpen="False" Message="" Severity="Warning" />
+                        </StackPanel>
+
+                        <StackPanel x:Name="PreviewStagePanel" Spacing="16" Visibility="Collapsed">
+                            <InfoBar x:Name="CompletionPanel" Title="Applied successfully" IsOpen="True" IsClosable="False"
+                                     Visibility="Collapsed" Severity="Success" AutomationProperties.LiveSetting="Polite"
+                                     Message="The lock-screen files were updated. Lock your PC to check the animation." />
+                            <Border MaxHeight="340" MinHeight="120" HorizontalAlignment="Stretch" Padding="4"
+                                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8">
+                                <Image x:Name="currentImage" Stretch="Uniform" MaxHeight="330"
+                                       AutomationProperties.Name="Prepared lock-screen animation" />
+                            </Border>
+                            <TextBlock x:Name="PreparedSummary" TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <InfoBar x:Name="SetModeWarning" Title="Check your lock screen mode" IsClosable="False"
+                                     IsOpen="False" Severity="Warning"
+                                     Message="Windows may be using Slideshow or Spotlight. Choose Picture in Windows Settings before setting your animation." />
+                            <StackPanel x:Name="SaveGeneratedGifPanel" Spacing="6" Visibility="Collapsed">
+                                <Button x:Name="SaveGeneratedGifButton" Click="SaveGeneratedGifButton_Click"
                                         ToolTipService.ToolTip="Save a copy of the generated GIF to a folder you choose">
                                     <StackPanel Orientation="Horizontal" Spacing="8">
                                         <FontIcon Glyph="&#xE74E;" FontSize="16" />
                                         <TextBlock Text="Save GIF…" />
                                     </StackPanel>
                                 </Button>
-                                <TextBlock Text="Keep a copy to reuse later with Browse GIF."
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           TextWrapping="Wrap" />
+                                <TextBlock Text="Keep a copy to use again with Choose GIF."
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                             </StackPanel>
-
+                            <Button x:Name="DiagnosticsButton" Content="Open Diagnostics" Click="OpenDiagnostics_Click"
+                                    Visibility="Collapsed" HorizontalAlignment="Left" />
                         </StackPanel>
-                    </winui:PivotItem>
+                    </StackPanel>
+                </ScrollViewer>
 
-                    <!--  2b) Use existing GIF  -->
-                    <winui:PivotItem Header="Use GIF">
-                        <StackPanel Spacing="16">
-
-                            <!--  Browse GIF panel  -->
-                            <Grid
-                                Padding="24"
-                                Background="{StaticResource SystemFillColorNeutralBackgroundBrush}"
-                                CornerRadius="{StaticResource ControlCornerRadius}">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <FontIcon
-                                    Grid.Column="0"
-                                    Margin="0,0,24,0"
-                                    Glyph="&#xE8B9;" />
-                                <TextBlock
-                                    Grid.Column="1"
-                                    Style="{ThemeResource BodyStrongTextBlockStyle}"
-                                    Text="Select a GIF file to set as lockscreen" />
-                                <Button
-                                    Grid.Column="2"
-                                    Padding="32,8"
-                                    Click="OpenGifButton_click"
-                                    Content="Browse GIF" />
-                            </Grid>
-
+                <StackPanel Grid.Row="2" Spacing="10">
+                    <StackPanel x:Name="OperationProgressPanel" Spacing="8" Visibility="Collapsed">
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <ProgressRing x:Name="OperationProgressRing" Width="20" Height="20" IsActive="False" />
+                            <TextBlock x:Name="OperationProgressText" Grid.Column="1" VerticalAlignment="Center"
+                                       TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                        </Grid>
+                    </StackPanel>
+                    <ProgressBar x:Name="GenerateLoading" Visibility="Collapsed" Value="0"
+                                 AutomationProperties.Name="GIF generation progress" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="BackButton" Content="Back" Click="Back_Click" Visibility="Collapsed" />
+                        <StackPanel Grid.Column="1" Spacing="8" HorizontalAlignment="Right">
+                            <Button x:Name="ContinueSelectionButton" Content="Continue" Click="ContinueSelection_Click"
+                                    Visibility="Collapsed" Style="{ThemeResource AccentButtonStyle}" />
+                            <Button x:Name="GenerateButton" Content="Continue" Click="GenerateButton_Click" IsEnabled="False"
+                                    Visibility="Collapsed" Style="{ThemeResource AccentButtonStyle}" />
+                            <Button x:Name="ApplyButton" Content="Set lock screen" Click="SetLockscreenButton_click" IsEnabled="False"
+                                    Visibility="Collapsed" Style="{ThemeResource AccentButtonStyle}" />
                         </StackPanel>
-                    </winui:PivotItem>
-                </winui:Pivot>
+                        <Button x:Name="HelpButton" Grid.Column="2" Width="32" Height="32" Padding="0"
+                                ToolTipService.ToolTip="Lock-screen help" AutomationProperties.Name="Lock-screen help">
+                            <FontIcon FontSize="16" Glyph="&#xE897;" />
+                            <Button.Flyout>
+                                <Flyout Placement="Top">
+                                    <StackPanel MaxWidth="280" Margin="8" Spacing="12">
+                                        <StackPanel Spacing="4">
+                                            <TextBlock FontWeight="SemiBold" Text="How does this work?" TextWrapping="Wrap" />
+                                            <TextBlock Text="Choose a video or GIF. For video, edit the clip and select Continue to generate a preview. Then select Set lock screen."
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="4">
+                                            <TextBlock FontWeight="SemiBold" Text="Animation not showing?" TextWrapping="Wrap" />
+                                            <TextBlock Text="Choose a picture in Windows lock-screen settings first, then try Set lock screen again. A successful apply confirms the files were updated; lock your PC to check playback."
+                                                       TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <StackPanel Spacing="4">
+                                            <TextBlock FontWeight="SemiBold" Text="Changed your monitor resolution?" TextWrapping="Wrap" />
+                                            <TextBlock Text="Set the GIF again after changing your primary monitor's resolution." TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+                </StackPanel>
             </Grid>
-        </ScrollView>
-
-        <!--  3) Remove Section: Clear saved animated GIFs and revert to default  -->
-        <Grid
-            Grid.Row="3"
-            Margin="0,12,0,12"
-            Padding="16"
-            Background="{StaticResource SystemFillColorCriticalBackgroundBrush}"
-            CornerRadius="{StaticResource ControlCornerRadius}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <StackPanel Grid.Column="0" Spacing="4">
-                <TextBlock FontWeight="SemiBold" Text="Remove Animated Lockscreen" />
-                <TextBlock
-                    Foreground="{StaticResource TextFillColorSecondaryBrush}"
-                    Text="This will clear any saved animated GIFs and revert back to your existing lockscreen"
-                    TextWrapping="Wrap" />
-            </StackPanel>
-
-            <Button
-                x:Name="removeAnimatedLockscreen"
-                Grid.Column="1"
-                VerticalAlignment="Center"
-                Click="RemoveAnimatedLockscreenButton_click"
-                Content="Remove" />
-        </Grid>
-
-        <!--  4) Bottom Row: Apply button  -->
-        <StackPanel
-            Grid.Row="4"
-            HorizontalAlignment="Right"
-            Orientation="Horizontal"
-            Spacing="8">
-
-            <!--  apply button  -->
-            <Button
-                x:Name="ApplyButton"
-                Click="SetLockscreenButton_click"
-                Content="Apply"
-                IsEnabled="False"
-                Style="{StaticResource AccentButtonStyle}" />
-
-            <!--  help icon button  -->
-            <Button
-                x:Name="HelpButton"
-                Width="32"
-                Height="32"
-                Padding="0"
-                ToolTipService.Placement="Top">
-                <FontIcon
-                    Grid.Column="0"
-                    FontSize="16"
-                    Glyph="&#xE897;" />
-                <Button.Flyout>
-                    <Flyout Placement="Top">
-                        <StackPanel
-                            MaxWidth="260"
-                            Margin="8"
-                            Spacing="10">
-                            <StackPanel Spacing="6">
-                                <TextBlock
-                                    FontWeight="SemiBold"
-                                    Text="Lockscreen not showing after you apply?"
-                                    TextWrapping="Wrap" />
-                                <TextBlock Text="Try manually setting one in the Windows settings first, then try applying again." TextWrapping="Wrap" />
-                            </StackPanel>
-
-                            <StackPanel Spacing="6">
-                                <TextBlock
-                                    FontWeight="SemiBold"
-                                    Text="Changed your primary monitor resolution?"
-                                    TextWrapping="Wrap" />
-                                <TextBlock Text="If you change the screen resolution of your primary monitor, re-apply your GIF from the app for it to take effect." TextWrapping="Wrap" />
-                            </StackPanel>
-                        </StackPanel>
-                    </Flyout>
-                </Button.Flyout>
-            </Button>
-
-        </StackPanel>
-    </Grid>
-    </ContentControl>
+        </ContentControl>
     <!-- Outside the ScrollView so loading is always visible and blocks inactive controls. -->
     <Grid x:Name="VideoLoadPanel" Visibility="Collapsed" Background="#99000000"
           KeyDown="VideoLoadPanel_KeyDown" TabFocusNavigation="Cycle">
@@ -558,5 +392,6 @@
             </StackPanel>
         </Border>
     </Grid>
+
     </Grid>
 </Page>

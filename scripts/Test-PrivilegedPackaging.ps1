@@ -1,5 +1,5 @@
 param(
-    [string]$AppDirectory = "$PSScriptRoot/../LockScreenGif/bin/Release/net9.0-windows10.0.26100.0/win-x64",
+    [string]$AppDirectory = "$PSScriptRoot/../artifacts/app",
     [string]$InstallerProject = "$PSScriptRoot/../Installer/LockscreenGif.aip"
 )
 $ErrorActionPreference = 'Stop'

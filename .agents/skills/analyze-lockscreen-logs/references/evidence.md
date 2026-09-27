@@ -42,6 +42,14 @@ Sidecar and temporary paths may have no applied-file verification boundary. Thei
 
 The diagnostic page intentionally omits playback-observation controls. Ask for the visible result and surface alongside a ZIP when not already supplied. An empty exported observation is not a failed test. Short lock/unlock tests also cannot establish the cause of next-day cache reversion; that needs evidence captured during the later event.
 
+## Regular apply verification
+
+`LockscreenVerificationService` reuses the diagnostic trace collector for the regular apply flow, without reapplying or running full cache inventories. Monitoring begins only after **Lock now** is selected, before requesting the lock. The result requires a successfully verified target and a completed positive-byte read started after that target's `VerifiedAt`, attributed to `LogonUI.exe` in the app's Windows session. Other readers can qualify for the diagnostic page's broader external-read finding but cannot qualify for the regular flow's LogonUI confirmation. Retained operations can establish a read even when their aggregate was omitted.
+
+Process names have two native sources: the startup `Process.GetProcesses()` snapshot uses `ProcessName` (for example, `LogonUI`), while ETW process events supply an image filename (for example, `LogonUI.exe`). Match those exact names case-insensitively while still requiring resolved process/session attribution. Requiring the extension alone can miss an already-running LogonUI process.
+
+**Later** completes the apply without collecting evidence. The normal check stops and drains after the observed unlock; if its five-minute capture limit expires while locked, it releases the collector and retains the session listener until unlock or app closure. No captured read remains inconclusive, including when Windows reused an image or tracing was unavailable. A positive read survives collection gaps. The short result describes file access, while the subsequent Windows notification confirms only that the GIF was applied. This check has no fresh after-unlock hash inventory and is not a diagnostic export.
+
 ## Coverage counters
 
 - `EventsLost`: ETW collection loss.
@@ -94,12 +102,27 @@ Obtain the visible symptom and surface in accompanying text. Use a selected/refe
 
 For new-build validation, check that aggregates contain the expected optional fields. When raw coverage is complete, reconcile failure/modification witnesses, untimed counts, and fallback totals with retained operations. Zero warnings alone does not prove the helper supplied the timing evidence. Compare exported findings with replay through the current analyzer using `dotnet run --project Tests/Diagnostics.Tests/Diagnostics.Tests.csproj -c Release -- --analyze-report "path/to/report.zip"`. Confirm playback separately through visual observation.
 
+## Save/export errors after bytes were written
+
+A `COMException` with HRESULT `0x80070490` at `CachedFileManager.CompleteUpdatesAsync` establishes that the provider-update completion call failed; it does not prove the preceding copy failed or the GIF encoder produced invalid output. Compare the save stack with the actual export bytes and dimensions before attributing it to generation, preview playback, or lock-screen application.
+
+Check `StorageFile.Provider.Id` before assuming a provider app owns the destination. `CompleteUpdatesAsync` can return element-not-found for plain local files in an unpackaged desktop caller even when bytes are written into the existing file; replacement is not required to trigger the error. The HRESULT alone does not establish that `CopyAndReplaceAsync` invalidated the destination identity. A nonempty path or `IsAvailable=true` also does not distinguish a plain local file from cached cloud storage.
+
+`PickedFileWriter` skips deferred provider updates only for exact, case-insensitive `computer` and `local` provider IDs. All other IDs, including absent/unknown metadata, retain the defer/complete protocol and genuine status/COM failures. It writes/truncates the existing destination stream and flushes/closes it, preserving the picker item's metadata. `IsEqual` protects same-file saves, including provider items without filesystem paths. Bytes existing locally alone do not prove cloud-provider synchronization succeeded. If both writing and update cleanup fail, the original write error remains primary and the cleanup error is logged separately.
+
+The synthetic `Tests/PickedFileWriter.Tests` harness covers those relationships without native APIs or user files. For native validation, use synthetic files for both a new export and replacement of longer contents, compare every byte, and inspect actual provider metadata. Local storage tests do not prove picker UI or cloud-provider behavior; validate available provider destinations separately. API contracts: [StorageProvider.Id](https://learn.microsoft.com/en-us/uwp/api/windows.storage.storageprovider.id), [CompleteUpdatesAsync](https://learn.microsoft.com/en-us/uwp/api/windows.storage.cachedfilemanager.completeupdatesasync), [IsEqual](https://learn.microsoft.com/en-us/uwp/api/windows.storage.storagefile.isequal).
+
+## Generated GIF resolution
+
+Compare the saved GIF's logical-screen width/height with the exported PNG frame dimensions and the selected output resolution. Correct FFmpeg frame dimensions do not prove the encoder kept them: Gifski's unset width/height defaults can automatically downscale frames in `dimensions_for_image`. `GifSkiService` supplies both dimensions from the first exported PNG's IHDR to preserve the actual frame size. See `Tests/VideoEditing.Tests/ResolutionTests.cs` and the [Gifski encoder source](https://raw.githubusercontent.com/ImageOptim/gifski/main/src/lib.rs). A preview's display size or a source-resolution label does not establish saved-file dimensions.
+
 ## Code and verification map
 
 Paths below are relative to the repository root.
 
 | Concern | Code | Isolated test project |
 | --- | --- | --- |
+| Save/export bytes and provider completion | LockScreenGif/Services/PickedFileWriter.cs | Tests/PickedFileWriter.Tests |
 | Commit and verification timestamps | LockScreenGif/Services/Lockscreen/VerifiedCacheWriter.cs | Tests/ApplyPipeline.Tests |
 | Read findings and icons | LockScreenGif/Services/Diagnostics/DiagnosticImageReadFinding.cs, DiagnosticTraceFindings.cs; LockScreenGif/ViewModels/DiagnosticFindingViewModel.cs | Tests/Diagnostics.Tests |
 | Baseline and final hashes | LockScreenGif/Services/Diagnostics/CacheFileReader.cs, CacheCollector.cs | Tests/Diagnostics.Tests |

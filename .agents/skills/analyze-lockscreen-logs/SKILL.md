@@ -14,6 +14,7 @@ Establish what happened to the selected GIF, what Windows accessed, and how trus
   It also accepts `session.json`, reads ZIP entries in memory, and emits compact JSON without extracting or modifying the report. Its timestamps are UTC.
 - The ZIP contains `summary.md`, `session.json`, and `events.jsonl`. The summary's conclusions can be wrong: compare them with structured apply results, snapshots, operations, and aggregates. Keep the session ID and build ID together; the ZIP filename is the export time, not necessarily the test time.
 - For ordinary application text logs, use `rg` for errors and relevant apply/permission stages, then read surrounding lines. Logger messages do not provide the same completion or timing guarantees as ETW records. Do not infer successful playback from a successful copy.
+- For a save/export error, distinguish writing the destination bytes from completing file-provider updates. A stack ending in `CachedFileManager.CompleteUpdatesAsync` can fail after a copy; it does not establish GIF generation or lock-screen apply failure. See the save/export guidance in the evidence reference.
 - If only a summary is available and raw timing or old file sizes matter, request the full existing export. Do not ask for a new elevated run when the existing report can answer the question.
 - Read [references/evidence.md](references/evidence.md) for schema and counter semantics, temporal checks, collector troubleshooting, and source/test locations.
 
@@ -28,6 +29,8 @@ Separate these questions:
 4. Was tracing complete enough to support a negative conclusion? Absence of a read is always inconclusive, including with complete collection.
 
 One verified GIF copy being accessed is enough for the access finding. Other variants are optional, and reads never establish decoding or animation. User observation is separate playback evidence.
+
+The regular apply flow's **Lock now** check is narrower than a diagnostic test: it starts tracing after the user accepts the prompt, uses the completed apply's verification timestamps, and looks specifically for an attributed LogonUI read in the current Windows session. **Later** skips tracing. Its warning means the read could not be confirmed; the Windows success notification reports the successful apply. Do not interpret either as proof of visible animation or a fresh post-unlock hash check. See the reference for its timeout behavior.
 
 Check `ActivityByFileAndProcess` before treating process errors or modifications as a lock-screen failure. Preparation-time probes, normal read EOF, and `STATUS_FLT_DISALLOW_FAST_IO` fallback attempts can occur in working cycles. An independent genuine failure becomes an access warning only with valid evidence that it started after that intended copy's successful `VerifiedAt`. Missing reads, uncertain timing/attribution, System I/O, and observed modifications are information; apply failures, fresh hash mismatches, and collection gaps remain separate warnings. Do not infer exact post-apply counts from whole-test totals or a latest-event witness.
 

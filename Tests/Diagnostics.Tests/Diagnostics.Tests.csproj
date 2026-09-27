@@ -1,17 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../LockScreenGif/Services/LogArchiveWriter.cs" Link="Services/LogArchiveWriter.cs" />
     <Compile Include="../../LockScreenGif/Models/Diagnostics/*.cs" Link="Models/%(Filename)%(Extension)" />
     <Compile Include="../../LockScreenGif/Models/LockscreenApplyResult.cs" Link="Models/LockscreenApplyResult.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/GifInspector.cs" Link="Services/GifInspector.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/ReferenceAnimation.cs" Link="Services/ReferenceAnimation.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticRedactor.cs" Link="Services/DiagnosticRedactor.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticReportWriter.cs" Link="Services/DiagnosticReportWriter.cs" />
+    <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticLogAttachments.cs" Link="Services/DiagnosticLogAttachments.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticTraceShutdownSummary.cs" Link="Services/DiagnosticTraceShutdownSummary.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/TraceHashCorrelation.cs" Link="Services/TraceHashCorrelation.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticImageReadFinding.cs" Link="Services/DiagnosticImageReadFinding.cs" />

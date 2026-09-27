@@ -4,7 +4,7 @@ Open **Diagnostics**, select the current GIF or the reference animation, then ch
 
 Setup shows the source and optional Windows step, followed by the Start test button. Normal readiness states are not displayed. Before the first test, unavailable monitoring or cache inspection produces a plain-language warning with a Check again action; source-selection guidance stays beside its controls. During and after a test, progress and Findings describe what happened instead of repeating preparation statuses.
 
-The experimental **Windows API step** toggle defaults to off. When enabled, it awaits `LockScreen.SetImageFileAsync` before cache discovery and replacement. If a GIF is not working, enabling this option and starting another test may help. Each new test records the selected toggle setting.
+The experimental **Windows API step** toggle defaults to off. It shares one saved preference with **Enable Windows lockscreen API** on Settings, persists between restarts, and also controls normal lockscreen applies. When enabled, it awaits `LockScreen.SetImageFileAsync` before cache discovery and replacement. If a GIF is not working, enabling this option and starting another test may help. Each new test records the selected toggle setting; changing the preference affects future applies, not a test already in progress.
 
 Findings use a check mark for verified results, a warning for concrete problems or incomplete collection, and a neutral information icon for inconclusive evidence. A completed external read of any verified GIF copy passes the overall image-access check; other cached copies do not all need to be read. Missing reads and optional variants remain informational. Expand a file-check group to see each image, its individual status, and expected versus observed hashes. The report contains the same detailed findings.
 
@@ -53,6 +53,19 @@ Only the current test is held in memory. Starting a new test replaces it; closin
 
 The activity timeline and technical details are collected for export rather than shown on the page. An export contains `summary.md`, `session.json`, and `events.jsonl`. Report schema 2 includes `ProcessTrace` collection times, status/reason, counters, operations and per-file/process aggregates. The page receives status/findings snapshots without serializing raw operation lists. Source/cache/rename paths and any path-valued trace fields pass through the same recursive redaction as the rest of the report. Source media and screenshots are excluded. A five-minute collection deadline and bounded event, inventory, and snapshot retention prevent indefinite monitoring; any evidence discarded by a limit is flagged. Inspect the report before publishing it.
 
+Diagnostics exports also include redacted application `app_*.log` files under
+`logs/`, using the same report-scoped aliases as the structured evidence. Log
+snapshots are collected in the background at export time and can include activity
+outside the current test. The eight most recently modified logs are considered,
+with at most the last 2 MiB of each. Only complete lines are retained at snapshot
+boundaries. `logs/manifest.json` records collection time, missing/unreadable files,
+omitted older files, truncation, and dropped partial lines. Nonstandard log names
+use generic ZIP entry names. An unavailable log directory or individual file does
+not prevent exporting the rest of the report; output/ZIP write errors still fail
+the export. Settings files, crash dumps, linked files, and subdirectories are not
+included. **Settings > Logs > Save logs as ZIP** remains the separate export of
+the original application logs without report redaction or these snapshot limits.
+
 ## Trace shutdown evidence
 
 The optional `ProcessTrace.Shutdown` section adds bounded measurements to schema 2: stop request, native stop result/duration, consumer return, disposal/correlation completion, and progress snapshots at stop, native return and deadline. A dispatch hook counts callbacks and records event/delivery timestamps without retaining unrelated payloads. Native STOP buffer statistics are labeled separately from consumer progress. Missing fields in older reports remain unknown.
@@ -81,7 +94,7 @@ Hash-change findings compare fresh reads from snapshots begun after verification
 
 ### Running the checks
 
-Run from the repository root using .NET 9:
+Run from the repository root using the .NET 10 SDK selected by `global.json`:
 
 ```powershell
 dotnet build LockScreenGif/LockscreenGif.csproj --configuration Debug -p:Platform=x64

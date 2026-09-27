@@ -6,12 +6,12 @@ using LockscreenGif.Helpers;
 using LockscreenGif.Models;
 using LockscreenGif.Notifications;
 using LockscreenGif.Services;
+using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
 using LockscreenGif.ViewModels;
 using LockscreenGif.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using WinRT.Interop;
 
@@ -59,14 +59,37 @@ public partial class App : Application
                     services.AddTransient<IActivationHandler, AppNotificationActivationHandler>();
 
                     // Services
+                    services.AddSingleton(_ => new AnalyticsService(
+                        AnalyticsOptions.ForBuild(
+                            BuildInfo.IsGitHubActionsBuild,
+                            context.Configuration["Analytics:ProductionProjectToken"] ?? string.Empty,
+                            context.Configuration["Analytics:DevelopmentProjectToken"] ?? string.Empty,
+                            context.Configuration["Analytics:Host"] ?? string.Empty
+                        ),
+                        Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                            "LockscreenGif",
+                            "analytics.json"
+                        ),
+                        BuildInfo.Version,
+                        Environment.OSVersion.Version.ToString()
+                    ));
                     services.AddSingleton<IAppNotificationService, AppNotificationService>();
                     services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
                     services.AddSingleton<IActivationService, ActivationService>();
                     services.AddSingleton<IPageService, PageService>();
                     services.AddSingleton<INavigationService, NavigationService>();
+                    services.AddSingleton(_ => new LockscreenPreferences(
+                        Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                            "LockscreenGif",
+                            "lockscreen.json"
+                        )
+                    ));
                     services.AddSingleton<ILockscreenService, LockscreenService>();
                     services.AddSingleton<WindowsSessionMonitor>();
                     services.AddSingleton<PrivilegedSessionFactory>();
+                    services.AddSingleton<LockscreenVerificationService>();
                     services.AddSingleton<DiagnosticsSessionService>();
                     services.AddTransient<DiagnosticsViewModel>();
                     services.AddTransient<DiagnosticsPage>();
@@ -74,6 +97,8 @@ public partial class App : Application
                     // Views and ViewModels
                     services.AddTransient<MainViewModel>();
                     services.AddTransient<MainPage>();
+                    services.AddTransient<SettingsViewModel>();
+                    services.AddTransient<SettingsPage>();
 
                     // Configuration
                     services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));
@@ -116,52 +141,14 @@ public partial class App : Application
         await App.GetService<IActivationService>().ActivateAsync(args);
         GetService<WindowsSessionMonitor>().Start(WindowNative.GetWindowHandle(MainWindow));
         MainWindow.AppWindow.Closing += MainWindow_Closing;
-    }
-
-    private bool _closePending;
-    private bool _closingAllowed;
-
-    private async void MainWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
-    {
-        var diagnostics = GetService<DiagnosticsSessionService>();
-        var lockscreen = GetService<ILockscreenService>();
-        if (_closingAllowed || (!diagnostics.IsRunning && !lockscreen.IsApplying))
+        if (MainWindow.Content is ShellPage shell)
         {
-            GetService<WindowsSessionMonitor>().Dispose();
-            MainWindow.AppWindow.Closing -= MainWindow_Closing;
-            return;
+            shell.InitializeAnalytics();
         }
-        args.Cancel = true;
-        if (_closePending)
+        if (!_closePending)
         {
-            return;
-        }
-
-        _closePending = true;
-        if (MainWindow.Content is Microsoft.UI.Xaml.Controls.Control control)
-        {
-            control.IsEnabled = false;
-        }
-        else if (MainWindow.Content is UIElement content)
-        {
-            content.IsHitTestVisible = false;
-        }
-
-        try
-        {
-            await diagnostics.CloseAsync("The app closed before the diagnostic test completed.");
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Could not finish the diagnostic session while closing", ex);
-            diagnostics.Interrupt("The app closed while diagnostic shutdown encountered an error.");
-        }
-        finally
-        {
-            // Ordinary Lockscreen-page applies also finish their native operations first.
-            await lockscreen.WaitForIdleAsync();
-            _closingAllowed = true;
-            MainWindow.Close();
+            GetService<AnalyticsService>().Track(AnalyticsEvent.AppOpened);
+            (MainWindow.Content as ShellPage)?.StartPageAnalytics();
         }
     }
 
@@ -186,6 +173,14 @@ public partial class App : Application
     {
         try
         {
+            GetService<AnalyticsService>().Track(AnalyticsEvent.AppError, new() { ErrorKind = AnalyticsProperties.ClassifyError(ex) });
+        }
+        catch
+        {
+            // Analytics must never interfere with crash handling.
+        }
+        try
+        {
             GetService<DiagnosticsSessionService>().Interrupt($"App error: {ex.GetType().Name} (0x{ex.HResult:X8}): {ex.Message}");
         }
         catch (Exception recordingError)
@@ -206,7 +201,20 @@ public partial class App : Application
         // so call the Win32 API directly or use a ContentDialog.
         ShowDialog(ex);
 
+        StopAnalytics();
         Environment.Exit(1);
+    }
+
+    private static void StopAnalytics()
+    {
+        try
+        {
+            GetService<AnalyticsService>().Stop();
+        }
+        catch
+        {
+            // Closing the app must never wait for analytics delivery or cleanup.
+        }
     }
 
     private static void ShowDialog(Exception ex)

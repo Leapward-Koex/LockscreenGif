@@ -11,7 +11,12 @@ public static class DiagnosticReportWriter
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     /// <summary>Export a caller-owned immutable snapshot, never the active mutable session.</summary>
-    public static async Task ExportAsync(DiagnosticSession session, string destinationPath, DiagnosticSession? comparison = null)
+    public static async Task ExportAsync(
+        DiagnosticSession session,
+        string destinationPath,
+        DiagnosticSession? comparison = null,
+        Func<string>? getLogDirectory = null
+    )
     {
         var redactor = new DiagnosticRedactor(session, comparison);
         var node = JsonSerializer.SerializeToNode(session, JsonOptions)!.AsObject();
@@ -23,6 +28,14 @@ public static class DiagnosticReportWriter
         {
             timeline.AppendLine(redactor.Redact(JsonSerializer.SerializeToNode(entry))!.ToJsonString());
         }
+        var summary = BuildSummary(session);
+        if (getLogDirectory is not null)
+        {
+            summary +=
+                "\n\n## Application logs\n\nRecent redacted application logs are included under `logs/`. "
+                + "See `logs/manifest.json` for collection status, unavailable files, and size limits. "
+                + "These logs are captured at export time and may include activity outside this diagnostic session.\n";
+        }
         // Write alongside the destination and move only after the ZIP is complete.
         var tempPath = destinationPath + "." + Guid.NewGuid().ToString("N") + ".tmp";
         try
@@ -30,7 +43,7 @@ public static class DiagnosticReportWriter
             await using (var file = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
             {
                 using var zip = new ZipArchive(file, ZipArchiveMode.Create, leaveOpen: true);
-                await WriteEntryAsync(zip, "summary.md", redactor.Redact(BuildSummary(session)));
+                await WriteEntryAsync(zip, "summary.md", redactor.Redact(summary));
                 await WriteEntryAsync(zip, "session.json", redactedSession);
                 await WriteEntryAsync(zip, "events.jsonl", timeline.ToString());
                 if (comparison is not null)
@@ -49,6 +62,10 @@ public static class DiagnosticReportWriter
                             + $"Windows API: {comparison.UseWindowsApi} -> {session.UseWindowsApi}\n"
                             + "The baseline was not automatically reset. File evidence and user observations must be considered together."
                     );
+                }
+                if (getLogDirectory is not null)
+                {
+                    await DiagnosticLogAttachments.WriteAsync(zip, getLogDirectory, redactor);
                 }
             }
             File.Move(tempPath, destinationPath, overwrite: true);

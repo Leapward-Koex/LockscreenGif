@@ -56,11 +56,25 @@ public sealed partial class VideoTimeline : UserControl
         _index = index;
         Filmstrip.Children.Clear();
         Filmstrip.ColumnDefinitions.Clear();
+        SetThumbnailLoading(true);
         SetFrames(0, index.Count, 0);
     }
 
-    public void SetThumbnails(IEnumerable<ImageSource> sources)
+    public void Clear()
     {
+        _index = null;
+        Filmstrip.Children.Clear();
+        Filmstrip.ColumnDefinitions.Clear();
+        SetThumbnailLoading(false);
+    }
+
+    public void SetThumbnails(VideoFrameIndex index, IEnumerable<ImageSource> sources)
+    {
+        if (!ReferenceEquals(_index, index))
+        {
+            return;
+        }
+
         Filmstrip.Children.Clear();
         Filmstrip.ColumnDefinitions.Clear();
         foreach (var source in sources)
@@ -70,6 +84,21 @@ public sealed partial class VideoTimeline : UserControl
             Grid.SetColumn(image, Filmstrip.Children.Count);
             Filmstrip.Children.Add(image);
         }
+        SetThumbnailLoading(false);
+    }
+
+    public void CompleteThumbnailLoading(VideoFrameIndex index)
+    {
+        if (ReferenceEquals(_index, index))
+        {
+            SetThumbnailLoading(false);
+        }
+    }
+
+    private void SetThumbnailLoading(bool loading)
+    {
+        ThumbnailLoadingRing.IsActive = loading;
+        ThumbnailLoadingPanel.Visibility = loading ? Visibility.Visible : Visibility.Collapsed;
     }
 
     public void SetFrames(int start, int end, int position)

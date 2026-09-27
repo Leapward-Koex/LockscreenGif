@@ -77,8 +77,11 @@ internal static class LifecycleTests
         await service.ExportAsync(export);
         using var archive = ZipFile.OpenRead(export);
         Program.Check(
-            archive.Entries.Count == 3 && archive.GetEntry("session.json") is not null,
-            "explicit export contains only the current test"
+            archive.Entries.Count == 4
+                && archive.GetEntry("session.json") is not null
+                && archive.GetEntry("logs/manifest.json") is not null
+                && !archive.Entries.Any(entry => entry.FullName.StartsWith("comparison/")),
+            "explicit export contains the current test and application log manifest"
         );
     }
 }

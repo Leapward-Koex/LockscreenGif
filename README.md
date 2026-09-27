@@ -17,6 +17,25 @@ ONLY real .GIF files are supported.
 Videos cannot work and will never work directly, please use the video option to dynamically create a gif to use.
 GIFs created through the video option are created with [FFMPEG](https://www.ffmpeg.org/) and [Gifski](https://gif.ski/) to produce high quality, video like gifs.
 
+# Logs
+
+Open **Settings > Logs** to open the log folder or choose **Save logs as ZIP…**
+and select a destination. The ZIP contains the app's `app_*.log` files, including
+the current log. Export runs in the background and leaves the original logs in
+place. These are copies of the original logs, not the redacted Diagnostics report;
+crash dumps, analytics settings, and other files in the folder are not included.
+
+**Diagnostics > Export report** also includes recent application logs, redacted
+alongside the diagnostic evidence. Its `logs/manifest.json` lists unavailable or
+shortened attachments. See [diagnostics documentation](docs/diagnostics.md).
+
+# Analytics
+
+Usage analytics are enabled on first launch, with a notice and an opt-out under
+**Settings > Analytics**. Events go to PostHog in the EU; filenames, media, and
+diagnostic logs are excluded. See [analytics documentation](docs/analytics.md)
+for events, delivery limits, configuration, and testing.
+
 # C# formatting
 
 Run `dotnet tool restore`, then `./scripts/Format-CSharp.ps1` from the repository
@@ -26,6 +45,14 @@ See [the code style guide](docs/code-style.md) for the shared rules and Visual
 Studio format-on-save setup.
 
 # Automated prereleases
+
+Builds use .NET 10 LTS and require Windows 11 24H2 (build 26100) or later, x64.
+Install the **x64 .NET 10 Desktop Runtime** before running either distribution;
+the MSI currently does not install it for you. The Windows App SDK is bundled.
+
+The .NET SDK is selected by `global.json`. The Windows .NET reference package is
+10.0.26100.87; the existing minimum Windows build remains 26100. Newer Windows
+builds are not excluded by the installer.
 
 Successful master builds publish a `build-<workflow run number>` GitHub prerelease
 with an x64 MSI, app ZIP, checksums, and commit changelog. Pull requests build and
