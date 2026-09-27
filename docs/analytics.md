@@ -13,8 +13,16 @@ explains how to opt out. Its **Open settings** button opens the **Settings** tab
 An existing disabled preference is never replaced by the first-launch default.
 
 The choice and a random installation ID are stored in
-`%LOCALAPPDATA%/LockscreenGif/analytics.json`. Opt-out discards queued events,
-cancels active delivery, and removes the local identifier. Re-enabling generates
+`%LOCALAPPDATA%/LockscreenGif/analytics.json`. An enabled-to-disabled transition
+captures one final `analytics_opted_out` event before removing the local identifier.
+Opt-out discards other queued events and cancels their active delivery. The final
+event uses the outgoing random installation/session IDs and common metadata only;
+it is attempted asynchronously with a three-second deadline from capture, no
+retry, and no disk storage. Disabling never waits for delivery. A stalled worker,
+offline connection, or immediate shutdown can lose the event. Repeating opt-out
+or starting with sharing disabled emits nothing. It measures the runtime opt-out
+action, not successful preference persistence or a complete count of all opt-outs.
+Re-enabling generates
 a new identifier. A request already in flight may still arrive after cancellation;
 packets already sent cannot be retracted. Already delivered events are not deleted. If saving fails,
 sharing stops for the current process and the Settings page reports that the
@@ -35,6 +43,7 @@ use synthetic tokens and fake HTTP transports.
 | Event | Meaning |
 | --- | --- |
 | `app_opened` | App activation completed, with the Windows compatibility fields listed below when available. |
+| `analytics_opted_out` | Final best-effort event captured when enabled sharing is turned off; only the preference transition can emit it. |
 | `page_viewed` | Lockscreen, Diagnostics, or Settings was opened. |
 | `gif_selected` | GIF selection completed, failed, or was cancelled; not a decoding or playback check. |
 | `video_load_started` | A selected video began indexing and preview initialization. |
@@ -53,6 +62,11 @@ use synthetic tokens and fake HTTP transports.
 
 Each started operation has a random `operation_id`, repeated on its terminal
 event. It identifies one attempt, not a media file or a whole editing session.
+The Choose/Edit/Set/Done stages do not send additional page or navigation events.
+Continue from Edit emits generation events only when conversion actually runs;
+returning to an unchanged prepared GIF does not start another attempt. Set and
+Retry retain normal `workflow=lockscreen` apply events. The completion screen
+does not emit a separate success or playback event.
 Video picker cancellations occur before loading starts and therefore can have
 a terminal event without an operation ID or a matching start. A missing terminal
 event does not prove a crash: delivery is best effort.

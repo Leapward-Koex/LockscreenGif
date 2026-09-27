@@ -15,11 +15,13 @@ public sealed class LockscreenService : ILockscreenService
     private readonly SemaphoreSlim _operationLock = new(1, 1);
     private readonly string _userSid;
     private readonly AnalyticsService _analytics;
+    private readonly LockscreenPreferences _preferences;
     private int _applying;
 
-    public LockscreenService(AnalyticsService analytics)
+    public LockscreenService(AnalyticsService analytics, LockscreenPreferences preferences)
     {
         _analytics = analytics;
+        _preferences = preferences;
         using var identity = WindowsIdentity.GetCurrent();
         _userSid = identity.User?.Value ?? throw new InvalidOperationException("Unable to obtain the current user's SID.");
         CacheDirectory = Path.Combine(
@@ -42,7 +44,7 @@ public sealed class LockscreenService : ILockscreenService
         var source = CurrentImage;
         return source is null
             ? new LockscreenApplyResult { Error = "Choose a GIF before applying." }
-            : await ApplyTrackedAsync(source.Path, false, null, default, null, AnalyticsWorkflow.Lockscreen);
+            : await ApplyTrackedAsync(source.Path, _preferences.UseWindowsApi, null, default, null, AnalyticsWorkflow.Lockscreen);
     }
 
     /// <summary>Detailed apply entry point for Diagnostics; normal user applies use ApplyGifAsLockscreenAsync.</summary>

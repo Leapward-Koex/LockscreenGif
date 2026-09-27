@@ -21,6 +21,7 @@ internal static class AnalyticsTests
         await Run("malformed and inaccessible settings fail closed without first-run reset", InvalidPreferencesAsync);
         await Run("failed preference writes stop collection", FailedWriteAsync);
         await Run("opt-out cancels active delivery and discards stale queued events", OptOutAsync);
+        await OptOutTests.RunAsync();
         await Run("the memory queue stays bounded under overload", BoundedQueueAsync);
         await Run("transport errors do not prevent subsequent delivery", FailureIsolationAsync);
         await Run("shutdown drains a healthy queue and bounds a stalled transport", ShutdownAsync);
@@ -215,7 +216,7 @@ internal static class AnalyticsTests
             );
         }
 
-        Check(context.Handler.Requests.Count == 3, "No event was sent while opted out.");
+        Check(context.Handler.Requests.Count == 4, "Only the final opt-out event is sent for the disabled transition.");
     }
 
     private static async Task PayloadAsync()
@@ -387,7 +388,10 @@ internal static class AnalyticsTests
         Check(!service.IsEnabled && service.HasSavedPreference, "Runtime collection stops even when preference write fails.");
         service.Track(AnalyticsEvent.AppOpened);
         await service.ShutdownAsync();
-        Check(context.Handler.Requests.Count == 0, "No event is sent after failed opt-out save.");
+        Check(
+            context.Handler.Requests.Single().Root.GetProperty("event").GetString() == "analytics_opted_out",
+            "The runtime opt-out is recorded even when persistence fails; no subsequent usage is sent."
+        );
         Check(Directory.GetFiles(context.DirectoryPath, "*.tmp").Length == 0, "Failed writes leave no temporary ID file.");
     }
 
@@ -410,9 +414,17 @@ internal static class AnalyticsTests
         Check(service.SetEnabled(true), "Re-enabled.");
         service.Track(AnalyticsEvent.PageViewed);
         await service.ShutdownAsync();
-        Check(context.Handler.Requests.Count <= 2, "Only the old in-flight request and at most one newly enabled event were started.");
+        Check(context.Handler.Requests.Count == 3, "Only the old in-flight request, final opt-out, and newly enabled event were started.");
         foreach (var current in context.Handler.Requests.Skip(1))
         {
+            if (current.Root.GetProperty("event").GetString() == "analytics_opted_out")
+            {
+                Check(
+                    current.Properties.GetProperty("distinct_id").GetString() == oldId,
+                    "The final opt-out uses the outgoing identifier."
+                );
+                continue;
+            }
             Check(current.Root.GetProperty("event").GetString() == "page_viewed", "No pre-opt-out queued event survives.");
             Check(current.Properties.GetProperty("distinct_id").GetString() != oldId, "No old identifier survives re-enabling.");
         }

@@ -1,9 +1,10 @@
 using System.Diagnostics;
+using LockscreenGif.Models;
+using LockscreenGif.Services;
 using LockscreenGif.Services.Analytics;
 using Microsoft.UI.Xaml;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Storage.Provider;
 using WinRT.Interop;
 
 namespace LockscreenGif.Views;
@@ -20,73 +21,62 @@ public sealed partial class MainPage
     }
 
     private async void SaveGeneratedGifButton_Click(object sender, RoutedEventArgs e) =>
-        await RunActionAsync(async () =>
-        {
-            var source = _generatedGif;
-            if (source is null)
+        await RunActionAsync(
+            async token =>
             {
-                return;
-            }
-
-            Stopwatch? timer = null;
-            try
-            {
-                var picker = new FileSavePicker
+                var source = _generatedGif;
+                if (source is null)
                 {
-                    SuggestedStartLocation = PickerLocationId.Downloads,
-                    SuggestedFileName = _generatedGifName,
-                    DefaultFileExtension = ".gif",
-                };
-                picker.FileTypeChoices.Add("GIF image", new List<string> { ".gif" });
-                InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
-                var destination = await picker.PickSaveFileAsync();
-                if (destination is null)
-                {
-                    _analyticsService.Track(
-                        AnalyticsEvent.GifSaveCompleted,
-                        new AnalyticsProperties { Outcome = AnalyticsOutcome.Cancelled }
-                    );
                     return;
                 }
 
-                timer = Stopwatch.StartNew();
-                if (!string.Equals(source.Path, destination.Path, StringComparison.OrdinalIgnoreCase))
+                Stopwatch? timer = null;
+                try
                 {
-                    CachedFileManager.DeferUpdates(destination);
-                    try
+                    var picker = new FileSavePicker
                     {
-                        await source.CopyAndReplaceAsync(destination);
-                    }
-                    finally
+                        SuggestedStartLocation = PickerLocationId.Downloads,
+                        SuggestedFileName = _generatedGifName,
+                        DefaultFileExtension = ".gif",
+                    };
+                    picker.FileTypeChoices.Add("GIF image", new List<string> { ".gif" });
+                    InitializeWithWindow.Initialize(picker, WindowNative.GetWindowHandle(App.MainWindow));
+                    var destination = await picker.PickSaveFileAsync();
+                    if (destination is null)
                     {
-                        var status = await CachedFileManager.CompleteUpdatesAsync(destination);
-                        if (status != FileUpdateStatus.Complete && status != FileUpdateStatus.CompleteAndRenamed)
-                        {
-                            throw new IOException($"The selected location could not finish saving the GIF ({status}).");
-                        }
+                        _analyticsService.Track(
+                            AnalyticsEvent.GifSaveCompleted,
+                            new AnalyticsProperties { Outcome = AnalyticsOutcome.Cancelled }
+                        );
+                        return;
                     }
-                }
 
-                OperationStatus.Title = "GIF saved";
-                OperationStatus.Message = "You can select the saved copy with Browse GIF whenever you want to use it again.";
-                OperationStatus.IsOpen = true;
-                _analyticsService.Track(
-                    AnalyticsEvent.GifSaveCompleted,
-                    new AnalyticsProperties { Outcome = AnalyticsOutcome.Succeeded, DurationMs = timer.Elapsed.TotalMilliseconds }
-                );
-            }
-            catch (Exception ex)
-            {
-                _analyticsService.Track(
-                    AnalyticsEvent.GifSaveCompleted,
-                    new AnalyticsProperties
-                    {
-                        Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
-                        DurationMs = timer?.Elapsed.TotalMilliseconds,
-                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
-                    }
-                );
-                throw;
-            }
-        });
+                    timer = Stopwatch.StartNew();
+                    await PickedFileWriter.CopyAsync(source, destination);
+
+                    OperationStatus.Title = "GIF saved";
+                    OperationStatus.Message = "You can select the saved copy with Choose GIF whenever you want to use it again.";
+                    OperationStatus.Severity = Microsoft.UI.Xaml.Controls.InfoBarSeverity.Success;
+                    OperationStatus.IsOpen = true;
+                    _analyticsService.Track(
+                        AnalyticsEvent.GifSaveCompleted,
+                        new AnalyticsProperties { Outcome = AnalyticsOutcome.Succeeded, DurationMs = timer.Elapsed.TotalMilliseconds }
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _analyticsService.Track(
+                        AnalyticsEvent.GifSaveCompleted,
+                        new AnalyticsProperties
+                        {
+                            Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
+                            DurationMs = timer?.Elapsed.TotalMilliseconds,
+                            ErrorKind = AnalyticsProperties.ClassifyError(ex),
+                        }
+                    );
+                    throw;
+                }
+            },
+            MainFlowOperation.Saving
+        );
 }

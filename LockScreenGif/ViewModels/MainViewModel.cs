@@ -1,8 +1,9 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using LockscreenGif.Models;
 
 namespace LockscreenGif.ViewModels;
 
 public partial class MainViewModel : ObservableRecipient
 {
-    public MainViewModel() { }
+    public MainFlowState Flow { get; } = new();
 }

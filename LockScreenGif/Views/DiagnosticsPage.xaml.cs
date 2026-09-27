@@ -85,7 +85,7 @@ public sealed partial class DiagnosticsPage : Page
     private void Lock_Click(object sender, RoutedEventArgs args) => ViewModel.LockNow();
 
     private void ChooseSource_Click(object sender, RoutedEventArgs args) =>
-        App.GetService<INavigationService>().NavigateTo(typeof(MainViewModel).FullName!, clearNavigation: true);
+        App.GetService<INavigationService>().NavigateTo(typeof(MainViewModel).FullName!, parameter: "Choose", clearNavigation: true);
 
     private async void Export_Click(object sender, RoutedEventArgs args)
     {

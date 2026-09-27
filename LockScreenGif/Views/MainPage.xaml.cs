@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Helpers;
+using LockscreenGif.Models;
 using LockscreenGif.Services;
 using LockscreenGif.Services.Analytics;
 using LockscreenGif.ViewModels;
@@ -51,29 +52,19 @@ public sealed partial class MainPage : Page
         _notificationService = App.GetService<IAppNotificationService>();
         _analyticsService = App.GetService<AnalyticsService>();
         InitializeComponent();
+        _flowReady = true;
+        RefreshFlowUi();
 
         NavigationCacheMode = Microsoft.UI.Xaml.Navigation.NavigationCacheMode.Required;
-        Loaded += (_, _) => StartLockscreenModePolling();
-
-        Unloaded += (_, _) =>
+        Loaded += (_, _) =>
         {
-            StopLockscreenModePolling();
-            PausePreview();
-            _videoLoadCts?.Cancel();
+            StartLockscreenModePolling();
+            RefreshFlowUi();
+            FocusStage();
         };
-        App.MainWindow.Closed += (_, _) =>
-        {
-            StopPlaybackRendering();
-            if (_session is not null)
-            {
-                _session.SeekCompleted -= Session_SeekCompleted;
-            }
 
-            _videoLoadCts?.Cancel();
-            _previewCts?.Cancel();
-            _editorCts?.Cancel();
-            VideoPreview.MediaPlayer?.Dispose();
-        };
+        Unloaded += MainPage_Unloaded;
+        App.MainWindow.Closed += MainWindow_Closed;
     }
 
     private void StartLockscreenModePolling()
@@ -108,11 +99,6 @@ public sealed partial class MainPage : Page
     private void RefreshLockscreenModeUi()
     {
         var mode = LockscreenService.TryGetLockScreenMode();
-        if (mode == _lastLockScreenMode)
-        {
-            return;
-        }
-
         _lastLockScreenMode = mode;
 
         var ok = mode is LockscreenService.LockScreenMode.PictureOrOther;
@@ -125,6 +111,13 @@ public sealed partial class MainPage : Page
         if (LockscreenModeWarning != null)
         {
             LockscreenModeWarning.IsOpen = !ok;
+            LockscreenModeWarning.Title = "Check your lock screen mode";
+            var message =
+                mode == LockscreenService.LockScreenMode.Unknown
+                    ? "Windows lock screen mode could not be checked. Make sure Picture is selected in Windows Settings."
+                    : "Windows may be using Slideshow or Spotlight. Choose Picture in Windows Settings before setting your animation.";
+            LockscreenModeWarning.Message = message;
+            SetModeWarning.Message = message;
         }
 
         if (PrereqStep1Badge != null)
@@ -147,6 +140,7 @@ public sealed partial class MainPage : Page
                 ? (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"]
                 : new SolidColorBrush(Colors.OrangeRed);
         }
+        RefreshFlowUi();
     }
 
     static double RoundToSigFigs(double value, int digits = 2)
@@ -272,20 +266,33 @@ public sealed partial class MainPage : Page
 
     private async void GenerateButton_Click(object sender, RoutedEventArgs e)
     {
-        if (
-            _videoFile == null
-            || _frames is null
-            || !_mediaReady
-            || _actionPending
-            || !CommitTime(StartTimeTextBox)
-            || !CommitTime(EndTimeTextBox)
-        )
+        if (_videoFile is null || _frames is null || !_mediaReady || _actionPending || Flow.Stage != MainFlowStage.Edit)
+        {
+            return;
+        }
+        var valid = CommitTime(StartTimeTextBox) & CommitTime(EndTimeTextBox);
+        if (!valid)
+        {
+            return;
+        }
+        if (Flow.TryContinue())
+        {
+            OperationStatus.IsOpen = false;
+            RefreshFlowUi();
+            return;
+        }
+        if (!Flow.TryBeginOperation(MainFlowOperation.Generating, out var flowToken))
         {
             return;
         }
 
         var operation = new AnalyticsProperties { OperationId = Guid.NewGuid() };
         var timer = Stopwatch.StartNew();
+        var source = _videoFile;
+        var frames = _frames;
+        var startFrame = _startFrame;
+        var endFrame = _endFrame;
+        var duration = _endSec - _startSec;
         try
         {
             var chosenWidth = (int)((ComboBoxItem)ComboResolution.SelectedItem).Tag;
@@ -294,21 +301,18 @@ public sealed partial class MainPage : Page
             {
                 OutputWidth = chosenWidth,
                 TargetFps = chosenFps,
-                ClipDurationSeconds = _endSec - _startSec,
-                SelectedFrameCount = _endFrame - _startFrame,
+                ClipDurationSeconds = duration,
+                SelectedFrameCount = endFrame - startFrame,
             };
             _analyticsService.Track(AnalyticsEvent.GifGenerationStarted, operation);
-            _actionPending = true;
-            PausePreview();
-            TrimEditorHost.IsEnabled = false;
-            VideoSettingsHost.IsEnabled = false;
+            SuspendEditorPlayback();
             ClearGeneratedGif();
-            ApplyButton.IsEnabled = false;
-            GenerateButton.IsEnabled = false;
+            OperationStatus.IsOpen = false;
             GenerateLoading.ShowError = false;
             GenerateLoading.Value = 0;
             GenerateLoading.IsIndeterminate = true;
             GenerateLoading.Visibility = Visibility.Visible;
+            RefreshFlowUi();
 
             var ExtractFramesProgress = (double percent) =>
             {
@@ -331,27 +335,26 @@ public sealed partial class MainPage : Page
             };
 
             var extracted = await VideoFrameService.ExportAsync(
-                _videoFile.Path,
-                _frames,
-                _startFrame,
-                _endFrame,
+                source.Path,
+                frames,
+                startFrame,
+                endFrame,
                 chosenWidth,
                 chosenFps,
                 ExtractFramesProgress
             );
-            var gifLocation = await GifSkiService.CreateGif(
-                extracted.Directory,
-                CreateGifProgress,
-                extracted.Timestamps,
-                _endSec - _startSec
-            );
+            var gifLocation = await GifSkiService.CreateGif(extracted.Directory, CreateGifProgress, extracted.Timestamps, duration);
 
-            _lockscreenService.CurrentImage = await StorageFile.GetFileFromPathAsync(gifLocation);
-            currentImage.Source = _lockscreenService.CurrentImageBitmap!;
-            _generatedGif = _lockscreenService.CurrentImage;
-            _generatedGifName = Path.GetFileNameWithoutExtension(_videoFile.Name);
-            SaveGeneratedGifPanel.Visibility = Visibility.Visible;
-            ApplyButton.IsEnabled = true;
+            var generated = await StorageFile.GetFileFromPathAsync(gifLocation);
+            var bitmap = await PrepareGifPreviewAsync(generated);
+            if (!Flow.IsCurrentOperation(flowToken))
+            {
+                return;
+            }
+            _lockscreenService.CurrentImage = _preparedGif = _generatedGif = generated;
+            currentImage.Source = bitmap;
+            _generatedGifName = Path.GetFileNameWithoutExtension(source.Name);
+            Flow.TryCompleteGeneration(flowToken, true);
             GenerateLoading.Value = 100;
             _analyticsService.Track(
                 AnalyticsEvent.GifGenerationCompleted,
@@ -376,18 +379,18 @@ public sealed partial class MainPage : Page
             GenerateLoading.ShowError = true;
             OperationStatus.Title = "GIF generation failed";
             OperationStatus.Message = "The selected clip could not be converted. Try another selection or video.";
+            OperationStatus.Severity = InfoBarSeverity.Error;
             OperationStatus.IsOpen = true;
+            Flow.TryCompleteGeneration(flowToken, false);
             Logger.Error("Failed to create gif from video", ex);
         }
         finally
         {
-            _actionPending = false;
-            ApplyButton.IsEnabled = _lockscreenService.CurrentImage is not null;
+            Flow.TryFinishOperation(flowToken);
             FfmpegService.CleanupTempDirectories();
-            TrimEditorHost.IsEnabled = true;
-            VideoSettingsHost.IsEnabled = true;
             GenerateLoading.IsIndeterminate = false;
-            UpdateGenerateEnabled();
+            RefreshFlowUi();
+            FocusStage();
         }
 
         return;
@@ -422,6 +425,7 @@ public sealed partial class MainPage : Page
         if (ComboFps.SelectedItem != null && ComboResolution.SelectedItem != null)
         {
             UpdateFileSizeWarning();
+            SyncDraftState();
         }
     }
 }

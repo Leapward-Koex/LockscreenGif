@@ -6,6 +6,19 @@
     <ScrollViewer>
         <StackPanel Margin="32" Spacing="20" MaxWidth="760" HorizontalAlignment="Left">
             <TextBlock Text="Settings" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock Text="Lockscreen" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Padding="24" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="16">
+                    <ToggleSwitch Header="Enable Windows lockscreen API"
+                        IsOn="{x:Bind ViewModel.Preferences.UseWindowsApi, Mode=TwoWay}"
+                        OnContent="Enabled" OffContent="Disabled" />
+                    <TextBlock TextWrapping="Wrap"
+                        Text="May help with applying the lockscreen in some scenarios. Windows sets the lockscreen image before the app applies the GIF. Off by default. This setting is shared with Diagnostics and saved between restarts." />
+                    <InfoBar IsOpen="{x:Bind ViewModel.Preferences.HasSaveError, Mode=OneWay}"
+                        IsClosable="False" Severity="Warning" Title="Could not save the lockscreen preference"
+                        Message="The setting applies for this session, but could not be saved. Toggle it again to retry before closing the app." />
+                </StackPanel>
+            </Border>
             <TextBlock Text="Logs" Style="{StaticResource SubtitleTextBlockStyle}" />
             <Border Padding="24" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="16">
@@ -31,7 +44,7 @@
                     <TextBlock TextWrapping="Wrap"
                         Text="Events are sent to PostHog in the EU with a random installation ID. Filenames, file paths, media, diagnostic logs, and exception messages are never included." />
                     <TextBlock TextWrapping="Wrap"
-                        Text="Turning this off stops new analytics requests and discards pending events on this PC. Data already sent is not removed. Turning it back on creates a new installation ID." />
+                        Text="Turning this off records one final opt-out event, stops usage analytics, and discards other pending events on this PC. Data already sent is not removed. Turning it back on creates a new installation ID." />
                     <InfoBar x:Name="AnalyticsStatus" IsOpen="False" IsClosable="False" Severity="Informational" />
                     <InfoBar x:Name="AnalyticsSettingsError" IsOpen="False" Severity="Warning"
                         Title="Could not save the analytics preference"

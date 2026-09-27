@@ -3,6 +3,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Models.Diagnostics;
+using LockscreenGif.Services;
 using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
 using Microsoft.UI.Dispatching;
@@ -21,17 +22,22 @@ public sealed class DiagnosticsViewModel : ObservableObject
     private bool _busy;
     private bool _stopping;
     private bool _useReference;
-    private bool _useWindowsApi;
     private bool _attached;
     private string _notice = string.Empty;
     private int _refreshQueued;
     private string? _findingsSession;
 
-    public DiagnosticsViewModel(DiagnosticsSessionService service, ILockscreenService lockscreen, AnalyticsService analytics)
+    public DiagnosticsViewModel(
+        DiagnosticsSessionService service,
+        ILockscreenService lockscreen,
+        AnalyticsService analytics,
+        LockscreenPreferences preferences
+    )
     {
         _service = service;
         _lockscreen = lockscreen;
         _analytics = analytics;
+        Preferences = preferences;
     }
 
     public ObservableCollection<DiagnosticSetupWarning> SetupWarnings { get; } = [];
@@ -51,11 +57,7 @@ public sealed class DiagnosticsViewModel : ObservableObject
             }
         }
     }
-    public bool UseWindowsApi
-    {
-        get => _useWindowsApi;
-        set => SetProperty(ref _useWindowsApi, value);
-    }
+    public LockscreenPreferences Preferences { get; }
     public string Notice
     {
         get => _notice;
@@ -176,10 +178,10 @@ public sealed class DiagnosticsViewModel : ObservableObject
                 {
                     Workflow = AnalyticsWorkflow.Diagnostics,
                     UsesReferenceGif = UseReference,
-                    ApiRequested = UseWindowsApi,
+                    ApiRequested = Preferences.UseWindowsApi,
                 }
             );
-            await _service.StartAsync(UseReference, UseWindowsApi);
+            await _service.StartAsync(UseReference, Preferences.UseWindowsApi);
         });
 
     public async Task StopAsync()

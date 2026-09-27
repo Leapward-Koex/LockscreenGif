@@ -95,9 +95,16 @@ public sealed class AnalyticsService : IDisposable
             lock (_sync)
             {
                 installationId = enabled ? _installationId ?? Guid.NewGuid().ToString("D") : null;
-                if (!enabled)
+                if (!enabled && _enabled)
                 {
+                    var optOut = CaptureOptOut();
                     cancelledConsent = DisableCollection();
+                    if (optOut is not null)
+                    {
+                        // Only this final snapshot survives opt-out. Ordinary queued/in-flight events are revoked.
+                        _pending.Enqueue(optOut with { Generation = Interlocked.Read(ref _generation), Consent = _consent.Token });
+                        SignalWorker();
+                    }
                 }
             }
 
@@ -128,7 +135,7 @@ public sealed class AnalyticsService : IDisposable
         var lockTaken = false;
         try
         {
-            if (_stopping || !_enabled || !_allowSending || !IsConfigured)
+            if (_stopping || !_enabled || !_allowSending || !IsConfigured || eventName == AnalyticsEvent.AnalyticsOptedOut)
             {
                 return;
             }
@@ -317,7 +324,12 @@ public sealed class AnalyticsService : IDisposable
                 }
             );
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(_lifetime.Token, item.Consent);
-            timeout.CancelAfter(SendTimeout);
+            var remaining = item.IsOptOut ? SendTimeout - (_timeProvider.GetUtcNow() - item.Timestamp) : SendTimeout;
+            if (remaining <= TimeSpan.Zero)
+            {
+                return;
+            }
+            timeout.CancelAfter(remaining);
             using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
             request.Content = new ByteArrayContent(payload);
             request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
@@ -339,10 +351,11 @@ public sealed class AnalyticsService : IDisposable
     }
 
     private bool CanDeliver(QueuedEvent item) =>
-        _enabled
+        (_enabled || item.IsOptOut)
         && Volatile.Read(ref _stopRequested) == 0
         && item.Generation == Interlocked.Read(ref _generation)
-        && !item.Consent.IsCancellationRequested;
+        && !item.Consent.IsCancellationRequested
+        && (!item.IsOptOut || _timeProvider.GetUtcNow() - item.Timestamp < SendTimeout);
 
     private Dictionary<string, object> CaptureProperties(QueuedEvent item)
     {
@@ -451,6 +464,36 @@ public sealed class AnalyticsService : IDisposable
         }
 
         _lastActivity = timestamp;
+    }
+
+    // Called only for an enabled -> disabled transition, before identifiers are removed. Never performs network work.
+    private QueuedEvent? CaptureOptOut()
+    {
+        try
+        {
+            if (_stopping || !_allowSending || !IsConfigured)
+            {
+                return null;
+            }
+
+            var timestamp = _timeProvider.GetUtcNow();
+            EnsureSession(timestamp);
+            return new QueuedEvent(
+                EventName(AnalyticsEvent.AnalyticsOptedOut)!,
+                null,
+                _installationId!,
+                _sessionId!,
+                timestamp,
+                Guid.CreateVersion7(timestamp),
+                0,
+                default,
+                IsOptOut: true
+            );
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     // Caller holds only the short-lived state lock; cancellation always runs after releasing it.
@@ -586,6 +629,7 @@ public sealed class AnalyticsService : IDisposable
             AnalyticsEvent.DiagnosticReportExportCompleted => "diagnostic_report_export_completed",
             AnalyticsEvent.AppError => "app_error",
             AnalyticsEvent.LogExportCompleted => "log_export_completed",
+            AnalyticsEvent.AnalyticsOptedOut => "analytics_opted_out",
             _ => null,
         };
 
@@ -639,6 +683,7 @@ public sealed class AnalyticsService : IDisposable
         DateTimeOffset Timestamp,
         Guid Id,
         long Generation,
-        CancellationToken Consent
+        CancellationToken Consent,
+        bool IsOptOut = false
     );
 }

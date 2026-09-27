@@ -32,7 +32,8 @@ public sealed partial class MainPage
         PageContent.IsEnabled = true;
         if (IsLoaded)
         {
-            BrowseVideoButton.Focus(FocusState.Programmatic);
+            RefreshFlowUi();
+            FocusStage();
         }
     }
 

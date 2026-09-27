@@ -35,6 +35,7 @@ public sealed partial class MainPage
     private readonly Dictionary<int, byte[]> _previewCache = [];
     private double _startSec => _frames?.TimeAt(_startFrame) ?? 0;
     private double _endSec => _frames?.TimeAt(_endFrame) ?? 0;
+    private bool CanInteractWithEditor => IsLoaded && Flow.Stage == MainFlowStage.Edit && !Flow.IsBusy;
 
     private void TrimControlsPanel_SizeChanged(object sender, SizeChangedEventArgs e)
     {
@@ -63,6 +64,7 @@ public sealed partial class MainPage
 
         if (resetInput)
         {
+            _updatingTimeText = true;
             if (boundary is null or TimelinePart.Start)
             {
                 _startError = null;
@@ -74,6 +76,7 @@ public sealed partial class MainPage
                 EndTimeTextBox.Text = VideoFrameIndex.FormatTime(_endSec);
             }
             UpdateValidationText();
+            _updatingTimeText = false;
         }
         SelectionSummary.Text =
             $"Duration {VideoFrameIndex.FormatTime(_endSec - _startSec)} · {_endFrame - _startFrame:N0} frames selected · {_frames.Count:N0} total";
@@ -94,8 +97,7 @@ public sealed partial class MainPage
         TrimError.Visibility = _startInvalid || _endInvalid ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void UpdateGenerateEnabled() =>
-        GenerateButton.IsEnabled = _mediaReady && _frames is not null && !_actionPending && !_startInvalid && !_endInvalid;
+    private void UpdateGenerateEnabled() => SyncDraftState();
 
     private void UpdatePreviewPosition()
     {
@@ -107,16 +109,16 @@ public sealed partial class MainPage
         TrimTimeline.SetFrames(_startFrame, _endFrame, _previewFrame);
     }
 
-    private bool CommitTime(TextBox box)
+    private bool TryReadTime(TextBox box, out int frame, out string? error)
     {
+        frame = 0;
+        error = null;
         if (_frames is null)
         {
             return false;
         }
 
         var start = ReferenceEquals(box, StartTimeTextBox);
-        string? error = null;
-        var frame = 0;
         if (!VideoFrameIndex.TryParseTime(box.Text, out var seconds))
         {
             error = "Enter seconds (5.25), minutes:seconds (1:05.25), or hours:minutes:seconds.";
@@ -133,6 +135,17 @@ public sealed partial class MainPage
                 error = "End must be after start. Select at least one frame.";
             }
         }
+        return error is null;
+    }
+
+    private bool CommitTime(TextBox box)
+    {
+        if (_frames is null || !CanInteractWithEditor)
+        {
+            return false;
+        }
+        var start = ReferenceEquals(box, StartTimeTextBox);
+        TryReadTime(box, out var frame, out var error);
         if (start)
         {
             _startError = error is null ? null : "Start: " + error;
@@ -158,7 +171,9 @@ public sealed partial class MainPage
             _endFrame = frame;
         }
 
+        _updatingTimeText = true;
         box.Text = VideoFrameIndex.FormatTime(start ? _startSec : _endSec);
+        _updatingTimeText = false;
         UpdateValidationText();
         UpdateEditor(resetInput: false);
         if (changed)
@@ -171,6 +186,20 @@ public sealed partial class MainPage
 
     private void TimeTextBox_LostFocus(object sender, RoutedEventArgs e) => CommitTime((TextBox)sender);
 
+    private void TimeTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_flowReady || _updatingTimeText || Flow.IsBusy || _frames is null)
+        {
+            return;
+        }
+        TryReadTime(StartTimeTextBox, out _, out var startError);
+        TryReadTime(EndTimeTextBox, out _, out var endError);
+        _startError = startError is null ? null : "Start: " + startError;
+        _endError = endError is null ? null : "End: " + endError;
+        UpdateValidationText();
+        SyncDraftState();
+    }
+
     private void TimeTextBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         var box = (TextBox)sender;
@@ -181,6 +210,7 @@ public sealed partial class MainPage
         }
         else if (e.Key == VirtualKey.Escape)
         {
+            _updatingTimeText = true;
             if (ReferenceEquals(box, StartTimeTextBox))
             {
                 _startError = null;
@@ -191,6 +221,7 @@ public sealed partial class MainPage
                 _endError = null;
                 box.Text = VideoFrameIndex.FormatTime(_endSec);
             }
+            _updatingTimeText = false;
             UpdateValidationText();
             UpdateGenerateEnabled();
             e.Handled = true;
@@ -199,7 +230,7 @@ public sealed partial class MainPage
 
     private void NudgeBoundary_Click(object sender, RoutedEventArgs e)
     {
-        if (_frames is null)
+        if (_frames is null || !CanInteractWithEditor)
         {
             return;
         }
@@ -222,7 +253,7 @@ public sealed partial class MainPage
 
     private void StartHere_Click(object sender, RoutedEventArgs e)
     {
-        if (_frames is null)
+        if (_frames is null || !CanInteractWithEditor)
         {
             return;
         }
@@ -238,7 +269,7 @@ public sealed partial class MainPage
 
     private void EndHere_Click(object sender, RoutedEventArgs e)
     {
-        if (_frames is null)
+        if (_frames is null || !CanInteractWithEditor)
         {
             return;
         }
@@ -260,7 +291,7 @@ public sealed partial class MainPage
 
     private void ResetTrim_Click(object sender, RoutedEventArgs e)
     {
-        if (_frames is null)
+        if (_frames is null || !CanInteractWithEditor)
         {
             return;
         }
@@ -273,6 +304,10 @@ public sealed partial class MainPage
 
     private void Timeline_InteractionStarted(object? sender, EventArgs e)
     {
+        if (!CanInteractWithEditor)
+        {
+            return;
+        }
         _resumeAfterInteraction = _playing;
         _scrubbingPlayhead = false;
         PausePreview();
@@ -281,7 +316,7 @@ public sealed partial class MainPage
 
     private void Timeline_FrameChanged(object? sender, TimelineChangedEventArgs e)
     {
-        if (_frames is null)
+        if (_frames is null || !CanInteractWithEditor)
         {
             return;
         }
@@ -309,6 +344,11 @@ public sealed partial class MainPage
     private void Timeline_InteractionCompleted(object? sender, EventArgs e)
     {
         _interacting = false;
+        if (!CanInteractWithEditor)
+        {
+            _resumeAfterInteraction = false;
+            return;
+        }
         if (_resumeAfterInteraction)
         {
             StartPlayback(fromStart: !_scrubbingPlayhead);
@@ -319,19 +359,22 @@ public sealed partial class MainPage
         }
     }
 
-    private void PausePreview()
+    private void SkipToSelectionBoundary_Click(object sender, RoutedEventArgs e)
     {
-        _playing = false;
-        StopPlaybackRendering();
-        _playbackSeekPending = false;
-        VideoPreview.MediaPlayer?.Pause();
-        _previewCts?.Cancel();
-        PlaySelectionButton.Content = "Play";
-        SetPreviewLoading(false);
+        if (_playing || _frames is null || !CanInteractWithEditor)
+        {
+            return;
+        }
+
+        ShowFrame(ReferenceEquals(sender, SelectionStartButton) ? _startFrame : _endFrame - 1);
     }
 
     private void PlaySelection_Click(object sender, RoutedEventArgs e)
     {
+        if (!CanInteractWithEditor)
+        {
+            return;
+        }
         if (_playing)
         {
             PausePreview();
@@ -345,7 +388,7 @@ public sealed partial class MainPage
 
     private void StartPlayback(bool fromStart = true)
     {
-        if (_frames is null || !_mediaReady)
+        if (_frames is null || !_mediaReady || !CanInteractWithEditor)
         {
             return;
         }
@@ -362,7 +405,7 @@ public sealed partial class MainPage
         SeekForPlayback(_frames.TimeAt(_previewFrame));
         _playing = true;
         UpdatePreviewPosition();
-        PlaySelectionButton.Content = "Pause";
+        UpdatePlaybackButtons();
         VideoPreview.MediaPlayer.Play();
         StartPlaybackRendering();
     }
@@ -459,12 +502,16 @@ public sealed partial class MainPage
                 images.Add(await BitmapAsync(image));
             }
             token.ThrowIfCancellationRequested();
-            TrimTimeline.SetThumbnails(images);
+            TrimTimeline.SetThumbnails(index, images);
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
             Logger.Error("Timeline thumbnails failed", ex);
+        }
+        finally
+        {
+            TrimTimeline.CompleteThumbnailLoading(index);
         }
     }
 

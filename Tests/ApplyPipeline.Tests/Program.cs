@@ -6,6 +6,9 @@ using LockscreenGif.Services.Lockscreen;
 
 var tests = new (string Name, Func<Task> Run)[]
 {
+    ("Windows API preference defaults off and survives restarts", LockscreenPreferencesTests.Persistence),
+    ("Invalid Windows API preferences default off", LockscreenPreferencesTests.InvalidSettings),
+    ("Failed preference saves preserve the saved value and can retry", LockscreenPreferencesTests.SaveFailure),
     ("All destinations are copied and hash verified", CompleteApply),
     ("Empty cache is a failed apply", EmptyCache),
     ("A locked destination produces a partial failure", PartialFailure),
@@ -58,7 +61,7 @@ static async Task CompleteApply()
         "Every destination must verify with a completion timestamp."
     );
     Assert(result.Files.Select(file => file.Sha256).Distinct().Count() == 1, "All hashes must match.");
-    Assert(!result.ApiRequested && !result.ApiCompleted, "Normal apply must not request Windows image API.");
+    Assert(!result.ApiRequested && !result.ApiCompleted, "An API-off apply must not request Windows image API.");
     Assert(result.SourceSizeBytes == new FileInfo(fixture.Source).Length, "Size describes one source GIF, not all cache copies.");
     Assert(result.SourceWidth == 1 && result.SourceHeight == 1, "GIF logical-screen dimensions are read from the source header.");
 }

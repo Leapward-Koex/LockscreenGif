@@ -12,7 +12,6 @@ using LockscreenGif.ViewModels;
 using LockscreenGif.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using WinRT.Interop;
 
@@ -80,6 +79,13 @@ public partial class App : Application
                     services.AddSingleton<IActivationService, ActivationService>();
                     services.AddSingleton<IPageService, PageService>();
                     services.AddSingleton<INavigationService, NavigationService>();
+                    services.AddSingleton(_ => new LockscreenPreferences(
+                        Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                            "LockscreenGif",
+                            "lockscreen.json"
+                        )
+                    ));
                     services.AddSingleton<ILockscreenService, LockscreenService>();
                     services.AddSingleton<WindowsSessionMonitor>();
                     services.AddSingleton<PrivilegedSessionFactory>();
@@ -143,61 +149,6 @@ public partial class App : Application
         {
             GetService<AnalyticsService>().Track(AnalyticsEvent.AppOpened);
             (MainWindow.Content as ShellPage)?.StartPageAnalytics();
-        }
-    }
-
-    private bool _closePending;
-    private bool _closingAllowed;
-
-    private async void MainWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
-    {
-        var diagnostics = GetService<DiagnosticsSessionService>();
-        var lockscreen = GetService<ILockscreenService>();
-        var verification = GetService<LockscreenVerificationService>();
-        (MainWindow.Content as ShellPage)?.StopLockscreenFeedback();
-        if (_closingAllowed || (!diagnostics.IsRunning && !lockscreen.IsApplying && !verification.IsRunning))
-        {
-            StopAnalytics();
-            GetService<WindowsSessionMonitor>().Dispose();
-            MainWindow.AppWindow.Closing -= MainWindow_Closing;
-            return;
-        }
-        args.Cancel = true;
-        if (_closePending)
-        {
-            return;
-        }
-
-        _closePending = true;
-        if (MainWindow.Content is Microsoft.UI.Xaml.Controls.Control control)
-        {
-            control.IsEnabled = false;
-        }
-        else if (MainWindow.Content is UIElement content)
-        {
-            content.IsHitTestVisible = false;
-        }
-
-        try
-        {
-            await verification.CloseAsync();
-            if (diagnostics.IsRunning)
-            {
-                await diagnostics.CloseAsync("The app closed before the diagnostic test completed.");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.Error("Could not finish the diagnostic session while closing", ex);
-            diagnostics.Interrupt("The app closed while diagnostic shutdown encountered an error.");
-        }
-        finally
-        {
-            // Ordinary Lockscreen-page applies also finish their native operations first.
-            await lockscreen.WaitForIdleAsync();
-            StopAnalytics();
-            _closingAllowed = true;
-            MainWindow.Close();
         }
     }
 

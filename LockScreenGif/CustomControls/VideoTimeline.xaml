@@ -42,7 +42,13 @@
         </Style>
     </UserControl.Resources>
     <Grid x:Name="Root" Height="108" SizeChanged="Root_SizeChanged">
-        <Grid x:Name="Filmstrip" Margin="32,32,32,12" Background="{ThemeResource ControlStrongFillColorDefaultBrush}" IsHitTestVisible="False" />
+        <Grid x:Name="Filmstrip" Margin="32,32,32,12" Background="Black" IsHitTestVisible="False" />
+        <StackPanel x:Name="ThumbnailLoadingPanel" Margin="32,32,32,12" Orientation="Horizontal" Spacing="8"
+                    HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False" Visibility="Collapsed">
+            <ProgressRing x:Name="ThumbnailLoadingRing" Width="18" Height="18" MinWidth="18" MinHeight="18"
+                          Foreground="White" IsActive="False" AutomationProperties.Name="Loading timeline thumbnails" />
+            <TextBlock Text="Loading thumbnails…" Foreground="White" FontSize="12" VerticalAlignment="Center" />
+        </StackPanel>
         <Canvas x:Name="Track" Background="Transparent" PointerPressed="Track_PointerPressed">
             <Border x:Name="LeftShade" Canvas.Top="32" Height="64" Background="#B0000000" IsHitTestVisible="False" />
             <Border x:Name="RightShade" Canvas.Top="32" Height="64" Background="#B0000000" IsHitTestVisible="False" />

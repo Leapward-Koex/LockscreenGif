@@ -18,6 +18,7 @@ public enum AnalyticsEvent
     DiagnosticReportExportCompleted,
     AppError,
     LogExportCompleted,
+    AnalyticsOptedOut,
 }
 
 public enum AnalyticsOutcome

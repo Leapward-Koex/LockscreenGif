@@ -6,7 +6,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Storage;
 using Windows.Storage.Pickers;
-using Windows.Storage.Provider;
 using Windows.System;
 using WinRT.Interop;
 
@@ -81,19 +80,7 @@ public sealed partial class SettingsPage
             temporaryPath = Path.Combine(Path.GetTempPath(), "LockscreenGif-logs-" + Guid.NewGuid().ToString("N") + ".zip");
             var count = await LogArchiveWriter.WriteAsync(logDirectory, temporaryPath);
             var archive = await StorageFile.GetFileFromPathAsync(temporaryPath);
-            CachedFileManager.DeferUpdates(destination);
-            try
-            {
-                await archive.CopyAndReplaceAsync(destination);
-            }
-            finally
-            {
-                var status = await CachedFileManager.CompleteUpdatesAsync(destination);
-                if (status is not FileUpdateStatus.Complete and not FileUpdateStatus.CompleteAndRenamed)
-                {
-                    throw new IOException($"The selected location could not finish saving the ZIP ({status}).");
-                }
-            }
+            await PickedFileWriter.CopyAsync(archive, destination);
             ShowLogStatus(
                 "Logs saved",
                 $"Saved {count} log {(count == 1 ? "file" : "files")} to {destination.Path}",
