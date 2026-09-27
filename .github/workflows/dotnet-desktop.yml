@@ -26,7 +26,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 9.0.x
+          global-json-file: global.json
 
       - uses: microsoft/setup-msbuild@v2
 
@@ -60,12 +60,16 @@ jobs:
         run: |
           dotnet publish -c Release -p:PublishProfile=FolderProfile.pubxml "-p:Version=$env:BUILD_VERSION" "-p:AssemblyVersion=$env:BUILD_VERSION.0" "-p:FileVersion=$env:BUILD_VERSION.0" "-p:InformationalVersion=$env:BUILD_IDENTITY" -p:IncludeSourceRevisionInInformationalVersion=false
           if ($LASTEXITCODE -ne 0) { throw 'Publish failed' }
-          $exe = Get-Item 'bin/Release/net9.0-windows10.0.26100.0/win-x64/LockscreenGif.exe'
+          $exe = Get-Item '../artifacts/app/LockscreenGif.exe'
           if ($exe.VersionInfo.ProductVersion -ne $env:BUILD_IDENTITY) { throw 'Built app version does not match this run' }
 
       - name: Verify privileged helper packaging
         shell: pwsh
         run: ./scripts/Test-PrivilegedPackaging.ps1
+
+      - name: Test release packaging
+        shell: pwsh
+        run: ./Tests/ReleasePackaging.Tests.ps1
 
       - name: Build MSI installer
         uses: caphyon/advinst-github-action@v2.0
@@ -85,7 +89,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force release-assets | Out-Null
-          Compress-Archive -Path 'LockScreenGif/bin/Release/net9.0-windows10.0.26100.0/win-x64/*' -DestinationPath "release-assets/LockscreenGif-$env:BUILD_VERSION-win-x64.zip"
+          Compress-Archive -Path 'artifacts/app/*' -DestinationPath "release-assets/LockscreenGif-$env:BUILD_VERSION-win-x64.zip"
           Copy-Item 'setup/installLockscreenGif.msi' "release-assets/LockscreenGif-$env:BUILD_VERSION-x64.msi"
 
       - uses: actions/upload-artifact@v4
@@ -150,7 +154,7 @@ jobs:
               printf 'Changes since [%s](%s/%s/compare/%s...%s):\n\n' "$previous_tag" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$previous_tag" "$GITHUB_SHA"
             fi
             git log "$commit_range" --first-parent --pretty=format:'- %s (`%h`)'
-            printf '\n\n### Downloads\n\n- Windows x64 MSI installer\n- Windows x64 app ZIP (requires .NET 9 Desktop Runtime)\n- SHA256SUMS for verification\n'
+            printf '\n\n### Downloads\n\nRequires Windows 11 24H2 (build 26100) or later, x64, and the .NET 10 Desktop Runtime.\n\n- Windows x64 MSI installer\n- Windows x64 app ZIP\n- SHA256SUMS for verification\n'
             printf '\nThe app logs its version, commit and build attempt at startup and displays them on the Diagnostics screen.\n'
           } > "$notes"
           (cd release-assets && sha256sum *.zip *.msi > SHA256SUMS)

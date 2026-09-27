@@ -21,7 +21,8 @@ internal static class GifTests
         Program.Check(gif.Sha256.Length == 64 && gif.SizeBytes == new FileInfo(source).Length, "Source hash and length recorded");
         var original = await File.ReadAllBytesAsync(source);
         await ReferenceAnimation.EnsureAsync(directory);
-        Program.Check(original.SequenceEqual(await File.ReadAllBytesAsync(source)), "Reference animation is deterministic");
+        var regenerated = await File.ReadAllBytesAsync(source);
+        Program.Check(original.SequenceEqual(regenerated), "Reference animation is deterministic");
         var broken = Path.Combine(directory, "broken.gif");
         await File.WriteAllBytesAsync(broken, original[..^8]);
         Program.Check((await GifInspector.InspectAsync(broken)).Error is not null, "Truncated GIF rejected");

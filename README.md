@@ -46,6 +46,14 @@ Studio format-on-save setup.
 
 # Automated prereleases
 
+Builds use .NET 10 LTS and require Windows 11 24H2 (build 26100) or later, x64.
+Install the **x64 .NET 10 Desktop Runtime** before running either distribution;
+the MSI currently does not install it for you. The Windows App SDK is bundled.
+
+The .NET SDK is selected by `global.json`. The Windows .NET reference package is
+10.0.26100.87; the existing minimum Windows build remains 26100. Newer Windows
+builds are not excluded by the installer.
+
 Successful master builds publish a `build-<workflow run number>` GitHub prerelease
 with an x64 MSI, app ZIP, checksums, and commit changelog. Pull requests build and
 test with read-only permissions; only the master release job can publish.

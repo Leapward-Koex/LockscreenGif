@@ -94,7 +94,7 @@ Hash-change findings compare fresh reads from snapshots begun after verification
 
 ### Running the checks
 
-Run from the repository root using .NET 9:
+Run from the repository root using the .NET 10 SDK selected by `global.json`:
 
 ```powershell
 dotnet build LockScreenGif/LockscreenGif.csproj --configuration Debug -p:Platform=x64
