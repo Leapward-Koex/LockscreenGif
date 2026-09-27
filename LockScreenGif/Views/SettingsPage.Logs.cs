@@ -34,6 +34,7 @@ public sealed partial class SettingsPage
         }
         catch (Exception ex)
         {
+            _analytics?.CaptureException(ex, AnalyticsErrorContext.LogFolderOpen);
             ShowLogStatus("Could not open the log folder", ex.Message, InfoBarSeverity.Error);
         }
         finally
@@ -107,16 +108,18 @@ public sealed partial class SettingsPage
         }
     }
 
-    private void TrackLogExport(AnalyticsOutcome outcome, Stopwatch? timer, Exception? error = null) =>
-        _analytics?.Track(
-            AnalyticsEvent.LogExportCompleted,
-            new AnalyticsProperties
-            {
-                Outcome = outcome,
-                DurationMs = timer?.Elapsed.TotalMilliseconds,
-                ErrorKind = error is null ? null : AnalyticsProperties.ClassifyError(error),
-            }
-        );
+    private void TrackLogExport(AnalyticsOutcome outcome, Stopwatch? timer, Exception? error = null)
+    {
+        var properties = new AnalyticsProperties { Outcome = outcome, DurationMs = timer?.Elapsed.TotalMilliseconds };
+        if (error is null)
+        {
+            _analytics?.Track(AnalyticsEvent.LogExportCompleted, properties);
+        }
+        else
+        {
+            _analytics?.TrackFailure(AnalyticsEvent.LogExportCompleted, error, properties);
+        }
+    }
 
     private void SetLogActionPending(bool pending)
     {

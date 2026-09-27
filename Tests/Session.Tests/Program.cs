@@ -14,6 +14,7 @@ internal static class Program
         try
         {
             await LifecycleTests.RunAsync(directory);
+            await SourceKindTests.RunAsync(directory);
             await CancellationTests.RunAsync(directory);
             await MemorySessionTests.RunAsync(directory);
             await ShutdownTests.RunAsync(directory);
@@ -21,6 +22,7 @@ internal static class Program
             await TraceRetentionTests.RunAsync();
             await TracePollingTests.RunAsync();
             await LockscreenVerificationTests.RunAsync();
+            await ErrorReportingTests.RunAsync(directory);
             Console.WriteLine($"All {_checks} session lifecycle checks passed. No native lock-screen APIs were called.");
         }
         finally

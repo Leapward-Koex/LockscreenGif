@@ -103,6 +103,25 @@ namespace LockscreenGif.Services.Diagnostics
 
 namespace WindowLifecycle.Tests
 {
+    public sealed class FakeErrorReporter : LockscreenGif.Contracts.Services.IErrorReporter
+    {
+        public int Reports { get; private set; }
+        public bool ThrowOnCapture { get; set; }
+
+        public void CaptureException(
+            Exception exception,
+            LockscreenGif.Services.Analytics.AnalyticsErrorContext context,
+            LockscreenGif.Services.Analytics.AnalyticsWorkflow workflow
+        )
+        {
+            Reports++;
+            if (ThrowOnCapture)
+            {
+                throw new InvalidOperationException("Synthetic reporter failure.");
+            }
+        }
+    }
+
     public sealed class FakeDispatcher
     {
         private readonly Queue<Action> _queue = new();

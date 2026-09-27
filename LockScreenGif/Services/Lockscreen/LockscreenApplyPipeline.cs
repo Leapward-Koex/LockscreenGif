@@ -92,6 +92,7 @@ internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheW
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await writer.WriteAsync(sourcePath, hash, target, progress, cancellationToken);
+                result.FailureException ??= target.FailureException;
             }
             result.Success = result.Files.All(file => file.Copied && file.Verified);
             result.Error = result.Success
@@ -113,6 +114,7 @@ internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheW
         }
         catch (Exception ex)
         {
+            result.FailureException = ex;
             result.Error = ApplyProgress.Describe(ex);
             progress.Report("Failed", result.Error, severity: "Error");
             Logger.Error("Lockscreen apply failed", ex);

@@ -6,8 +6,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../../LockScreenGif/Contracts/Services/IErrorReporter.cs" Link="Contracts/IErrorReporter.cs" />
+    <Compile Include="../../LockScreenGif/Services/Analytics/AnalyticsErrorContext.cs" Link="Analytics/AnalyticsErrorContext.cs" />
+    <Compile Include="../../LockScreenGif/Services/Analytics/AnalyticsEvent.cs" Link="Analytics/AnalyticsEvent.cs" />
     <Compile Include="../../LockScreenGif/Models/Diagnostics/*.cs" Link="Models/%(Filename)%(Extension)" />
     <Compile Include="../../LockScreenGif/Models/LockscreenApplyResult.cs" Link="Models/LockscreenApplyResult.cs" />
+    <Compile Include="../../LockScreenGif/Models/LockscreenSource.cs" Link="Models/LockscreenSource.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/*.cs"
              Exclude="../../LockScreenGif/Services/Diagnostics/PrivilegedSessionFactory.cs;../../LockScreenGif/Services/Diagnostics/EnvironmentCollector.cs;../../LockScreenGif/Services/Diagnostics/WindowsSessionMonitor.cs"
              Link="Production/%(Filename)%(Extension)" />

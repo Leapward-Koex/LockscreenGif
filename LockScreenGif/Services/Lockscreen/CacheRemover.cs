@@ -20,6 +20,7 @@ internal sealed class CacheRemover(CacheLayout layout, CachePermissions permissi
             catch (Exception ex)
             {
                 result.FailedDeletions++;
+                result.FailureException ??= ex;
                 progress.Report("RemoveFailed", ApplyProgress.Describe(ex), folder, "Error");
                 continue;
             }
@@ -52,6 +53,7 @@ internal sealed class CacheRemover(CacheLayout layout, CachePermissions permissi
                 catch (Exception ex)
                 {
                     result.FailedDeletions++;
+                    result.FailureException ??= ex;
                     progress.Report("RemoveFailed", ApplyProgress.Describe(ex), file, "Error");
                 }
             }

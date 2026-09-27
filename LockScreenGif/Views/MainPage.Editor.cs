@@ -1,6 +1,7 @@
 using LockscreenGif.CustomControls;
 using LockscreenGif.Models;
 using LockscreenGif.Services;
+using LockscreenGif.Services.Analytics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -24,6 +25,8 @@ public sealed partial class MainPage
         _resumeAfterInteraction;
     private bool _playbackRendering,
         _playbackSeekPending;
+    private bool _previewErrorReported,
+        _thumbnailErrorReported;
     private string? _startError,
         _endError;
     private bool _startInvalid => _startError is not null;
@@ -465,6 +468,7 @@ public sealed partial class MainPage
                 return;
             }
 
+            CapturePreviewError(ex);
             SetPreviewStatus("Exact frame preview could not load. Move a frame to retry.");
             Logger.Error("Frame preview failed", ex);
         }
@@ -507,6 +511,11 @@ public sealed partial class MainPage
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
+            if (!token.IsCancellationRequested && ReferenceEquals(index, _frames) && !_thumbnailErrorReported)
+            {
+                _thumbnailErrorReported = true;
+                _analyticsService.CaptureException(ex, AnalyticsErrorContext.VideoThumbnails);
+            }
             Logger.Error("Timeline thumbnails failed", ex);
         }
         finally
@@ -625,6 +634,7 @@ public sealed partial class MainPage
                 return;
             }
 
+            CapturePreviewError(args.ExtendedErrorCode ?? new InvalidDataException("The video preview failed."));
             _mediaReady = false;
             PausePreview();
             HideVideoUi();
@@ -633,4 +643,17 @@ public sealed partial class MainPage
             OperationStatus.Message = "Choose another MP4 or MKV video.";
             OperationStatus.IsOpen = true;
         });
+
+    private void CapturePreviewError(Exception exception)
+    {
+        // Preview failures can recur while scrubbing or playing. Report only the
+        // first failure for the current video, then allow a new selection to retry.
+        if (_previewErrorReported)
+        {
+            return;
+        }
+
+        _previewErrorReported = true;
+        _analyticsService.CaptureException(exception, AnalyticsErrorContext.VideoPreview);
+    }
 }

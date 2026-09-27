@@ -11,6 +11,10 @@ public sealed class FakePrivilegedSession : IPrivilegedOperationSession
 {
     public bool Decline { get; set; }
     public bool Disconnect { get; set; }
+    public Exception? StartError { get; set; }
+    public Exception? ReadError { get; set; }
+    public Exception? StopError { get; set; }
+    public Exception? DisposeError { get; set; }
     public bool Disposed { get; private set; }
     public int Starts { get; private set; }
     public int Stops { get; private set; }
@@ -24,6 +28,10 @@ public sealed class FakePrivilegedSession : IPrivilegedOperationSession
     {
         Starts++;
         _stopped = false;
+        if (StartError is { } startError)
+        {
+            throw startError;
+        }
         if (Decline)
         {
             throw new OperationCanceledException("Synthetic UAC decline");
@@ -37,6 +45,10 @@ public sealed class FakePrivilegedSession : IPrivilegedOperationSession
 
     public Task<TraceBatch> ReadTraceAsync(CancellationToken token)
     {
+        if (ReadError is { } readError)
+        {
+            throw readError;
+        }
         if (Disconnect)
         {
             throw new IOException("Synthetic disconnect");
@@ -65,6 +77,10 @@ public sealed class FakePrivilegedSession : IPrivilegedOperationSession
     public async Task StopTraceAsync(CancellationToken token)
     {
         Stops++;
+        if (StopError is { } stopError)
+        {
+            throw stopError;
+        }
         await Task.Delay(StopDelay, token);
         _stopped = true;
     }
@@ -74,6 +90,10 @@ public sealed class FakePrivilegedSession : IPrivilegedOperationSession
     public ValueTask DisposeAsync()
     {
         Disposed = true;
+        if (DisposeError is { } disposeError)
+        {
+            throw disposeError;
+        }
         return ValueTask.CompletedTask;
     }
 }

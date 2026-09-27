@@ -17,6 +17,7 @@ public sealed class LockscreenService : ILockscreenService
     private readonly AnalyticsService _analytics;
     private readonly LockscreenPreferences _preferences;
     private int _applying;
+    private SelectedImage? _selectedImage;
 
     public LockscreenService(AnalyticsService analytics, LockscreenPreferences preferences)
     {
@@ -34,17 +35,29 @@ public sealed class LockscreenService : ILockscreenService
         );
     }
 
-    public StorageFile? CurrentImage { get; set; }
+    public void SetCurrentImage(StorageFile file, LockscreenSourceKind sourceKind) =>
+        _selectedImage = new(file, new LockscreenSource(file.Path, sourceKind));
+
+    public StorageFile? CurrentImage => _selectedImage?.File;
+    public LockscreenSource? CurrentSource => _selectedImage?.Source;
     public BitmapImage? CurrentImageBitmap => CurrentImage is null ? null : new BitmapImage { UriSource = new Uri(CurrentImage.Path) };
     public bool IsApplying => Volatile.Read(ref _applying) != 0;
     public string CacheDirectory { get; }
 
     public async Task<LockscreenApplyResult> ApplyGifAsLockscreenAsync()
     {
-        var source = CurrentImage;
+        var source = CurrentSource;
         return source is null
             ? new LockscreenApplyResult { Error = "Choose a GIF before applying." }
-            : await ApplyTrackedAsync(source.Path, _preferences.UseWindowsApi, null, default, null, AnalyticsWorkflow.Lockscreen);
+            : await ApplyTrackedAsync(
+                source.Path,
+                _preferences.UseWindowsApi,
+                null,
+                default,
+                null,
+                AnalyticsWorkflow.Lockscreen,
+                source.Kind
+            );
     }
 
     /// <summary>Detailed apply entry point for Diagnostics; normal user applies use ApplyGifAsLockscreenAsync.</summary>
@@ -53,74 +66,37 @@ public sealed class LockscreenService : ILockscreenService
         bool useWindowsApi,
         Action<LockscreenApplyEvent>? progress = null,
         CancellationToken cancellationToken = default,
-        ICachePermissionSession? permissionSession = null
-    ) => ApplyTrackedAsync(sourcePath, useWindowsApi, progress, cancellationToken, permissionSession, AnalyticsWorkflow.Diagnostics);
+        ICachePermissionSession? permissionSession = null,
+        LockscreenSourceKind sourceKind = LockscreenSourceKind.Unknown
+    ) =>
+        ApplyTrackedAsync(
+            sourcePath,
+            useWindowsApi,
+            progress,
+            cancellationToken,
+            permissionSession,
+            AnalyticsWorkflow.Diagnostics,
+            sourceKind
+        );
 
-    private async Task<LockscreenApplyResult> ApplyTrackedAsync(
+    private Task<LockscreenApplyResult> ApplyTrackedAsync(
         string sourcePath,
         bool useWindowsApi,
         Action<LockscreenApplyEvent>? progress,
         CancellationToken cancellationToken,
         ICachePermissionSession? permissionSession,
-        AnalyticsWorkflow workflow
-    )
-    {
-        var started = Stopwatch.GetTimestamp();
-        var operationId = Guid.NewGuid();
-        _analytics.Track(
-            AnalyticsEvent.LockscreenApplyStarted,
-            new()
-            {
-                OperationId = operationId,
-                Workflow = workflow,
-                ApiRequested = useWindowsApi,
-            }
+        AnalyticsWorkflow workflow,
+        LockscreenSourceKind sourceKind
+    ) =>
+        LockscreenApplyAnalytics.RunAsync(
+            _analytics,
+            workflow,
+            sourceKind,
+            useWindowsApi,
+            () => ApplyCoreAsync(sourcePath, useWindowsApi, progress, cancellationToken, permissionSession)
         );
-        try
-        {
-            var result = await ApplyCoreAsync(sourcePath, useWindowsApi, progress, cancellationToken, permissionSession);
-            _analytics.Track(
-                AnalyticsEvent.LockscreenApplyCompleted,
-                new()
-                {
-                    OperationId = operationId,
-                    Workflow = workflow,
-                    Outcome =
-                        result.Cancelled ? AnalyticsOutcome.Cancelled
-                        : result.Success ? AnalyticsOutcome.Succeeded
-                        : result.Files.Any(file => file.Copied) ? AnalyticsOutcome.Partial
-                        : AnalyticsOutcome.Failed,
-                    DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
-                    TargetCount = result.Files.Count,
-                    CopiedCount = result.Files.Count(file => file.Copied),
-                    VerifiedCount = result.Files.Count(file => file.Verified),
-                    FailedCount = result.Cancelled ? null : result.Files.Count(file => !file.Copied || !file.Verified),
-                    ApiRequested = result.ApiRequested,
-                    ApiCompleted = result.ApiCompleted,
-                    GifSizeBytes = result.SourceSizeBytes,
-                    GifWidth = result.SourceWidth,
-                    GifHeight = result.SourceHeight,
-                }
-            );
-            return result;
-        }
-        catch (Exception ex)
-        {
-            _analytics.Track(
-                AnalyticsEvent.LockscreenApplyCompleted,
-                new()
-                {
-                    OperationId = operationId,
-                    Workflow = workflow,
-                    Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
-                    DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
-                    ApiRequested = useWindowsApi,
-                    ErrorKind = AnalyticsProperties.ClassifyError(ex),
-                }
-            );
-            throw;
-        }
-    }
+
+    private sealed record SelectedImage(StorageFile File, LockscreenSource Source);
 
     private async Task<LockscreenApplyResult> ApplyCoreAsync(
         string sourcePath,
@@ -179,36 +155,37 @@ public sealed class LockscreenService : ILockscreenService
                 result = await remover.RemoveAsync();
             }
             Logger.Info($"Deleted lock-screen variants: {result.SuccessfulDeletions} succeeded, {result.FailedDeletions} failed.");
-            _analytics.Track(
-                AnalyticsEvent.LockscreenRemovalCompleted,
-                new()
-                {
-                    Outcome =
-                        result.FailedDeletions > 0
-                            ? result.SuccessfulDeletions > 0
-                                ? AnalyticsOutcome.Partial
-                                : AnalyticsOutcome.Failed
-                            : result.SuccessfulDeletions > 0
-                                ? AnalyticsOutcome.Succeeded
-                                : AnalyticsOutcome.NoChange,
-                    DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
-                    TargetCount = result.SuccessfulDeletions + result.FailedDeletions,
-                    FailedCount = result.FailedDeletions,
-                    Workflow = AnalyticsWorkflow.Lockscreen,
-                }
-            );
+            var completed = new AnalyticsProperties
+            {
+                Outcome =
+                    result.FailedDeletions > 0
+                        ? result.SuccessfulDeletions > 0
+                            ? AnalyticsOutcome.Partial
+                            : AnalyticsOutcome.Failed
+                        : result.SuccessfulDeletions > 0
+                            ? AnalyticsOutcome.Succeeded
+                            : AnalyticsOutcome.NoChange,
+                DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+                TargetCount = result.SuccessfulDeletions + result.FailedDeletions,
+                FailedCount = result.FailedDeletions,
+                Workflow = AnalyticsWorkflow.Lockscreen,
+            };
+            _analytics.Track(AnalyticsEvent.LockscreenRemovalCompleted, completed);
+            if (result.FailedDeletions > 0 && result.FailureException is { } failure)
+            {
+                _analytics.CaptureException(failure, AnalyticsErrorContext.LockscreenRemoval, completed);
+            }
             return result;
         }
         catch (Exception ex)
         {
             Logger.Error($"Removing lock-screen variants failed: {ApplyProgress.Describe(ex)}", ex);
-            _analytics.Track(
+            _analytics.TrackFailure(
                 AnalyticsEvent.LockscreenRemovalCompleted,
-                new()
+                ex,
+                new AnalyticsProperties
                 {
-                    Outcome = AnalyticsOutcome.Failed,
                     DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
-                    ErrorKind = AnalyticsProperties.ClassifyError(ex),
                     Workflow = AnalyticsWorkflow.Lockscreen,
                 }
             );

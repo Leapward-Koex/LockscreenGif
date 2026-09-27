@@ -184,8 +184,9 @@ public sealed partial class MainPage : Page
         var rounded = RoundToSigFigs(totalMB, 2);
 
         FileSizeWarning.Message =
-            $"Generating the GIF may temporarily take up to {rounded} MB of space to generate the GIF. "
-            + "Ensure you have enough space free.";
+            $"Extracted frames are estimated at about {rounded} MiB. "
+            + "The GIF needs additional space while these frames are retained. "
+            + "Actual usage can be higher or lower depending on the video.";
         FileSizeWarning.IsOpen = true;
         if (totalMB > 5000)
         {
@@ -288,6 +289,8 @@ public sealed partial class MainPage : Page
 
         var operation = new AnalyticsProperties { OperationId = Guid.NewGuid() };
         var timer = Stopwatch.StartNew();
+        var stage = AnalyticsGenerationStage.Preparing;
+        var stageTimer = Stopwatch.StartNew();
         var source = _videoFile;
         var frames = _frames;
         var startFrame = _startFrame;
@@ -301,6 +304,7 @@ public sealed partial class MainPage : Page
             {
                 OutputWidth = chosenWidth,
                 TargetFps = chosenFps,
+                SourceFps = _videoFps,
                 ClipDurationSeconds = duration,
                 SelectedFrameCount = endFrame - startFrame,
             };
@@ -334,6 +338,8 @@ public sealed partial class MainPage : Page
                 });
             };
 
+            stage = AnalyticsGenerationStage.ExtractingFrames;
+            stageTimer.Restart();
             var extracted = await VideoFrameService.ExportAsync(
                 source.Path,
                 frames,
@@ -343,15 +349,39 @@ public sealed partial class MainPage : Page
                 chosenFps,
                 ExtractFramesProgress
             );
+            operation = operation with
+            {
+                ExtractionDurationMs = stageTimer.Elapsed.TotalMilliseconds,
+                ExtractedFrameCount = extracted.Timestamps.Length,
+            };
+            stage = AnalyticsGenerationStage.EncodingGif;
+            stageTimer.Restart();
             var gifLocation = await GifSkiService.CreateGif(extracted.Directory, CreateGifProgress, extracted.Timestamps, duration);
+            operation = operation with { EncodingDurationMs = stageTimer.Elapsed.TotalMilliseconds };
 
+            stage = AnalyticsGenerationStage.OpeningOutput;
+            stageTimer.Restart();
             var generated = await StorageFile.GetFileFromPathAsync(gifLocation);
+            stage = AnalyticsGenerationStage.LoadingPreview;
+            stageTimer.Restart();
             var bitmap = await PrepareGifPreviewAsync(generated);
+            operation = operation with { PreviewDurationMs = stageTimer.Elapsed.TotalMilliseconds };
             if (!Flow.IsCurrentOperation(flowToken))
             {
+                _analyticsService.Track(
+                    AnalyticsEvent.GifGenerationCompleted,
+                    operation with
+                    {
+                        Outcome = AnalyticsOutcome.Cancelled,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                    }
+                );
                 return;
             }
-            _lockscreenService.CurrentImage = _preparedGif = _generatedGif = generated;
+            stage = AnalyticsGenerationStage.Completing;
+            stageTimer.Restart();
+            _preparedGif = _generatedGif = generated;
+            _lockscreenService.SetCurrentImage(generated, LockscreenSourceKind.Video);
             currentImage.Source = bitmap;
             _generatedGifName = Path.GetFileNameWithoutExtension(source.Name);
             Flow.TryCompleteGeneration(flowToken, true);
@@ -367,13 +397,14 @@ public sealed partial class MainPage : Page
         }
         catch (Exception ex)
         {
-            _analyticsService.Track(
+            _analyticsService.TrackFailure(
                 AnalyticsEvent.GifGenerationCompleted,
+                ex,
                 operation with
                 {
-                    Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
                     DurationMs = timer.Elapsed.TotalMilliseconds,
-                    ErrorKind = AnalyticsProperties.ClassifyError(ex),
+                    FailureStage = stage,
+                    FailureStageDurationMs = stageTimer.Elapsed.TotalMilliseconds,
                 }
             );
             GenerateLoading.ShowError = true;
@@ -416,8 +447,8 @@ public sealed partial class MainPage : Page
         catch (Exception ex)
         {
             Logger.Error("failed to get video info", ex);
+            throw;
         }
-        return (null, 0, 0);
     }
 
     private void ComboResolution_SelectionChanged(object sender, SelectionChangedEventArgs e)

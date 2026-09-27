@@ -10,8 +10,13 @@ using Microsoft.Win32.SafeHandles;
 namespace LockscreenGif.Services.Lockscreen;
 
 /// <summary>One authenticated helper connection, including its cached launch failure, for the entire operation.</summary>
-internal sealed class CachePermissionSession(string root, string sid, Func<ProcessStartInfo, Process?>? launch = null)
-    : IPrivilegedOperationSession
+internal sealed class CachePermissionSession(
+    string root,
+    string sid,
+    Func<ProcessStartInfo, Process?>? launch = null,
+    TimeSpan? connectionTimeout = null,
+    TimeSpan? requestTimeout = null
+) : IPrivilegedOperationSession
 {
     private readonly SemaphoreSlim _serial = new(1, 1);
     private Task? _connection;
@@ -66,7 +71,7 @@ internal sealed class CachePermissionSession(string root, string sid, Func<Proce
                 using var timeout = new CancellationTokenSource();
                 if (request.Command != "Grant")
                 {
-                    timeout.CancelAfter(TimeSpan.FromSeconds(30));
+                    timeout.CancelAfter(requestTimeout ?? TimeSpan.FromSeconds(30));
                 }
 
                 await PipeProtocol.WriteAsync(_pipe!, request, timeout.Token);
@@ -85,6 +90,15 @@ internal sealed class CachePermissionSession(string root, string sid, Func<Proce
                 }
 
                 return reply;
+            }
+            catch (OperationCanceledException ex) when (!replyConsumed && request.Command != "Grant")
+            {
+                // Dispatched requests use only our internal deadline. Caller cancellation is
+                // observed separately so a consumed trace batch is never discarded.
+                var failure = new TimeoutException("The permission helper did not reply before the deadline.", ex);
+                _broken = failure;
+                _pipe?.Dispose();
+                throw failure;
             }
             catch (Exception ex) when (!replyConsumed)
             {
@@ -134,7 +148,7 @@ internal sealed class CachePermissionSession(string root, string sid, Func<Proce
             throw new OperationCanceledException("The Windows permission request was cancelled.", ex);
         }
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
-        timeout.CancelAfter(TimeSpan.FromSeconds(30));
+        timeout.CancelAfter(connectionTimeout ?? TimeSpan.FromSeconds(30));
         var connected = _pipe.WaitForConnectionAsync(timeout.Token);
         if (await Task.WhenAny(connected, _process.WaitForExitAsync()) != connected)
         {
@@ -146,7 +160,15 @@ internal sealed class CachePermissionSession(string root, string sid, Func<Proce
             catch (OperationCanceledException) { }
             throw new IOException("The helper exited before connecting.");
         }
-        await connected;
+        try
+        {
+            await connected;
+        }
+        catch (OperationCanceledException ex) when (!token.IsCancellationRequested && timeout.IsCancellationRequested)
+        {
+            // An internal deadline is a failed helper connection, not a user cancellation.
+            throw new TimeoutException("The permission helper did not connect before the deadline.", ex);
+        }
         if (!GetNamedPipeClientProcessId(_pipe.SafePipeHandle, out var clientId) || clientId != _process.Id)
         {
             throw new IOException("Unexpected helper peer.");

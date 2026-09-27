@@ -56,6 +56,7 @@ public sealed partial class MainPage
         }
         catch (Exception ex)
         {
+            _analyticsService.CaptureException(ex, AnalyticsErrorContext.MainAction);
             Logger.Error($"Main page action failed: {ex.GetType().Name} (0x{ex.HResult:X8})", ex);
             // Feedback after a completed apply can outlive the draft it belonged to.
             if (!Flow.IsCurrentOperation(token))
@@ -87,7 +88,10 @@ public sealed partial class MainPage
                 var source = _preparedGif ?? throw new InvalidOperationException("Prepare an animation before applying.");
                 var sourcePath = source.Path;
                 // The normal entry point snapshots this source synchronously and preserves normal-usage analytics.
-                _lockscreenService.CurrentImage = source;
+                _lockscreenService.SetCurrentImage(
+                    source,
+                    Flow.Source == MainFlowSource.Video ? LockscreenSourceKind.Video : LockscreenSourceKind.UserGif
+                );
                 var result = await _lockscreenService.ApplyGifAsLockscreenAsync();
                 // Keep the source available for retries and diagnostics until next startup.
                 if (!Flow.TryCompleteApply(token, result))
@@ -170,21 +174,14 @@ public sealed partial class MainPage
                 _sourceFile = _preparedGif = file;
                 _editSignature = null;
                 ClearGeneratedGif();
-                _lockscreenService.CurrentImage = file;
+                _lockscreenService.SetCurrentImage(file, LockscreenSourceKind.UserGif);
                 currentImage.Source = bitmap;
                 Flow.TryCommitSelection(token, MainFlowSource.Gif);
                 _analyticsService.Track(AnalyticsEvent.GifSelected, new AnalyticsProperties { Outcome = AnalyticsOutcome.Succeeded });
             }
             catch (Exception ex)
             {
-                _analyticsService.Track(
-                    AnalyticsEvent.GifSelected,
-                    new AnalyticsProperties
-                    {
-                        Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
-                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
-                    }
-                );
+                _analyticsService.TrackFailure(AnalyticsEvent.GifSelected, ex);
                 throw;
             }
         });
@@ -207,14 +204,7 @@ public sealed partial class MainPage
             }
             catch (Exception ex)
             {
-                _analyticsService.Track(
-                    AnalyticsEvent.VideoLoadCompleted,
-                    new AnalyticsProperties
-                    {
-                        Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
-                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
-                    }
-                );
+                _analyticsService.TrackFailure(AnalyticsEvent.VideoLoadCompleted, ex);
                 throw;
             }
             if (file is null)
@@ -271,6 +261,8 @@ public sealed partial class MainPage
                 _editorCts?.Cancel();
                 _editorCts?.Dispose();
                 _editorCts = new CancellationTokenSource();
+                _previewErrorReported = false;
+                _thumbnailErrorReported = false;
                 _previewCache.Clear();
                 PreviewStill.Source = null;
                 PreviewStill.Visibility = Visibility.Collapsed;
@@ -314,16 +306,12 @@ public sealed partial class MainPage
                     }
                 );
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
-                _analyticsService.Track(
+                _analyticsService.TrackFailure(
                     AnalyticsEvent.VideoLoadCompleted,
-                    new AnalyticsProperties
-                    {
-                        OperationId = operationId,
-                        Outcome = AnalyticsOutcome.Cancelled,
-                        DurationMs = timer.Elapsed.TotalMilliseconds,
-                    }
+                    ex,
+                    new AnalyticsProperties { OperationId = operationId, DurationMs = timer.Elapsed.TotalMilliseconds }
                 );
                 OperationStatus.Title = "Video loading cancelled";
                 OperationStatus.Message = _videoFile is null
@@ -333,15 +321,10 @@ public sealed partial class MainPage
             }
             catch (Exception ex)
             {
-                _analyticsService.Track(
+                _analyticsService.TrackFailure(
                     AnalyticsEvent.VideoLoadCompleted,
-                    new AnalyticsProperties
-                    {
-                        OperationId = operationId,
-                        Outcome = AnalyticsOutcome.Failed,
-                        DurationMs = timer.Elapsed.TotalMilliseconds,
-                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
-                    }
+                    ex,
+                    new AnalyticsProperties { OperationId = operationId, DurationMs = timer.Elapsed.TotalMilliseconds }
                 );
                 throw;
             }

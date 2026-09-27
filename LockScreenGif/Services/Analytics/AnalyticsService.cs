@@ -1,10 +1,16 @@
+using System.Globalization;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
+using LockscreenGif.Contracts.Services;
+using LockscreenGif.Models;
 
 namespace LockscreenGif.Services.Analytics;
 
 /// <summary>Best-effort analytics gated by the saved sharing preference. Events only live in a small in-memory queue.</summary>
-public sealed class AnalyticsService : IDisposable
+public sealed class AnalyticsService : IDisposable, IErrorReporter
 {
     private const int QueueCapacity = 64;
     private static readonly TimeSpan SendTimeout = TimeSpan.FromSeconds(3);
@@ -12,6 +18,7 @@ public sealed class AnalyticsService : IDisposable
     private readonly object _sync = new();
     private readonly object _preferencesSync = new();
     private readonly Queue<QueuedEvent> _pending = new();
+    private readonly ConditionalWeakTable<Exception, CapturedMarker> _capturedExceptions = new();
     private readonly SemaphoreSlim _available = new(0, 1);
     private readonly CancellationTokenSource _lifetime = new();
     private readonly HttpClient _httpClient;
@@ -130,12 +137,78 @@ public sealed class AnalyticsService : IDisposable
         }
     }
 
-    public void Track(AnalyticsEvent eventName, AnalyticsProperties? properties = null)
+    public void Track(AnalyticsEvent eventName, AnalyticsProperties? properties = null) => TrackCore(eventName, properties);
+
+    public void TrackFailure(AnalyticsEvent eventName, Exception exception, AnalyticsProperties? properties = null, bool handled = true)
+    {
+        try
+        {
+            var failure = (properties ?? new AnalyticsProperties()).WithFailure(exception);
+            Track(eventName, failure);
+            if (ErrorContextFor(eventName) is { } context)
+            {
+                CaptureException(exception, context, failure, handled);
+            }
+        }
+        catch
+        {
+            // Optional error reporting must not replace the original operation error.
+        }
+    }
+
+    public void CaptureException(
+        Exception exception,
+        AnalyticsErrorContext context,
+        AnalyticsProperties? properties = null,
+        bool handled = true
+    )
+    {
+        try
+        {
+            if (_stopping || !_enabled || !_allowSending || !IsConfigured || ErrorContextName(context) is null)
+            {
+                return;
+            }
+            var failure = (properties ?? new AnalyticsProperties()).WithFailure(exception);
+            if (handled && failure.ErrorKind == AnalyticsErrorKind.Cancelled)
+            {
+                return;
+            }
+            // A rethrow can reach a second UI/fatal boundary. Weak keys neither retain exceptions nor grow a permanent history.
+            var marker = _capturedExceptions.GetValue(AnalyticsErrorDetails.Unwrap(exception), static _ => new CapturedMarker());
+            if (Interlocked.Exchange(ref marker.Captured, 1) != 0)
+            {
+                return;
+            }
+            if (properties?.Outcome == AnalyticsOutcome.Partial)
+            {
+                failure = failure with { Outcome = AnalyticsOutcome.Partial };
+            }
+            // Only typed snapshots enter the queue; the exception, its Data and raw stack/message never do.
+            TrackCore(AnalyticsEvent.Exception, failure, new CapturedException(context, handled));
+        }
+        catch
+        {
+            // Never recurse into error tracking if constructing or queueing an exception fails.
+        }
+    }
+
+    void IErrorReporter.CaptureException(Exception exception, AnalyticsErrorContext context, AnalyticsWorkflow workflow) =>
+        CaptureException(exception, context, new AnalyticsProperties { Workflow = workflow });
+
+    private void TrackCore(AnalyticsEvent eventName, AnalyticsProperties? properties, CapturedException? capturedException = null)
     {
         var lockTaken = false;
         try
         {
-            if (_stopping || !_enabled || !_allowSending || !IsConfigured || eventName == AnalyticsEvent.AnalyticsOptedOut)
+            if (
+                _stopping
+                || !_enabled
+                || !_allowSending
+                || !IsConfigured
+                || eventName == AnalyticsEvent.AnalyticsOptedOut
+                || (eventName == AnalyticsEvent.Exception && capturedException is null)
+            )
             {
                 return;
             }
@@ -164,7 +237,8 @@ public sealed class AnalyticsService : IDisposable
                     timestamp,
                     Guid.CreateVersion7(timestamp),
                     Interlocked.Read(ref _generation),
-                    _consent.Token
+                    _consent.Token,
+                    Exception: capturedException
                 )
             );
             SignalWorker();
@@ -385,9 +459,26 @@ public sealed class AnalyticsService : IDisposable
             return properties;
         }
 
+        if (item.Exception is { } error)
+        {
+            AddExceptionProperties(properties, values, error);
+        }
+
         Add("outcome", OutcomeName(values.Outcome));
         Add("page", PageName(values.Page));
         Add("error_kind", ErrorName(values.ErrorKind));
+        Add("exception_type", ExceptionTypeName(values.ExceptionType));
+        Add("error_hresult", values.ErrorHResult);
+        Add(
+            "error_component",
+            values.ErrorComponent switch
+            {
+                MediaProcessingComponent.Ffmpeg => "ffmpeg",
+                MediaProcessingComponent.Gifski => "gifski",
+                _ => null,
+            }
+        );
+        Add("native_error_code", values.NativeErrorCode);
         Add("duration_ms", values.DurationMs is >= 0 and <= 86_400_000 ? Math.Round(values.DurationMs.Value) : null);
         Add("target_count", NonNegative(values.TargetCount));
         Add("copied_count", NonNegative(values.CopiedCount));
@@ -397,10 +488,36 @@ public sealed class AnalyticsService : IDisposable
         Add("api_completed", values.ApiCompleted);
         Add("operation_id", values.OperationId is { } operationId && operationId != Guid.Empty ? operationId.ToString("D") : null);
         Add("workflow", WorkflowName(values.Workflow));
+        Add(
+            "lockscreen_source",
+            values.LockscreenSource switch
+            {
+                LockscreenSourceKind.Video => "video",
+                LockscreenSourceKind.UserGif => "user_gif",
+                LockscreenSourceKind.BundledGif => "bundled_gif",
+                LockscreenSourceKind.Unknown => "unknown",
+                _ => null,
+            }
+        );
         Add("requested_width", values.OutputWidth is > 0 and <= 32768 ? values.OutputWidth : null);
         Add("requested_fps", values.TargetFps is >= 0 and <= 1000 ? values.TargetFps : null);
+        Add(
+            "requested_fps_mode",
+            values.TargetFps is >= 0 and <= 1000
+                ? values.TargetFps == 0
+                    ? "all_source_frames"
+                    : "target"
+                : null
+        );
+        Add("source_fps", values.SourceFps is > 0 and <= 1000 ? values.SourceFps : null);
         Add("clip_duration_seconds", values.ClipDurationSeconds is >= 0 and <= 86400 ? values.ClipDurationSeconds : null);
         Add("selected_frame_count", values.SelectedFrameCount is > 0 and <= 10_000_000 ? values.SelectedFrameCount : null);
+        Add("extracted_frame_count", values.ExtractedFrameCount is > 0 and <= 10_000_000 ? values.ExtractedFrameCount : null);
+        Add("failure_stage", GenerationStageName(values.FailureStage));
+        Add("failure_stage_duration_ms", Duration(values.FailureStageDurationMs));
+        Add("extraction_duration_ms", Duration(values.ExtractionDurationMs));
+        Add("encoding_duration_ms", Duration(values.EncodingDurationMs));
+        Add("preview_duration_ms", Duration(values.PreviewDurationMs));
         Add("uses_reference_gif", values.UsesReferenceGif);
         Add("gif_size_bytes", values.GifSizeBytes is > 0 and <= 9_007_199_254_740_991L ? values.GifSizeBytes : null);
         Add("gif_width", values.GifWidth is > 0 and <= ushort.MaxValue ? values.GifWidth : null);
@@ -415,6 +532,118 @@ public sealed class AnalyticsService : IDisposable
             }
         }
     }
+
+    private static void AddExceptionProperties(Dictionary<string, object> properties, AnalyticsProperties values, CapturedException error)
+    {
+        var context = ErrorContextName(error.Context)!;
+        var type = PostHogExceptionTypeName(values);
+        var kind = ErrorName(values.ErrorKind) ?? "other";
+        var hresult = values.ErrorHResult?.ToString(CultureInfo.InvariantCulture) ?? "none";
+        var nativeCode = values.NativeErrorCode?.ToString(CultureInfo.InvariantCulture) ?? "none";
+        var component = values.ErrorComponent switch
+        {
+            MediaProcessingComponent.Ffmpeg => "ffmpeg",
+            MediaProcessingComponent.Gifski => "gifski",
+            _ => "none",
+        };
+        var group = string.Join(
+            '|',
+            "v1",
+            context,
+            type,
+            kind,
+            hresult,
+            component,
+            nativeCode,
+            GenerationStageName(values.FailureStage) ?? "none"
+        );
+        properties["error_context"] = context;
+        properties["$exception_list"] = new[]
+        {
+            new
+            {
+                type,
+                // This is a fixed-category description, never Exception.Message or a stack frame.
+                value = $"{context}: {kind} (HRESULT {hresult}; native code {nativeCode})",
+                mechanism = new
+                {
+                    handled = error.Handled,
+                    synthetic = false,
+                    type = "manual",
+                },
+            },
+        };
+        properties["$exception_fingerprint"] = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(group))).ToLowerInvariant();
+    }
+
+    private static string PostHogExceptionTypeName(AnalyticsProperties values) =>
+        values.ExceptionType switch
+        {
+            AnalyticsExceptionType.Cancelled => "OperationCanceledException",
+            AnalyticsExceptionType.UnauthorizedAccess => "UnauthorizedAccessException",
+            AnalyticsExceptionType.Security => "SecurityException",
+            AnalyticsExceptionType.InvalidData => "InvalidDataException",
+            AnalyticsExceptionType.Format => "FormatException",
+            AnalyticsExceptionType.Timeout => "TimeoutException",
+            AnalyticsExceptionType.FileNotFound => "FileNotFoundException",
+            AnalyticsExceptionType.DirectoryNotFound => "DirectoryNotFoundException",
+            AnalyticsExceptionType.Io => "IOException",
+            AnalyticsExceptionType.OutOfMemory => "OutOfMemoryException",
+            AnalyticsExceptionType.DllNotFound => "DllNotFoundException",
+            AnalyticsExceptionType.EntryPointNotFound => "EntryPointNotFoundException",
+            AnalyticsExceptionType.BadImageFormat => "BadImageFormatException",
+            AnalyticsExceptionType.Win32 => "Win32Exception",
+            AnalyticsExceptionType.Com => "COMException",
+            AnalyticsExceptionType.InvalidOperation => "InvalidOperationException",
+            AnalyticsExceptionType.Argument => "ArgumentException",
+            AnalyticsExceptionType.Aggregate => "AggregateException",
+            AnalyticsExceptionType.MediaProcessing => values.ErrorComponent switch
+            {
+                MediaProcessingComponent.Ffmpeg => "FFmpegError",
+                MediaProcessingComponent.Gifski => "GifskiError",
+                _ => "MediaProcessingException",
+            },
+            _ => "Exception",
+        };
+
+    private static AnalyticsErrorContext? ErrorContextFor(AnalyticsEvent eventName) =>
+        eventName switch
+        {
+            AnalyticsEvent.GifSelected => AnalyticsErrorContext.GifSelection,
+            AnalyticsEvent.VideoLoadCompleted => AnalyticsErrorContext.VideoLoad,
+            AnalyticsEvent.GifGenerationCompleted => AnalyticsErrorContext.GifGeneration,
+            AnalyticsEvent.GifSaveCompleted => AnalyticsErrorContext.GifSave,
+            AnalyticsEvent.LockscreenApplyCompleted => AnalyticsErrorContext.LockscreenApply,
+            AnalyticsEvent.LockscreenRemovalCompleted => AnalyticsErrorContext.LockscreenRemoval,
+            AnalyticsEvent.DiagnosticReportExportCompleted => AnalyticsErrorContext.DiagnosticReportExport,
+            AnalyticsEvent.LogExportCompleted => AnalyticsErrorContext.LogExport,
+            AnalyticsEvent.AppError => AnalyticsErrorContext.AppCrash,
+            _ => null,
+        };
+
+    private static string? ErrorContextName(AnalyticsErrorContext context) =>
+        context switch
+        {
+            AnalyticsErrorContext.GifSelection => "gif_selection",
+            AnalyticsErrorContext.VideoLoad => "video_load",
+            AnalyticsErrorContext.GifGeneration => "gif_generation",
+            AnalyticsErrorContext.GifSave => "gif_save",
+            AnalyticsErrorContext.LockscreenApply => "lockscreen_apply",
+            AnalyticsErrorContext.LockscreenRemoval => "lockscreen_removal",
+            AnalyticsErrorContext.DiagnosticReportExport => "diagnostic_report_export",
+            AnalyticsErrorContext.LogExport => "log_export",
+            AnalyticsErrorContext.AppCrash => "app_crash",
+            AnalyticsErrorContext.MainAction => "main_action",
+            AnalyticsErrorContext.DiagnosticsAction => "diagnostics_action",
+            AnalyticsErrorContext.LogFolderOpen => "log_folder_open",
+            AnalyticsErrorContext.AppShutdown => "app_shutdown",
+            AnalyticsErrorContext.VideoPreview => "video_preview",
+            AnalyticsErrorContext.VideoThumbnails => "video_thumbnails",
+            AnalyticsErrorContext.DiagnosticRun => "diagnostic_run",
+            AnalyticsErrorContext.DiagnosticTrace => "diagnostic_trace",
+            AnalyticsErrorContext.LockscreenVerification => "lockscreen_verification",
+            _ => null,
+        };
 
     private void LoadPreferences()
     {
@@ -620,6 +849,7 @@ public sealed class AnalyticsService : IDisposable
             AnalyticsEvent.VideoLoadCompleted => "video_load_completed",
             AnalyticsEvent.GifGenerationStarted => "gif_generation_started",
             AnalyticsEvent.GifGenerationCompleted => "gif_generation_completed",
+            AnalyticsEvent.Exception => "$exception",
             AnalyticsEvent.GifSaveCompleted => "gif_save_completed",
             AnalyticsEvent.LockscreenApplyStarted => "lockscreen_apply_started",
             AnalyticsEvent.LockscreenApplyCompleted => "lockscreen_apply_completed",
@@ -670,6 +900,53 @@ public sealed class AnalyticsService : IDisposable
             AnalyticsErrorKind.Io => "io",
             AnalyticsErrorKind.Timeout => "timeout",
             AnalyticsErrorKind.Other => "other",
+            AnalyticsErrorKind.OutOfMemory => "out_of_memory",
+            AnalyticsErrorKind.DiskFull => "disk_full",
+            AnalyticsErrorKind.DependencyMissing => "dependency_missing",
+            AnalyticsErrorKind.DependencyIncompatible => "dependency_incompatible",
+            AnalyticsErrorKind.NativeFailure => "native_failure",
+            AnalyticsErrorKind.InvalidState => "invalid_state",
+            AnalyticsErrorKind.InvalidArgument => "invalid_argument",
+            _ => null,
+        };
+
+    private static double? Duration(double? value) => value is >= 0 and <= 86_400_000 ? Math.Round(value.Value) : null;
+
+    private static string? GenerationStageName(AnalyticsGenerationStage? value) =>
+        value switch
+        {
+            AnalyticsGenerationStage.Preparing => "preparing",
+            AnalyticsGenerationStage.ExtractingFrames => "extracting_frames",
+            AnalyticsGenerationStage.EncodingGif => "encoding_gif",
+            AnalyticsGenerationStage.OpeningOutput => "opening_output",
+            AnalyticsGenerationStage.LoadingPreview => "loading_preview",
+            AnalyticsGenerationStage.Completing => "completing",
+            _ => null,
+        };
+
+    private static string? ExceptionTypeName(AnalyticsExceptionType? value) =>
+        value switch
+        {
+            AnalyticsExceptionType.Cancelled => "cancelled",
+            AnalyticsExceptionType.UnauthorizedAccess => "unauthorized_access",
+            AnalyticsExceptionType.Security => "security",
+            AnalyticsExceptionType.InvalidData => "invalid_data",
+            AnalyticsExceptionType.Format => "format",
+            AnalyticsExceptionType.Timeout => "timeout",
+            AnalyticsExceptionType.FileNotFound => "file_not_found",
+            AnalyticsExceptionType.DirectoryNotFound => "directory_not_found",
+            AnalyticsExceptionType.Io => "io",
+            AnalyticsExceptionType.OutOfMemory => "out_of_memory",
+            AnalyticsExceptionType.DllNotFound => "dll_not_found",
+            AnalyticsExceptionType.EntryPointNotFound => "entry_point_not_found",
+            AnalyticsExceptionType.BadImageFormat => "bad_image_format",
+            AnalyticsExceptionType.Win32 => "win32",
+            AnalyticsExceptionType.Com => "com",
+            AnalyticsExceptionType.InvalidOperation => "invalid_operation",
+            AnalyticsExceptionType.Argument => "argument",
+            AnalyticsExceptionType.Aggregate => "aggregate",
+            AnalyticsExceptionType.MediaProcessing => "media_processing",
+            AnalyticsExceptionType.Other => "other",
             _ => null,
         };
 
@@ -684,6 +961,14 @@ public sealed class AnalyticsService : IDisposable
         Guid Id,
         long Generation,
         CancellationToken Consent,
-        bool IsOptOut = false
+        bool IsOptOut = false,
+        CapturedException? Exception = null
     );
+
+    private sealed record CapturedException(AnalyticsErrorContext Context, bool Handled);
+
+    private sealed class CapturedMarker
+    {
+        public int Captured;
+    }
 }

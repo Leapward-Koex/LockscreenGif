@@ -1,8 +1,10 @@
 using System.Diagnostics;
 using System.Threading.Channels;
 using LockscreenGif.Contracts.Services;
+using LockscreenGif.Models;
 using LockscreenGif.Models.Diagnostics;
 using LockscreenGif.Privileged;
+using LockscreenGif.Services.Analytics;
 
 namespace LockscreenGif.Services.Diagnostics;
 
@@ -20,6 +22,7 @@ internal sealed class DiagnosticRun
     );
     private readonly CacheCollector _cache;
     private readonly string _source;
+    private readonly LockscreenSourceKind _sourceKind;
     private readonly Stopwatch _elapsed = Stopwatch.StartNew();
     private readonly TimeSpan _limit;
     private Task? _monitorTask;
@@ -31,6 +34,7 @@ internal sealed class DiagnosticRun
     private Task? _finishTask;
     private readonly IPrivilegedOperationSession _privileged;
     private readonly DiagnosticProcessTrace _trace;
+    private readonly IErrorReporter? _errorReporter;
     public DiagnosticRecorder Recorder { get; }
     public bool IsFinished { get; private set; }
     public event Action<DiagnosticRun>? Finished;
@@ -41,17 +45,21 @@ internal sealed class DiagnosticRun
         DiagnosticSession session,
         string source,
         IPrivilegedOperationSession privileged,
-        TimeSpan? testLimit = null
+        TimeSpan? testLimit = null,
+        LockscreenSourceKind sourceKind = LockscreenSourceKind.Unknown,
+        IErrorReporter? errorReporter = null
     )
     {
         _lockscreen = lockscreen;
         _windows = windows;
         _source = source;
+        _sourceKind = sourceKind;
         _limit = testLimit ?? TimeSpan.FromMinutes(5);
         _stop.CancelAfter(_limit);
         Recorder = new(session);
         _privileged = privileged;
-        _trace = new(privileged, Recorder);
+        _errorReporter = errorReporter;
+        _trace = new(privileged, Recorder, errorReporter: errorReporter);
         _cache = new(
             lockscreen.CacheDirectory,
             (message, severity) =>
@@ -95,10 +103,12 @@ internal sealed class DiagnosticRun
 
             var session = Recorder.Snapshot(includeTraceDetails: false);
             var original = _source;
+            var sourceKind = _sourceKind;
             if (session.UseReference)
             {
                 referenceDirectory = Path.Combine(Path.GetTempPath(), "LockscreenGif-reference-" + Guid.NewGuid().ToString("N"));
                 original = await ReferenceAnimation.EnsureAsync(referenceDirectory);
+                sourceKind = LockscreenSourceKind.BundledGif;
             }
             if (string.IsNullOrWhiteSpace(original))
             {
@@ -128,7 +138,8 @@ internal sealed class DiagnosticRun
                 session.UseWindowsApi,
                 e => Recorder.Add("Apply: " + e.Stage, e.Message + (e.Path is null ? "" : $" — {e.Path}"), e.Severity),
                 _stop.Token,
-                _privileged
+                _privileged,
+                sourceKind
             );
             if (IsFinished)
             {
@@ -157,6 +168,7 @@ internal sealed class DiagnosticRun
         }
         catch (Exception ex)
         {
+            ReportError(ex);
             Recorder.Update(s => s.Error = $"{ex.GetType().Name} (0x{ex.HResult:X8}): {ex.Message}");
             await FinishAsync("Results");
         }
@@ -260,6 +272,7 @@ internal sealed class DiagnosticRun
         }
         catch (Exception ex)
         {
+            ReportError(ex);
             Recorder.Update(s =>
             {
                 s.MonitoringComplete = false;
@@ -390,6 +403,7 @@ internal sealed class DiagnosticRun
             }
             catch (Exception ex)
             {
+                ReportError(ex);
                 Recorder.Update(s =>
                 {
                     s.ProcessTrace.State = "Incomplete";
@@ -411,4 +425,7 @@ internal sealed class DiagnosticRun
         IsFinished = true;
         Finished?.Invoke(this);
     }
+
+    private void ReportError(Exception exception) =>
+        DiagnosticErrorReporting.Capture(_errorReporter, exception, AnalyticsErrorContext.DiagnosticRun, AnalyticsWorkflow.Diagnostics);
 }

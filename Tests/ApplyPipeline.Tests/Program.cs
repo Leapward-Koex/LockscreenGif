@@ -12,6 +12,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("All destinations are copied and hash verified", CompleteApply),
     ("Empty cache is a failed apply", EmptyCache),
     ("A locked destination produces a partial failure", PartialFailure),
+    ("Committed hash mismatches retain a safe operation failure", CommittedHashMismatch),
     ("Existing read-only files do not require elevation", ReadOnlyFile),
     ("Cancellation before apply makes no changes", CancelledBeforeApply),
     ("Cancellation at a copy boundary preserves remaining destinations", CancelBetweenCopies),
@@ -30,6 +31,9 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Declined elevation is not repeated", PermissionSessionTests.DeclinedElevationIsNotRepeated),
     ("Failed helper launch is not repeated", PermissionSessionTests.FailedLaunchIsNotRepeated),
     ("Precancelled permission repair does not launch", PermissionSessionTests.PrecancelledRepairDoesNotLaunch),
+    ("Permission helper connection deadlines remain failures and do not relaunch", PermissionTransportTests.ConnectionDeadlineIsFailure),
+    ("Cancelling a pending permission helper connection remains cancellation", PermissionTransportTests.ConnectionCancellation),
+    ("Permission helper request deadlines remain failures and break the connection", PermissionTransportTests.RequestDeadlineIsFailure),
     ("Many path repairs share one helper process", PermissionTransportTests.ReusesOneProcess),
     ("Disconnected helper never relaunches", PermissionTransportTests.DisconnectedHelperDoesNotRelaunch),
     ("Trace startup failure and cancelled draining preserve the session", PermissionTransportTests.TraceFailureAndCancelledRead),
@@ -64,6 +68,10 @@ static async Task CompleteApply()
     Assert(!result.ApiRequested && !result.ApiCompleted, "An API-off apply must not request Windows image API.");
     Assert(result.SourceSizeBytes == new FileInfo(fixture.Source).Length, "Size describes one source GIF, not all cache copies.");
     Assert(result.SourceWidth == 1 && result.SourceHeight == 1, "GIF logical-screen dimensions are read from the source header.");
+    Assert(
+        result.FailureException is null && result.Files.All(file => file.FailureException is null),
+        "Success retains no failure exception."
+    );
 }
 
 static async Task EmptyCache()
@@ -78,6 +86,7 @@ static async Task EmptyCache()
         !result.Success && result.Files.Count == 0 && result.Error!.Contains("No lock-screen cache"),
         "An empty cache must not report success."
     );
+    Assert(result.FailureException is InvalidOperationException, "A top-level failure retains its original exception for error tracking.");
 }
 
 static async Task PartialFailure()
@@ -91,6 +100,29 @@ static async Task PartialFailure()
     Assert(
         result.Files.Single(file => file.Path == fixture.MainImage).Error!.Contains("in use"),
         "Locked file must retain its exception type."
+    );
+    var failedFile = result.Files.Single(file => file.Path == fixture.MainImage);
+    Assert(
+        failedFile.FailureException is IOException && ReferenceEquals(result.FailureException, failedFile.FailureException),
+        "Partial failures preserve the first actual failed write at the operation boundary."
+    );
+}
+
+static async Task CommittedHashMismatch()
+{
+    using var fixture = new CacheFixture();
+    var result = await fixture.Apply(item =>
+    {
+        if (item.Stage == "Verifying" && item.Path == fixture.MainImage)
+        {
+            File.WriteAllText(fixture.MainImage, "changed after commit");
+        }
+    });
+    var failedFile = result.Files.Single(file => file.Path == fixture.MainImage);
+    Assert(failedFile.Copied && !failedFile.Verified && !result.Success, "A hash mismatch remains an unsuccessful verification.");
+    Assert(
+        failedFile.FailureException is InvalidDataException && ReferenceEquals(result.FailureException, failedFile.FailureException),
+        "A mismatch without a thrown exception receives one known failure at the operation boundary."
     );
 }
 
@@ -118,6 +150,7 @@ static async Task CancelledBeforeApply()
         result.Cancelled && !result.Success && Directory.GetFiles(fixture.Folder).Length == 0,
         "Pre-cancelled apply must not write cache files."
     );
+    Assert(result.FailureException is null, "Expected cancellation does not create an error tracking failure.");
 }
 
 static async Task CancelBetweenCopies()
@@ -194,6 +227,7 @@ static async Task InvalidSource()
         "Invalid GIF signatures produce no GIF size properties."
     );
     Assert(!result.Success && result.Error!.Contains("InvalidDataException"), "Invalid source must fail before writes.");
+    Assert(result.FailureException is InvalidDataException, "Invalid input preserves the original source validation exception.");
     Assert(Directory.GetFiles(fixture.Folder).Length == 0, "Invalid source should not affect the cache.");
 }
 
@@ -267,7 +301,12 @@ static async Task Serialization()
 {
     using var fixture = new CacheFixture();
     var result = await fixture.Apply();
-    var restored = JsonSerializer.Deserialize<LockscreenApplyResult>(JsonSerializer.Serialize(result))!;
+    const string privateDetail = @"synthetic-secret C:\Users\private-person\private-animation.gif";
+    result.FailureException = new IOException(privateDetail);
+    result.Files[0].FailureException = new UnauthorizedAccessException(privateDetail);
+    var json = JsonSerializer.Serialize(result);
+    Assert(!json.Contains(privateDetail) && !json.Contains("FailureException"), "Transient exceptions never enter exported result JSON.");
+    var restored = JsonSerializer.Deserialize<LockscreenApplyResult>(json)!;
     Assert(
         restored.SourceSizeBytes == result.SourceSizeBytes
             && restored.SourceWidth == result.SourceWidth
@@ -277,6 +316,16 @@ static async Task Serialization()
     Assert(
         restored.Files.Count == result.Files.Count && restored.Files.All(file => file.Verified),
         "Cloning a report must preserve file outcomes."
+    );
+    Assert(
+        restored.FailureException is null && restored.Files.All(file => file.FailureException is null),
+        "Report clones retain no exceptions."
+    );
+    var removal = new LockscreenGif.Services.DeleteFilesResult { FailedDeletions = 1, FailureException = new IOException(privateDetail) };
+    var removalJson = JsonSerializer.Serialize(removal);
+    Assert(
+        !removalJson.Contains(privateDetail) && !removalJson.Contains("FailureException"),
+        "Removal exceptions never enter result JSON."
     );
 }
 
@@ -297,6 +346,7 @@ static async Task InvalidStagingHash()
         "Failed staging verification must preserve the previous image."
     );
     Assert(!Directory.GetFiles(fixture.Folder, "*.tmp").Any(), "Rejected staging file must be removed.");
+    Assert(result.FailureException is IOException, "Staging failure retains the actual exception without cleanup replacing it.");
 }
 
 static async Task ElevationGate()
@@ -323,6 +373,7 @@ static async Task RemoveVariants()
         "Removal should delete the available variant and report the locked variant."
     );
     Assert(File.Exists(fixture.MainImage), "Removing variants must preserve the main image.");
+    Assert(result.FailureException is IOException, "Partial removal retains its first actual failure for error tracking.");
 }
 
 static async Task PreserveDestinationAcl()

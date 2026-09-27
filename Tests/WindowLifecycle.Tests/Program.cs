@@ -80,6 +80,7 @@ internal static class Program
         App.Register(verification);
         App.Register<ILockscreenService>(lockscreen);
         App.Register(monitor);
+        App.Register<IErrorReporter>(new FakeErrorReporter());
         return (diagnostics, verification, lockscreen, monitor);
     }
 
@@ -134,12 +135,21 @@ internal static class Program
 
     private static async Task FailedVerificationAsync()
     {
-        var services = Setup();
-        services.Verification.Completion = Task.FromException(new InvalidOperationException("Synthetic shutdown failure"));
-        App.MainWindow.AppWindow.RequestClose();
-        App.MainWindow.DispatcherQueue.Pump();
-        await App.MainWindow.CloseCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
-        Check(services.Diagnostics.Interrupted && App.MainWindow.CloseCalls == 1, "verification failure still finalizes shutdown");
+        foreach (var throwOnCapture in new[] { false, true })
+        {
+            var services = Setup();
+            var reporter = (FakeErrorReporter)App.GetService<IErrorReporter>();
+            reporter.ThrowOnCapture = throwOnCapture;
+            services.Verification.Completion = Task.FromException(new InvalidOperationException("Synthetic shutdown failure"));
+            App.MainWindow.AppWindow.RequestClose();
+            App.MainWindow.DispatcherQueue.Pump();
+            await App.MainWindow.CloseCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            Check(reporter.Reports == 1, "shutdown failures are reported once");
+            Check(
+                services.Diagnostics.Interrupted && App.MainWindow.CloseCalls == 1,
+                "verification and reporting failures still finalize shutdown"
+            );
+        }
     }
 
     private static void DispatcherShutdown()
