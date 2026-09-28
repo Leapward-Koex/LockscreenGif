@@ -75,6 +75,7 @@ public partial class App : Application
                         Environment.OSVersion.Version.ToString()
                     ));
                     services.AddSingleton<IAppNotificationService, AppNotificationService>();
+                    services.AddSingleton<IErrorReporter>(sp => sp.GetRequiredService<AnalyticsService>());
                     services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
                     services.AddSingleton<IActivationService, ActivationService>();
                     services.AddSingleton<IPageService, PageService>();
@@ -173,7 +174,7 @@ public partial class App : Application
     {
         try
         {
-            GetService<AnalyticsService>().Track(AnalyticsEvent.AppError, new() { ErrorKind = AnalyticsProperties.ClassifyError(ex) });
+            GetService<AnalyticsService>().TrackFailure(AnalyticsEvent.AppError, ex, handled: false);
         }
         catch
         {

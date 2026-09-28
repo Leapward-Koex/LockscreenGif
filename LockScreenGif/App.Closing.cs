@@ -1,4 +1,5 @@
 using LockscreenGif.Contracts.Services;
+using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
 using LockscreenGif.Views;
 using Microsoft.UI.Windowing;
@@ -54,6 +55,11 @@ public partial class App
         }
         catch (Exception ex)
         {
+            try
+            {
+                GetService<IErrorReporter>().CaptureException(ex, AnalyticsErrorContext.AppShutdown, AnalyticsWorkflow.Diagnostics);
+            }
+            catch { }
             Logger.Error("Could not finish the diagnostic session while closing", ex);
             diagnostics.Interrupt("The app closed while diagnostic shutdown encountered an error.");
         }

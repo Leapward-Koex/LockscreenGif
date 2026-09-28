@@ -16,6 +16,7 @@ internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheW
     )
     {
         var result = new LockscreenApplyResult { ApiRequested = useWindowsApi };
+        var failureStage = LockscreenApplyFailureReason.SourceReadFailed;
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -51,6 +52,7 @@ internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheW
 
             if (useWindowsApi)
             {
+                failureStage = LockscreenApplyFailureReason.WindowsApiFailed;
                 progress.Report("WindowsApi", "Setting the lock-screen image through Windows before replacing cache files.");
                 var apiTimer = Stopwatch.StartNew();
                 var file = await StorageFile.GetFileFromPathAsync(sourcePath).AsTask(cancellationToken);
@@ -76,27 +78,42 @@ internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheW
                     $"Windows accepted the image-setting request in {apiTimer.ElapsedMilliseconds} ms. Animated playback is not guaranteed."
                 );
                 cancellationToken.ThrowIfCancellationRequested();
+                failureStage = LockscreenApplyFailureReason.CacheDiscoveryFailed;
                 await layout.WaitForSettlingAsync(progress, cancellationToken);
             }
 
+            failureStage = LockscreenApplyFailureReason.CacheDiscoveryFailed;
             var destinations = await layout.FindDestinationsAsync(progress, cancellationToken);
             if (destinations.Count == 0)
             {
+                failureStage = LockscreenApplyFailureReason.NoDestinations;
                 throw new InvalidOperationException(
                     "No lock-screen cache destinations were found. Set a Picture lock screen in Windows Settings and try again."
                 );
             }
 
             result.Files.AddRange(destinations.Select(path => new LockscreenFileResult { Path = path, Error = "Not attempted." }));
+            failureStage = LockscreenApplyFailureReason.CopyFailed;
             foreach (var target in result.Files)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 await writer.WriteAsync(sourcePath, hash, target, progress, cancellationToken);
+                result.FailureException ??= target.FailureException;
+                if (!target.Copied || !target.Verified)
+                {
+                    // Keep the first unsuccessful destination aligned with the retained exception.
+                    result.FailureReason ??=
+                        target.Copied ? LockscreenApplyFailureReason.VerificationFailed
+                        : target.FailureException is { } error && CachePermissions.IsAccessDenied(error)
+                            ? LockscreenApplyFailureReason.CacheInaccessible
+                        : LockscreenApplyFailureReason.CopyFailed;
+                }
             }
             result.Success = result.Files.All(file => file.Copied && file.Verified);
             result.Error = result.Success
                 ? null
-                : $"Only {result.Files.Count(file => file.Verified)} of {result.Files.Count} destinations were verified.";
+                : $"Only {result.Files.Count(file => file.Verified)} of {result.Files.Count} destinations were verified. "
+                    + RecoveryMessage(result.FailureReason ?? LockscreenApplyFailureReason.Unknown);
             progress.Report(
                 "Completed",
                 result.Success
@@ -108,15 +125,58 @@ internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheW
         catch (OperationCanceledException ex)
         {
             result.Cancelled = true;
+            result.FailureReason = null;
             result.Error = ex.Message;
             progress.Report("Cancelled", ex.Message, severity: "Warning");
         }
         catch (Exception ex)
         {
-            result.Error = ApplyProgress.Describe(ex);
-            progress.Report("Failed", result.Error, severity: "Error");
+            result.FailureException = ex;
+            result.FailureReason = ClassifyFailure(failureStage, ex);
+            result.Error = RecoveryMessage(result.FailureReason.Value);
+            // Keep technical details in local evidence, separate from the actionable UI message.
+            progress.Report("Failed", $"{result.Error} {ApplyProgress.Describe(ex)}", severity: "Error");
             Logger.Error("Lockscreen apply failed", ex);
         }
         return result;
     }
+
+    private static LockscreenApplyFailureReason ClassifyFailure(LockscreenApplyFailureReason stage, Exception error) =>
+        stage switch
+        {
+            LockscreenApplyFailureReason.SourceReadFailed when error is InvalidDataException or EndOfStreamException =>
+                LockscreenApplyFailureReason.InvalidSource,
+            LockscreenApplyFailureReason.CacheDiscoveryFailed when CachePermissions.IsAccessDenied(error) =>
+                LockscreenApplyFailureReason.CacheInaccessible,
+            LockscreenApplyFailureReason.CacheDiscoveryFailed when error is DirectoryNotFoundException or FileNotFoundException =>
+                LockscreenApplyFailureReason.CacheMissing,
+            _ => stage,
+        };
+
+    private static string RecoveryMessage(LockscreenApplyFailureReason reason) =>
+        reason switch
+        {
+            LockscreenApplyFailureReason.CacheInaccessible =>
+                "Windows denied access to the lock-screen cache. Retry and allow the Windows permission request if it appears. "
+                    + "If access is still denied, export a diagnostic report for support or your administrator.",
+            LockscreenApplyFailureReason.CacheMissing =>
+                "The Windows lock-screen cache could not be found. Open Windows Settings > Personalization > Lock screen, "
+                    + "choose Picture and select an image, then retry. If the cache is still unavailable, export a diagnostic report for support.",
+            LockscreenApplyFailureReason.NoDestinations =>
+                "No lock-screen cache destinations were found. Open Windows Settings > Personalization > Lock screen, "
+                    + "choose Picture and select an image, then retry. If no destinations appear, export a diagnostic report for support.",
+            LockscreenApplyFailureReason.CacheDiscoveryFailed =>
+                "The lock-screen cache could not be inspected. Retry, then export a diagnostic report for support if the problem continues.",
+            LockscreenApplyFailureReason.InvalidSource => "The selected file is not a readable GIF. Choose another GIF and retry.",
+            LockscreenApplyFailureReason.SourceReadFailed =>
+                "The selected GIF could not be read. Check that the file is available and readable, then select it again.",
+            LockscreenApplyFailureReason.WindowsApiFailed =>
+                "Windows could not set the lock-screen image. Open Windows Settings > Personalization > Lock screen, "
+                    + "choose Picture and select an image, then retry. If Windows prevents this change, contact your administrator.",
+            LockscreenApplyFailureReason.CopyFailed =>
+                "The GIF could not be copied to every lock-screen cache file. Retry, then export a diagnostic report for support if the problem continues.",
+            LockscreenApplyFailureReason.VerificationFailed =>
+                "A copied lock-screen cache file could not be verified. Retry, then export a diagnostic report for support if the problem continues.",
+            _ => "The GIF could not be applied. Export a diagnostic report for support.",
+        };
 }

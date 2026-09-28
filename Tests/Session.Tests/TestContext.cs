@@ -13,7 +13,7 @@ internal sealed class TestContext : IAsyncDisposable
     public FakePrivilegedSession Helper { get; } = new();
     public PrivilegedSessionFactory Factory { get; }
 
-    private TestContext(string directory)
+    private TestContext(string directory, IErrorReporter? errorReporter)
     {
         DirectoryPath = directory;
         StoreDirectory = Path.Combine(directory, "reports");
@@ -21,12 +21,12 @@ internal sealed class TestContext : IAsyncDisposable
         Directory.CreateDirectory(cache);
         Lockscreen = new(cache);
         Factory = new(_ => Helper);
-        Service = new(Lockscreen, Windows, Factory);
+        Service = new(Lockscreen, Windows, Factory, errorReporter: errorReporter);
     }
 
-    public static async Task<TestContext> CreateAsync(string root, string name)
+    public static async Task<TestContext> CreateAsync(string root, string name, IErrorReporter? errorReporter = null)
     {
-        var context = new TestContext(Path.Combine(root, name));
+        var context = new TestContext(Path.Combine(root, name), errorReporter);
         context.Lockscreen.CurrentImage = new(await ReferenceAnimation.EnsureAsync(context.DirectoryPath));
         return context;
     }

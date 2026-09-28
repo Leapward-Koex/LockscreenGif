@@ -65,14 +65,10 @@ public sealed partial class MainPage
                 }
                 catch (Exception ex)
                 {
-                    _analyticsService.Track(
+                    _analyticsService.TrackFailure(
                         AnalyticsEvent.GifSaveCompleted,
-                        new AnalyticsProperties
-                        {
-                            Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
-                            DurationMs = timer?.Elapsed.TotalMilliseconds,
-                            ErrorKind = AnalyticsProperties.ClassifyError(ex),
-                        }
+                        ex,
+                        new AnalyticsProperties { DurationMs = timer?.Elapsed.TotalMilliseconds }
                     );
                     throw;
                 }

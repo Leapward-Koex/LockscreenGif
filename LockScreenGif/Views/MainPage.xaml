@@ -277,7 +277,7 @@
                                     </StackPanel>
                                 </Expander>
                             </ContentControl>
-                            <InfoBar x:Name="FileSizeWarning" Title="Free space requirement" IsClosable="False"
+                            <InfoBar x:Name="FileSizeWarning" Title="Temporary space estimate" IsClosable="False"
                                      IsOpen="False" Message="" Severity="Warning" />
                         </StackPanel>
 

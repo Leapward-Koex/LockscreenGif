@@ -229,14 +229,13 @@ public sealed class DiagnosticsViewModel : ObservableObject
             }
             catch (Exception ex)
             {
-                _analytics.Track(
+                _analytics.TrackFailure(
                     AnalyticsEvent.DiagnosticReportExportCompleted,
-                    new()
+                    ex,
+                    new AnalyticsProperties
                     {
                         Workflow = AnalyticsWorkflow.Diagnostics,
-                        Outcome = ex is OperationCanceledException ? AnalyticsOutcome.Cancelled : AnalyticsOutcome.Failed,
                         DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
-                        ErrorKind = AnalyticsProperties.ClassifyError(ex),
                     }
                 );
                 throw;
@@ -258,7 +257,15 @@ public sealed class DiagnosticsViewModel : ObservableObject
         }
     }
 
-    public void ShowError(Exception error) => Notice = $"{error.GetType().Name}: {error.Message}";
+    public void ShowError(Exception error)
+    {
+        _analytics.CaptureException(
+            error,
+            AnalyticsErrorContext.DiagnosticsAction,
+            new AnalyticsProperties { Workflow = AnalyticsWorkflow.Diagnostics }
+        );
+        Notice = $"{error.GetType().Name}: {error.Message}";
+    }
 
     private async Task RunAsync(Func<Task> action)
     {

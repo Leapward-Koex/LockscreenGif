@@ -27,6 +27,10 @@ internal static class AnalyticsTests
         await Run("shutdown drains a healthy queue and bounds a stalled transport", ShutdownAsync);
         await ReliabilityTests.RunAsync();
         await WindowsContextTests.RunAsync();
+        await GenerationErrorTests.RunAsync();
+        await ErrorTrackingTests.RunAsync();
+        await ApplySourceTests.RunAsync();
+        await ApplyFailureTests.RunAsync();
         Console.WriteLine("All analytics checks passed. Every request used a fake HTTP transport.");
     }
 
@@ -309,6 +313,7 @@ internal static class AnalyticsTests
             "workflow",
             "requested_width",
             "requested_fps",
+            "requested_fps_mode",
             "clip_duration_seconds",
             "selected_frame_count",
             "uses_reference_gif",

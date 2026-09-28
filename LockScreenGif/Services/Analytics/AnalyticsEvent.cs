@@ -19,6 +19,7 @@ public enum AnalyticsEvent
     AppError,
     LogExportCompleted,
     AnalyticsOptedOut,
+    Exception,
 }
 
 public enum AnalyticsOutcome
@@ -51,4 +52,45 @@ public enum AnalyticsErrorKind
     Io,
     Timeout,
     Other,
+    OutOfMemory,
+    DiskFull,
+    DependencyMissing,
+    DependencyIncompatible,
+    NativeFailure,
+    InvalidState,
+    InvalidArgument,
+}
+
+public enum AnalyticsExceptionType
+{
+    Cancelled,
+    UnauthorizedAccess,
+    Security,
+    InvalidData,
+    Format,
+    Timeout,
+    FileNotFound,
+    DirectoryNotFound,
+    Io,
+    OutOfMemory,
+    DllNotFound,
+    EntryPointNotFound,
+    BadImageFormat,
+    Win32,
+    Com,
+    InvalidOperation,
+    Argument,
+    Aggregate,
+    MediaProcessing,
+    Other,
+}
+
+public enum AnalyticsGenerationStage
+{
+    Preparing,
+    ExtractingFrames,
+    EncodingGif,
+    OpeningOutput,
+    LoadingPreview,
+    Completing,
 }

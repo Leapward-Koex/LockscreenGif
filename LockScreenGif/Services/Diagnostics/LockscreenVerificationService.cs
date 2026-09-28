@@ -2,6 +2,7 @@ using LockscreenGif.Contracts.Services;
 using LockscreenGif.Models;
 using LockscreenGif.Models.Diagnostics;
 using LockscreenGif.Privileged;
+using LockscreenGif.Services.Analytics;
 
 namespace LockscreenGif.Services.Diagnostics;
 
@@ -13,20 +14,27 @@ public sealed class LockscreenVerificationService
     private readonly PrivilegedSessionFactory _privileged;
     private readonly TimeSpan _monitorLimit;
     private readonly TimeSpan _unlockDelay;
+    private readonly IErrorReporter? _errorReporter;
     private readonly object _gate = new();
     private CancellationTokenSource? _stop;
     private Task<LockscreenVerificationResult>? _run;
     private int _running;
 
-    public LockscreenVerificationService(ILockscreenService lockscreen, WindowsSessionMonitor windows, PrivilegedSessionFactory privileged)
-        : this(lockscreen, windows, privileged, TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(1)) { }
+    public LockscreenVerificationService(
+        ILockscreenService lockscreen,
+        WindowsSessionMonitor windows,
+        PrivilegedSessionFactory privileged,
+        IErrorReporter? errorReporter = null
+    )
+        : this(lockscreen, windows, privileged, TimeSpan.FromMinutes(5), TimeSpan.FromSeconds(1), errorReporter) { }
 
     internal LockscreenVerificationService(
         ILockscreenService lockscreen,
         WindowsSessionMonitor windows,
         PrivilegedSessionFactory privileged,
         TimeSpan monitorLimit,
-        TimeSpan unlockDelay
+        TimeSpan unlockDelay,
+        IErrorReporter? errorReporter = null
     )
     {
         _lockscreen = lockscreen;
@@ -34,6 +42,7 @@ public sealed class LockscreenVerificationService
         _privileged = privileged;
         _monitorLimit = monitorLimit;
         _unlockDelay = unlockDelay;
+        _errorReporter = errorReporter;
     }
 
     public bool IsRunning => Volatile.Read(ref _running) != 0;
@@ -100,6 +109,7 @@ public sealed class LockscreenVerificationService
         }
         catch (Exception ex)
         {
+            ReportError(ex);
             Logger.Warn($"Lock-screen verification failed: {ex.GetType().Name}: {ex.Message}");
             return Warning(false, "The GIF was applied, but its lock-screen read could not be confirmed.");
         }
@@ -187,6 +197,7 @@ public sealed class LockscreenVerificationService
                 }
                 catch (Exception ex)
                 {
+                    ReportError(ex);
                     Logger.Warn($"Lock-screen verification helper shutdown failed: {ex.GetType().Name}.");
                     recorder.Update(session => session.ProcessTrace.State = "Incomplete");
                 }
@@ -199,7 +210,7 @@ public sealed class LockscreenVerificationService
             try
             {
                 helper = _privileged.Create(_lockscreen.CacheDirectory);
-                trace = new(helper, recorder);
+                trace = new(helper, recorder, errorReporter: _errorReporter, workflow: AnalyticsWorkflow.Lockscreen);
                 await trace.StartAsync(new(_lockscreen.CacheDirectory, sourcePath), token);
             }
             catch (OperationCanceledException) when (token.IsCancellationRequested)
@@ -208,6 +219,7 @@ public sealed class LockscreenVerificationService
             }
             catch (Exception ex)
             {
+                ReportError(ex);
                 Logger.Warn($"Lock-screen file monitoring could not start: {ex.GetType().Name}.");
                 recorder.Update(session => session.ProcessTrace.State = "Unavailable");
             }
@@ -259,6 +271,14 @@ public sealed class LockscreenVerificationService
 
     private static LockscreenVerificationResult Warning(bool unlocked, string message) =>
         new(false, unlocked, "Lock-screen read not confirmed", message);
+
+    private void ReportError(Exception exception) =>
+        DiagnosticErrorReporting.Capture(
+            _errorReporter,
+            exception,
+            AnalyticsErrorContext.LockscreenVerification,
+            AnalyticsWorkflow.Lockscreen
+        );
 
     private void SetStatus(string status)
     {

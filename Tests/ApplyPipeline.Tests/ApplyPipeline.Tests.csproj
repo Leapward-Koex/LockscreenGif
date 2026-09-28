@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../ProtectedCacheFixture.cs" Link="Fixtures/ProtectedCacheFixture.cs" />
     <Compile Include="../../LockScreenGif/Services/LockscreenPreferences.cs" Link="Production/LockscreenPreferences.cs" />
     <Compile Include="../../LockScreenGif/Models/LockscreenApplyResult.cs" Link="Production/LockscreenApplyResult.cs" />
     <Compile Include="../../LockScreenGif/Services/Lockscreen/ApplyProgress.cs" Link="Production/ApplyProgress.cs" />

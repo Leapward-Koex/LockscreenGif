@@ -10,6 +10,7 @@
     <Compile Include="../../LockScreenGif/Models/VideoFrameIndex.cs" Link="Production/VideoFrameIndex.cs" />
     <Compile Include="../../LockScreenGif/Services/VideoFrameService.cs" Link="Production/VideoFrameService.cs" />
     <Compile Include="../../LockScreenGif/Services/GifSkiService.cs" Link="Production/GifSkiService.cs" />
+    <Compile Include="../../LockScreenGif/Services/MediaProcessingException.cs" Link="Production/MediaProcessingException.cs" />
     <None Include="../../LockScreenGif/Vendor/FFMPEG/ffmpeg.exe" Link="Vendor/FFMPEG/ffmpeg.exe" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../LockScreenGif/Vendor/gifski/gifski.dll" Link="Vendor/gifski/gifski.dll" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

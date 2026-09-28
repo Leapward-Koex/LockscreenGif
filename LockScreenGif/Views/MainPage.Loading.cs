@@ -83,7 +83,7 @@ public sealed partial class MainPage
                 var ready = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 void Opened(MediaPlayer sender, object args) => ready.TrySetResult(true);
                 void Failed(MediaPlayer sender, MediaPlayerFailedEventArgs args) =>
-                    ready.TrySetException(new InvalidDataException("The video preview could not be opened."));
+                    ready.TrySetException(args.ExtendedErrorCode ?? new InvalidDataException("The video preview could not be opened."));
                 var opened = false;
                 player.MediaOpened += Opened;
                 player.MediaFailed += Failed;

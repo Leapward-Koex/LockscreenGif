@@ -7,5 +7,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../LockScreenGif/Services/Analytics/*.cs" Link="Production/%(Filename)%(Extension)" />
+    <Compile Include="../../LockScreenGif/Services/MediaProcessingException.cs" Link="Production/MediaProcessingException.cs" />
+    <Compile Include="../../LockScreenGif/Contracts/Services/IErrorReporter.cs" Link="Production/IErrorReporter.cs" />
+    <Compile Include="../../LockScreenGif/Models/LockscreenSource.cs" Link="Production/LockscreenSource.cs" />
+    <Compile Include="../../LockScreenGif/Models/LockscreenApplyResult.cs" Link="Production/LockscreenApplyResult.cs" />
   </ItemGroup>
 </Project>

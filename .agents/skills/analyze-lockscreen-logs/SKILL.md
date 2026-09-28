@@ -15,7 +15,9 @@ Establish what happened to the selected GIF, what Windows accessed, and how trus
 - The ZIP contains `summary.md`, `session.json`, and `events.jsonl`. The summary's conclusions can be wrong: compare them with structured apply results, snapshots, operations, and aggregates. Keep the session ID and build ID together; the ZIP filename is the export time, not necessarily the test time.
 - For ordinary application text logs, use `rg` for errors and relevant apply/permission stages, then read surrounding lines. Logger messages do not provide the same completion or timing guarantees as ETW records. Do not infer successful playback from a successful copy.
 - For a save/export error, distinguish writing the destination bytes from completing file-provider updates. A stack ending in `CachedFileManager.CompleteUpdatesAsync` can fail after a copy; it does not establish GIF generation or lock-screen apply failure. See the save/export guidance in the evidence reference.
+- PostHog `$exception` issues contain sanitized error families, numeric codes and a fixed `error_context`, not raw messages or stacks. Use the matching `operation_id` and local logs to distinguish a failed apply from a diagnostic/verification collector failure; absence of a delivered event is inconclusive. An internal helper-start or trace-drain deadline is a timeout failure, not evidence that the user cancelled. See [the analytics contract](../../../docs/analytics.md).
 - If only a summary is available and raw timing or old file sizes matter, request the full existing export. Do not ask for a new elevated run when the existing report can answer the question.
+- For persistent cache discovery or parent-attribute access denial, use the read-only `scripts/Get-LockscreenAccessReport.ps1` collector in normal and administrator PowerShell for the same target SID. Follow [the collection guide](../../../docs/cache-access-report.md); request both reports and do not change permissions while gathering the comparison.
 - Read [references/evidence.md](references/evidence.md) for schema and counter semantics, temporal checks, collector troubleshooting, and source/test locations.
 
 ## Reach a defensible conclusion
@@ -37,6 +39,8 @@ Check `ActivityByFileAndProcess` before treating process errors or modifications
 Playback observations are deliberately kept outside the diagnostic page. A ZIP should be accompanied by the reported outcome (animated, selected GIF but still, previous image, blank, or uncertain) and surface (initial lock screen, sign-in background, or after waking). Empty observation fields are not evidence of failed playback and do not justify restoring removed UI.
 
 When comparing collector performance between reports, compare `BaselineInventory` as well as selected source size: a small reference GIF can replace a very large previous GIF, and the baseline hashing workload differs.
+
+For a selected GIF that stays frozen despite successful copies and reads, follow the reference's playback and graphics comparison guidance. Compare the working machine's exact Windows build and graphics configuration before blaming the release or virtualization. Check ETW event times against callback wall-clock times before trusting cross-clock phase comparisons.
 
 For drain timeouts, distinguish the native consumer finishing from the transport queue draining. Compare the last retained operation and aggregate timestamps with final fresh hash reads; `ProcessTrace.EndedAt` is worker cleanup time, not proof of event coverage through that time. Use the script's `TraceShutdown` measurements when present, and see the shutdown guidance in the reference before assigning a cause.
 

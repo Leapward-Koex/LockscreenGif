@@ -57,8 +57,9 @@ use synthetic tokens and fake HTTP transports.
 | `diagnostic_test_requested` | A diagnostic test was requested; not confirmation that the test completed. |
 | `diagnostic_stop_requested` | The user requested that the diagnostic test stop. |
 | `diagnostic_report_export_completed` | A diagnostic report export succeeded, failed, or was cancelled; report contents are not sent. |
-| `app_error` | Best-effort error category before existing fatal-error handling. |
-| `log_export_completed` | Saving a ZIP from Settings succeeded, failed, or was cancelled. Only outcome, elapsed time, and a coarse error category are sent; no log contents, names, or destination paths. |
+| `app_error` | Best-effort structured error details before existing fatal-error handling. |
+| `$exception` | PostHog Error Tracking event for an actual caught or unhandled error. Operation failures keep their existing terminal event and send this companion event with the same available operation/source context. Handled cancellations are excluded. |
+| `log_export_completed` | Saving a ZIP from Settings succeeded, failed, or was cancelled. Only outcome, elapsed time, and structured error details are sent; no log contents, names, or destination paths. |
 
 Each started operation has a random `operation_id`, repeated on its terminal
 event. It identifies one attempt, not a media file or a whole editing session.
@@ -76,19 +77,144 @@ Properties use a fixed typed allowlist:
 | Properties | Meaning |
 | --- | --- |
 | `outcome`, `page`, `error_kind` | Bounded categories for results, navigation, and errors. |
+| `exception_type`, `error_hresult` | Allowlisted exception family and signed 32-bit HRESULT on exception failures. Unknown types use `other`; runtime type names and exception text are never sent. |
+| `error_context` | On `$exception`, the fixed error boundary, such as `gif_generation`, `video_load`, `lockscreen_apply`, `diagnostic_run`, or `app_crash`. |
+| `error_component`, `native_error_code` | `ffmpeg` or `gifski` and their numeric exit/return code for structured media failures. A Win32 exception also supplies its numeric native error code, without a media component. |
 | `operation_id`, `workflow` | Attempt correlation and `lockscreen` versus `diagnostics` apply context. |
+| `lockscreen_source` | Origin of the GIF on both `lockscreen_apply_started` and `lockscreen_apply_completed`: `video` (generated in the app), `user_gif` (picked by the user), or `bundled_gif` (the diagnostic reference animation). `unknown` is used when an internal caller cannot supply provenance. |
 | `duration_ms` | Elapsed operation time, excluding the file picker where applicable. |
 | `requested_width`, `requested_fps` | Requested generation settings; FPS `0` means all source frames. These are not measurements of validated output media. |
+| `requested_fps_mode`, `source_fps` | Mode is `all_source_frames` for requested FPS `0`, otherwise `target`. Source FPS is nominal video metadata when known, not measured output FPS. Zero remains in `requested_fps` for compatibility. |
 | `clip_duration_seconds`, `selected_frame_count` | The requested conversion range. |
+| `extracted_frame_count` | Frames reported by FFmpeg after successful extraction. May be fewer than selected source frames when a target FPS is used; omitted if extraction fails. |
+| `failure_stage`, `failure_stage_duration_ms` | Generation stage where an exception was caught, and elapsed time within that stage. Stages are `preparing`, `extracting_frames`, `encoding_gif`, `opening_output`, `loading_preview`, and `completing`. |
+| `extraction_duration_ms`, `encoding_duration_ms`, `preview_duration_ms` | Elapsed times for completed generation stages, retained if a later stage fails. A missing value means the stage did not complete, not zero time. |
 | `uses_reference_gif` | Whether a diagnostic test requested the bundled reference GIF. |
 | `gif_size_bytes`, `gif_width`, `gif_height` | Source GIF file size in bytes and logical-screen width/height in pixels on `lockscreen_apply_completed`, for normal and diagnostic applies. These describe one source file, not total cache storage or monitor resolution. |
 | `target_count`, `copied_count`, `verified_count`, `failed_count` | Cache operation counts. Cancelled applies omit `failed_count` because some destinations may not have been attempted. |
 | `api_requested`, `api_completed` | Whether the Windows lockscreen API was requested and completed. |
+| `apply_failure_reason` | Typed failure category on failed or partial `lockscreen_apply_completed` events and their companion `$exception`, when present. Values are `source_read_failed`, `invalid_source`, `windows_api_failed`, `cache_inaccessible`, `cache_missing`, `no_destinations`, `cache_discovery_failed`, `copy_failed`, `verification_failed`, and `unknown`. Success and cancellation omit this field. |
+
+Apply failure reasons describe the stage and evidence available to the app.
+`cache_inaccessible` means discovery or pre-copy cache access was denied, including
+when permission repair was rejected. `cache_missing` means a required
+cache directory was absent. `no_destinations` means cache discovery completed
+without finding a supported destination. These can all have `target_count=0`
+and `failed_count=0`: file failure counts cover discovered targets, not errors
+that prevent discovery. Use `outcome` to identify a failed operation. A completed
+Windows API call does not establish that the animated cache apply succeeded.
+
+Other discovery errors use `cache_discovery_failed`; uncategorized results or
+exceptions outside a known apply stage use `unknown`. A reason is never inferred
+from a raw exception message, filename, or path. Missing reasons on older events
+mean unrecorded, not a successful operation. These categories explain cache
+writes and verification, not whether Windows displayed the animation.
+For partial results, the first unsuccessful destination supplies the reason;
+failures after a committed copy use `verification_failed`. Detailed exception
+families and codes remain available on the companion error event.
 
 Common properties are app version, Windows version, platform, environment,
 random installation ID, and `$session_id`. No paths, filenames, media, hashes,
 usernames, Windows SIDs, exception messages, stack traces, or diagnostic reports
 are sent.
+
+### PostHog Error Tracking
+
+The integration follows PostHog's [manual Error Tracking contract](https://posthog.com/docs/error-tracking/installation/manual).
+`AnalyticsService.TrackFailure(event, exception, properties)` keeps the existing
+operation result and reports its exception. `CaptureException(exception, context,
+properties)` reports caught errors without creating a new product-usage event.
+Both use the same saved consent, environment, identity, bounded queue, and HTTP
+worker as usage analytics. Neither waits for HTTP delivery.
+
+Each `$exception` contains:
+
+- `$exception_list`: one object with an allowlisted exception `type`, a `value`
+  assembled from fixed context/error categories and numeric codes, and
+  `mechanism: { handled, synthetic: false, type: "manual" }`. Catch sites use
+  `handled=true`; the existing fatal handler uses `false`.
+- `$exception_fingerprint`: a stable SHA-256 of the approved boundary, exception
+  family, category, generation stage, HRESULT, native component and native code.
+  Operation IDs, source selections, durations, app versions and installation IDs
+  do not split an issue into new fingerprints.
+- The available typed operation ID, workflow, source, timing and error properties
+  already used on the corresponding terminal event.
+
+Raw exception messages, `Data`, runtime type names, source files, function names
+and stack traces are not sent. PostHog accepts exceptions without a stacktrace;
+these issues show the approved context and error codes rather than a source-code
+stack view. Fingerprints group this sanitized information, never hashes of private
+messages or paths. Unknown exception families use `Exception` in the PostHog
+list and `other` in the existing `exception_type` property.
+
+The same exception object (including known single-cause wrappers) is reported
+once per analytics-service lifetime, so an inner operation catch and outer UI
+fallback do not duplicate it. Weak keys do not retain exceptions indefinitely,
+and queued events contain only typed snapshots. Different exception instances
+still count as separate occurrences. A dropped capture is not retried simply
+because the same exception reaches another boundary.
+
+Covered boundaries include GIF selection/generation/save, video load and preview,
+log/report export, lockscreen apply/removal, main-action and diagnostics UI
+fallbacks, log-folder opening, shutdown failures, actual diagnostic run/trace
+failures, lockscreen verification failures, and the fatal handler. Preview and
+thumbnail failures are each limited to one report per successfully loaded video;
+trace failures are limited per trace lifetime. Expected cancellation, diagnostic
+observations, successful permission retries, ordinary polling/probe misses and
+analytics' own failures do not create issues.
+
+Apply and removal internals sometimes return failure results instead of throwing.
+They now retain the first actual exception in a transient `[JsonIgnore]` field
+and report it once at the operation boundary. Partial failures keep `outcome=partial`.
+The known committed-file verification mismatch receives a fixed local exception;
+arbitrary result `Error` strings are never parsed or transmitted. These transient
+exception fields are excluded from diagnostic report JSON.
+
+In PostHog, open **Error Tracking** and filter by `environment`, `app_version`,
+`error_context`, and `workflow`. `$exception` also appears in the activity feed.
+Use `operation_id` to join it to a generation/apply result and `lockscreen_source`
+for source breakdowns. Existing custom events are retained for funnels; historical
+failures are not converted into Error Tracking issues.
+
+Regression tests validate this capture payload with fake HTTP transports and do
+not send live exceptions. After deploying a build, confirm a real failure's
+`$exception` in the correct project's activity feed and Error Tracking view.
+Delivery remains best effort: opt-out, offline connections, queue pressure or
+immediate process termination may prevent an error from arriving. Error reporting
+does not delay fatal shutdown to force delivery.
+
+### Investigating generation failures
+
+Break down `gif_generation_completed` with `outcome=failed` by `failure_stage`,
+then `error_kind`, `exception_type`, `error_component`, and `native_error_code`
+or `error_hresult`. The same safe error details are used by other exception-based
+operation events. Result-based failures without an exception can still have only
+an outcome or coarse category. The fixed error families include cancellation,
+permission denied, invalid media, I/O, timeout, out of memory, disk full, missing
+or incompatible dependencies, native failure, invalid state, invalid argument,
+and other. Classification uses exception types and numeric codes; it never
+parses error messages. Known single-cause exception wrappers are unwrapped up
+to eight levels; multiple-cause aggregates remain aggregates.
+
+For native media failures, use the component with its code: FFmpeg's exit code
+and Gifski's return code have different meanings. Gifski output setup, frame
+submission, and finalization results are checked. Its known invalid-state,
+permission, invalid-input, and timeout results receive more specific categories;
+other results remain `native_failure` with the original numeric code. The
+HRESULT on a media wrapper describes the managed exception, so the native code
+is the useful discriminator. FFmpeg exit codes may still be too coarse to name
+the exact cause; detailed stderr remains in local logs only.
+
+`loading_preview` means encoding and reopening the output already completed;
+an error there is a preview/decode failure, not evidence that the encoder failed.
+Stage durations separate slow extraction from slow encoding or preview loading.
+They add no per-frame events or network work to conversion. Superseded generation
+attempts that finish conversion emit a cancelled terminal event.
+
+Use `requested_fps_mode` to distinguish all-source-frame conversions from target
+rates. For variable-frame-rate sources, neither nominal `source_fps` nor
+`selected_frame_count / clip_duration_seconds` proves a constant output frame
+rate. Older events lack the new details and cannot be diagnosed retroactively.
 
 Apply size metadata comes from the same held source stream and header used by
 the apply operation; it adds no separate file open or image decode. It is also
@@ -96,6 +222,17 @@ included when a later apply step fails, if the source metadata was available.
 Unknown sizes/dimensions are omitted, and the start event has no size fields
 because it precedes opening the source. GIF dimensions describe the header's
 logical screen, not a full decoding or playback validation.
+
+Apply source is captured together with the selected file, then copied into the
+attempt's start and terminal events with the same `operation_id`. It remains
+the same for success, partial failure, failure, cancellation, and exceptions,
+even if the current selection changes while the operation is waiting or running.
+Retries keep the prepared GIF's source. Diagnostics using the current GIF retain
+its video/user-GIF origin; diagnostics using the reference animation report
+`bundled_gif`. Keep `workflow=lockscreen` when measuring normal usage.
+Source describes how the app received this selection: a previously generated
+GIF saved to disk and later picked again is `user_gif`. No file name, path,
+content inspection, or file hash is used to infer or transmit this category.
 
 ### Windows compatibility on `app_opened`
 
@@ -211,7 +348,10 @@ for individual events would count the same installation several times.
 | Where do workflows stop? | Separate sequential funnels: successful `gif_selected` to successful normal apply; and successful video load to generation to normal apply. Start with a one-hour conversion window and inspect time-to-convert. A funnel joins observed user events and does not prove the same media file was used. |
 | Which attempts lack a completion? | Pair `video_load_started`, `gif_generation_started`, or `lockscreen_apply_started` with the corresponding terminal event by `operation_id` in a SQL insight. Do not join IDs across different operation types. Missing completion means unobserved, not necessarily failed. |
 | How often does normal apply succeed? | Count `lockscreen_apply_completed` with `workflow=lockscreen`. Use `succeeded / (succeeded + partial + failed)`; exclude cancellations. Show the denominator and break down by `app_version` and `windows_version`. |
-| What makes operations slow? | Median and p95 of `duration_ms` for successful generation/apply. Break generation down by requested width/FPS and clip duration; show sample counts. |
+| Does apply reliability differ by source? | Break the same normal-apply success rate down by `lockscreen_source` (`video` versus `user_gif`). Use `workflow=diagnostics` separately for bundled-reference comparisons. Join start/completion by `operation_id`; missing source on older events means unrecorded, not `user_gif`. |
+| Why do applies fail before finding targets? | Filter `lockscreen_apply_completed` to `outcome=failed` or `partial`, break down by `apply_failure_reason`, and inspect `target_count=0` separately. Distinguish `cache_inaccessible`, `cache_missing`, and `no_destinations`; compare app/Windows versions and API options. Keep `workflow=diagnostics` separate from `workflow=lockscreen`, exclude cancellations, and treat missing reasons as unrecorded. Companion `$exception` events share the operation ID and reason when an exception is available. |
+| What makes operations slow? | Median and p95 of `duration_ms` for successful generation/apply. Compare generation's completed extraction, encoding, and preview durations. Break down by requested width, FPS mode, source/target FPS, and clip duration; show sample counts. |
+| Where does GIF generation fail? | Filter `gif_generation_completed` to `outcome=failed`, break down by `failure_stage`, then `error_kind` and native component/code or exception family/HRESULT. Compare versions and requested settings; exclude cancellations. Missing fields on older events mean unknown, not success. |
 | Do installations return? | Retention: successful normal apply as the start event and **Meaningful app use** as the return action, weekly periods across eight weeks. Use **On or after** for this occasional-use utility; distinguish first-use and recurring retention. |
 
 Trends supports distinct users/sessions, rolling seven-day WAU, rolling

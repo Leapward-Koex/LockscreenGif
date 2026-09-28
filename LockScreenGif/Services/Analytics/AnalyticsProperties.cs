@@ -1,3 +1,5 @@
+using LockscreenGif.Models;
+
 namespace LockscreenGif.Services.Analytics;
 
 // Keep this a closed set of typed fields. Paths, media names, logs, and exception text must never enter analytics.
@@ -11,6 +13,8 @@ public sealed record AnalyticsProperties
 
     public AnalyticsWorkflow? Workflow { get; init; }
 
+    public LockscreenSourceKind? LockscreenSource { get; init; }
+
     public double? DurationMs { get; init; }
 
     // Requested conversion settings; these do not describe validated output media.
@@ -18,9 +22,24 @@ public sealed record AnalyticsProperties
 
     public double? TargetFps { get; init; }
 
+    // Nominal source metadata, not the measured output frame rate (which may vary).
+    public double? SourceFps { get; init; }
+
     public double? ClipDurationSeconds { get; init; }
 
     public int? SelectedFrameCount { get; init; }
+
+    public int? ExtractedFrameCount { get; init; }
+
+    public AnalyticsGenerationStage? FailureStage { get; init; }
+
+    public double? FailureStageDurationMs { get; init; }
+
+    public double? ExtractionDurationMs { get; init; }
+
+    public double? EncodingDurationMs { get; init; }
+
+    public double? PreviewDurationMs { get; init; }
 
     public bool? UsesReferenceGif { get; init; }
 
@@ -41,16 +60,19 @@ public sealed record AnalyticsProperties
 
     public bool? ApiCompleted { get; init; }
 
+    public LockscreenApplyFailureReason? ApplyFailureReason { get; init; }
+
     public AnalyticsErrorKind? ErrorKind { get; init; }
 
-    public static AnalyticsErrorKind ClassifyError(Exception exception) =>
-        exception switch
-        {
-            OperationCanceledException => AnalyticsErrorKind.Cancelled,
-            UnauthorizedAccessException or System.Security.SecurityException => AnalyticsErrorKind.PermissionDenied,
-            InvalidDataException or FormatException => AnalyticsErrorKind.InvalidMedia,
-            TimeoutException => AnalyticsErrorKind.Timeout,
-            IOException => AnalyticsErrorKind.Io,
-            _ => AnalyticsErrorKind.Other,
-        };
+    public AnalyticsExceptionType? ExceptionType { get; init; }
+
+    public int? ErrorHResult { get; init; }
+
+    public MediaProcessingComponent? ErrorComponent { get; init; }
+
+    public int? NativeErrorCode { get; init; }
+
+    public AnalyticsProperties WithFailure(Exception exception) => AnalyticsErrorDetails.Apply(this, exception);
+
+    public static AnalyticsErrorKind ClassifyError(Exception exception) => AnalyticsErrorDetails.Classify(exception);
 }

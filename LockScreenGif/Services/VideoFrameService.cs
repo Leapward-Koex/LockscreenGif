@@ -407,7 +407,11 @@ public static partial class VideoFrameService
             cancellationToken.ThrowIfCancellationRequested();
             if (process.ExitCode != 0)
             {
-                throw new InvalidOperationException("Video decoding failed: " + string.Join(Environment.NewLine, recent));
+                throw new MediaProcessingException(
+                    MediaProcessingComponent.Ffmpeg,
+                    process.ExitCode,
+                    "Video decoding failed: " + string.Join(Environment.NewLine, recent)
+                );
             }
         }
         finally

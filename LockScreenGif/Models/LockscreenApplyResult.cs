@@ -1,5 +1,19 @@
 namespace LockscreenGif.Models;
 
+public enum LockscreenApplyFailureReason
+{
+    Unknown,
+    SourceReadFailed,
+    InvalidSource,
+    WindowsApiFailed,
+    CacheInaccessible,
+    CacheMissing,
+    NoDestinations,
+    CacheDiscoveryFailed,
+    CopyFailed,
+    VerificationFailed,
+}
+
 public sealed class LockscreenApplyResult
 {
     public bool Success { get; set; }
@@ -12,6 +26,11 @@ public sealed class LockscreenApplyResult
     public int? SourceWidth { get; set; }
     public int? SourceHeight { get; set; }
     public string? Error { get; set; }
+    public LockscreenApplyFailureReason? FailureReason { get; set; }
+
+    // Preserve the original failure for the operation boundary without exporting private exception details.
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Exception? FailureException { get; set; }
     public List<LockscreenFileResult> Files { get; set; } = [];
 }
 
@@ -22,6 +41,9 @@ public sealed class LockscreenFileResult
     public bool Verified { get; set; }
     public DateTimeOffset? VerifiedAt { get; set; }
     public string? Error { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore]
+    public Exception? FailureException { get; set; }
     public string? Sha256 { get; set; }
 }
 
