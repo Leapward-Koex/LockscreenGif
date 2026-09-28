@@ -28,6 +28,7 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Removal preserves the main image and reports locked variants", RemoveVariants),
     ("Atomic replacement preserves the destination ACL", PreserveDestinationAcl),
     ("Permission helper retains exact paths and operation lifetime", PermissionSessionTests.ScopeAndLifetime),
+    ("Protected native ancestors allow scoped recovery with metadata-only parent access", ProtectedMetadataTests.RunAsync),
     ("Denied cache-root attributes can reach scoped repair", PermissionRecoveryTests.DeniedRootAttributesRecover),
     ("Denied cache-folder attributes can reach scoped repair", PermissionRecoveryTests.DeniedFolderAttributesRecover),
     ("Denied cache-file attributes can reach scoped repair", PermissionRecoveryTests.DeniedFileAttributesRecover),

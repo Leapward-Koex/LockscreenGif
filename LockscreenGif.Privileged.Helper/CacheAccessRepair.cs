@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Security.AccessControl;
 using System.Security.Principal;
 
 namespace LockscreenGif.Privileged.Helper;
@@ -7,17 +8,23 @@ internal sealed class CacheAccessRepair
 {
     private readonly string _sid;
     private readonly Func<string, string[], Task<int>> _run;
+    private readonly Func<string, FileAttributes> _readAttributes;
+    private readonly string _metadataParent;
+    private readonly Action _grantParentMetadata;
     public string Root { get; }
 
     public CacheAccessRepair(
         string sid,
         string? fixtureRoot = null,
         Func<string, string[], Task<int>>? run = null,
-        CancellationToken lifetime = default
+        CancellationToken lifetime = default,
+        Func<string, FileAttributes>? readAttributes = null,
+        Action? grantParentMetadata = null
     )
     {
         _sid = new SecurityIdentifier(sid).Value;
         _run = run ?? ((name, args) => ToolAsync(name, args, lifetime));
+        _readAttributes = readAttributes ?? ProtectedCacheMetadata.Read;
         Root =
             fixtureRoot
             ?? Path.Combine(
@@ -28,6 +35,9 @@ internal sealed class CacheAccessRepair
                 _sid,
                 "ReadOnly"
             );
+        Root = Path.GetFullPath(Root).TrimEnd(Path.DirectorySeparatorChar);
+        _metadataParent = Path.GetDirectoryName(Root) ?? throw new ArgumentException("The cache must have a user parent directory.");
+        _grantParentMetadata = grantParentMetadata ?? GrantParentMetadata;
     }
 
     internal void Validate(string path, bool write)
@@ -63,7 +73,7 @@ internal sealed class CacheAccessRepair
         }
         for (var current = full; current is not null; current = Path.GetDirectoryName(current))
         {
-            if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+            if ((_readAttributes(current) & FileAttributes.ReparsePoint) != 0)
             {
                 throw new UnauthorizedAccessException("Permission repair does not follow links.");
             }
@@ -73,21 +83,56 @@ internal sealed class CacheAccessRepair
     public async Task<int> GrantAsync(string path, bool write)
     {
         Validate(path, write);
-        var grant = "*" + _sid + ":" + (write ? "M" : "RX");
+        // The client must still reject links after repair. Permit metadata reads
+        // on the fixed SID parent, without granting listing, file data,
+        // write access, inheritance, or any access to the SystemData parent.
+        try
+        {
+            _grantParentMetadata();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            Validate(path, write);
+            var result = await _run("takeown.exe", ["/f", _metadataParent, "/a"]);
+            if (result != 0)
+            {
+                return result;
+            }
+            Validate(path, write);
+            _grantParentMetadata();
+        }
+        return await RepairPathAsync(path, write ? "M" : "RX", () => Validate(path, write));
+    }
+
+    internal void GrantParentMetadata()
+    {
+        // icacls may itself require readable attributes before applying a grant,
+        // even after takeown succeeded. The ACL API uses the owner's READ_CONTROL
+        // and WRITE_DAC rights directly, preserving other entries and inheritance.
+        var parent = new DirectoryInfo(_metadataParent);
+        var acl = parent.GetAccessControl(AccessControlSections.Access);
+        acl.AddAccessRule(new(new SecurityIdentifier(_sid), FileSystemRights.ReadAttributes, AccessControlType.Allow));
+        parent.SetAccessControl(acl);
+    }
+
+    private async Task<int> RepairPathAsync(string path, string rights, Action validate)
+    {
+        validate();
+        var grant = "*" + _sid + ":" + rights;
         var result = await _run("icacls.exe", [path, "/grant", grant]);
         if (result == 0)
         {
             return 0;
         }
 
-        Validate(path, write);
+        validate();
         result = await _run("takeown.exe", ["/f", path, "/a"]);
         if (result != 0)
         {
             return result;
         }
 
-        Validate(path, write);
+        validate();
         return await _run("icacls.exe", [path, "/grant", grant]);
     }
 
