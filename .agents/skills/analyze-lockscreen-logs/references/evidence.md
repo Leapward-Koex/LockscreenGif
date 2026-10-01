@@ -94,6 +94,19 @@ Obtain the visible symptom and surface in accompanying text. Use a selected/refe
 
 For new-build validation, check that aggregates contain the expected optional fields. When raw coverage is complete, reconcile failure/modification witnesses, untimed counts, and fallback totals with retained operations. Zero warnings alone does not prove the helper supplied the timing evidence. Compare exported findings with replay through the current analyzer using `dotnet run --project Tests/Diagnostics.Tests/Diagnostics.Tests.csproj -c Release -- --analyze-report "path/to/report.zip"`. Confirm playback separately through visual observation.
 
+## Controlled Windows feature investigations
+
+Record DisplayVersion, build/UBR and package identity separately. A same-build working machine constrains a version-only explanation; distinguish reported playback from independently captured pixels. Keep stored configuration, a diagnostic caller's API result, sampled consumer data, static code and observed playback as separate evidence. Tool-derived feature layouts and encoded registry names are not supported Windows contracts.
+
+A controlled registry intervention needs exact prior absence/presence and value kinds, matched media/cache/hardware/user controls, fresh readback after restart, and rollback/reapplication with actual clock and sign-in captures. Restore prior absence rather than inventing an enabled value. If unexpected values appear, preserve the initial cleanup refusal. A later narrow removal must bind to the owned creation receipt and measured current contents; do not infer who created the extra value. Reapplication creates new ownership evidence, so an old rollback receipt must not authorize removing the new instance.
+
+Distinguish managed interop failure from a native return. An argument-binding exception can occur before Windows is called; inspect actual managed types and use a correctly typed retained SafeHandle owner. Command failure alone proves neither native failure nor unchanged state. Independently inspect post-state and preserve partial mutations.
+
+A guest transport or session-closure timeout can coexist with a completed native reader and publisher. Join retained local source, raw rows, publication hashes and terminal outcomes. Keep transport failure separate, and do not classify an unexecuted next operation as a failed native query.
+
+Verify capture liveness within the actual phase. A byte-identical first-boot feed without a live control is inconclusive. Keep first boot, post-login and recovery captures distinct. Preserve a conservative classifier's result alongside direct semantic evidence: a recognized clock-minute change can establish a live display while a classifier requiring several control transitions remains inconclusive. Inspect partial-update frames without trimming them into a cleaner sequence.
+
+Interpret fixed consumer-data samples only through widths and expressions verified in the exact matching code. A sequential cache snapshot does not prove an invocation, executed branch, loaded-code equality, image ownership or atomic decision. Static branch evidence may explain a reproducible workaround without establishing a universal Windows defect.
 ## Code and verification map
 
 Paths below are relative to the repository root.
