@@ -1,8 +1,12 @@
+using System.Diagnostics;
 using LockscreenGif.Helpers;
+using LockscreenGif.Models;
 using LockscreenGif.Services;
+using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Windows.Media.Core;
 using Windows.Media.Playback;
 using Windows.Storage;
@@ -13,9 +17,13 @@ namespace LockscreenGif.Views;
 
 public sealed partial class MainPage
 {
-    private bool _actionPending;
+    private bool _actionPending => Flow.IsBusy;
 
-    private async Task RunActionAsync(Func<Task> action, bool changesLockscreen = false)
+    private async Task RunActionAsync(
+        Func<MainFlowOperationToken, Task> action,
+        MainFlowOperation operation = MainFlowOperation.Selecting,
+        bool changesLockscreen = false
+    )
     {
         if (_actionPending)
         {
@@ -29,75 +37,110 @@ public sealed partial class MainPage
             OperationStatus.IsOpen = true;
             return;
         }
-        _actionPending = true;
+        if (changesLockscreen && App.GetService<LockscreenVerificationService>().IsRunning)
+        {
+            OperationStatus.Title = "Checking the applied lock screen";
+            OperationStatus.Message = "Lock and unlock to finish the file-read check before changing the lock screen.";
+            OperationStatus.IsOpen = true;
+            return;
+        }
+        if (!Flow.TryBeginOperation(operation, out var token))
+        {
+            return;
+        }
         OperationStatus.IsOpen = false;
-        ApplyButton.IsEnabled = false;
-        SaveGeneratedGifButton.IsEnabled = false;
-        removeAnimatedLockscreen.IsEnabled = false;
+        RefreshFlowUi();
         try
         {
-            await action();
+            await action(token);
         }
         catch (Exception ex)
         {
+            _analyticsService.CaptureException(ex, AnalyticsErrorContext.MainAction);
             Logger.Error($"Main page action failed: {ex.GetType().Name} (0x{ex.HResult:X8})", ex);
+            // Feedback after a completed apply can outlive the draft it belonged to.
+            if (!Flow.IsCurrentOperation(token))
+            {
+                return;
+            }
             OperationStatus.Title = "The action could not be completed";
             OperationStatus.Message = $"{ex.GetType().Name}: {ex.Message}";
+            OperationStatus.Severity = InfoBarSeverity.Error;
             OperationStatus.IsOpen = true;
+            if (operation == MainFlowOperation.Applying)
+            {
+                Flow.TryCompleteApply(token, new LockscreenApplyResult { Cancelled = ex is OperationCanceledException });
+                ShowApplyOutcome();
+            }
         }
         finally
         {
-            _actionPending = false;
-            SaveGeneratedGifButton.IsEnabled = true;
-            ApplyButton.IsEnabled = _lockscreenService.CurrentImage is not null;
-            removeAnimatedLockscreen.IsEnabled = true;
-            UpdateGenerateEnabled();
+            Flow.TryFinishOperation(token);
+            RefreshFlowUi();
         }
     }
 
     private async void SetLockscreenButton_click(object sender, RoutedEventArgs e) =>
         await RunActionAsync(
-            async () =>
+            async token =>
             {
                 Logger.Info("Trying to set lockscreen");
-                var success = await _lockscreenService.ApplyGifAsLockscreenAsync();
+                var source = _preparedGif ?? throw new InvalidOperationException("Prepare an animation before applying.");
+                var sourcePath = source.Path;
+                // The normal entry point snapshots this source synchronously and preserves normal-usage analytics.
+                _lockscreenService.SetCurrentImage(
+                    source,
+                    Flow.Source == MainFlowSource.Video ? LockscreenSourceKind.Video : LockscreenSourceKind.UserGif
+                );
+                var result = await _lockscreenService.ApplyGifAsLockscreenAsync();
                 // Keep the source available for retries and diagnostics until next startup.
-                var key = success ? "AppNotificationSuccess" : "AppNotificationFailure";
-                _notificationService.Show(string.Format(key.GetLocalized(), AppContext.BaseDirectory));
+                if (!Flow.TryCompleteApply(token, result))
+                {
+                    return;
+                }
+                ShowApplyOutcome();
+                RefreshFlowUi();
+                if (Flow.LastApplyOutcome != MainFlowApplyOutcome.Succeeded)
+                {
+                    _notificationService.Show(string.Format("AppNotificationFailure".GetLocalized(), AppContext.BaseDirectory));
+                    return;
+                }
+                if (App.MainWindow.Content is ShellPage shell)
+                {
+                    await shell.CompleteLockscreenApplyAsync(result, sourcePath);
+                }
             },
+            MainFlowOperation.Applying,
             changesLockscreen: true
         );
 
-    private async void RemoveAnimatedLockscreenButton_click(object sender, RoutedEventArgs e) =>
-        await RunActionAsync(
-            async () =>
-            {
-                var result = await _lockscreenService.RemoveAppliedGif();
-                if (result is null)
-                {
-                    _notificationService.Show(string.Format("AppNotificationDeleteFailure".GetLocalized(), AppContext.BaseDirectory));
-                }
-                else if (result.FailedDeletions != 0)
-                {
-                    _notificationService.Show(
-                        string.Format(
-                            "AppNotificationDeletePartialFailure".GetLocalized(),
-                            AppContext.BaseDirectory,
-                            result.SuccessfulDeletions,
-                            result.FailedDeletions
-                        )
-                    );
-                }
-                else
-                {
-                    _notificationService.Show(string.Format("AppNotificationDeleteSuccess".GetLocalized(), AppContext.BaseDirectory));
-                    OperationStatus.Title = "Animated lock-screen variants removed";
-                    OperationStatus.Message = "You may need to lock and unlock before applying another GIF.";
-                    OperationStatus.IsOpen = true;
-                }
-            },
-            changesLockscreen: true
-        );
+    private void ShowApplyOutcome()
+    {
+        if (Flow.LastApplyOutcome == MainFlowApplyOutcome.Succeeded)
+        {
+            OperationStatus.IsOpen = false;
+            return;
+        }
+        OperationStatus.Title = Flow.LastApplyOutcome switch
+        {
+            MainFlowApplyOutcome.Cancelled => "Applying stopped",
+            MainFlowApplyOutcome.Partial => "Couldn’t finish applying",
+            _ => "Couldn’t apply the GIF",
+        };
+        OperationStatus.Message = Flow.LastApplyOutcome switch
+        {
+            MainFlowApplyOutcome.Cancelled when Flow.LastApplyChangedFiles =>
+                "Some lock-screen files have already changed. Your GIF is still ready to retry.",
+            MainFlowApplyOutcome.Cancelled => "Your GIF is still ready to retry.",
+            MainFlowApplyOutcome.Partial when Flow.LastApplyError is not null =>
+                $"Some lock-screen files were updated, but the operation did not finish. {Flow.LastApplyError}",
+            MainFlowApplyOutcome.Partial => "Some lock-screen files were updated, but the operation did not finish. Try again.",
+            _ => Flow.LastApplyError ?? "Your GIF is still ready. Try again or open Diagnostics.",
+        };
+        OperationStatus.Severity =
+            Flow.LastApplyOutcome == MainFlowApplyOutcome.Cancelled ? InfoBarSeverity.Warning : InfoBarSeverity.Error;
+        OperationStatus.IsOpen = true;
+    }
 
     private static async Task<StorageFile?> PickFileAsync(PickerLocationId location, params string[] extensions)
     {
@@ -112,38 +155,82 @@ public sealed partial class MainPage
     }
 
     private async void OpenGifButton_click(object sender, RoutedEventArgs e) =>
-        await RunActionAsync(async () =>
+        await RunActionAsync(async token =>
         {
-            var file = await PickFileAsync(PickerLocationId.PicturesLibrary, ".gif");
-            if (file is null)
+            try
             {
-                return;
-            }
+                var file = await PickFileAsync(PickerLocationId.PicturesLibrary, ".gif");
+                if (file is null)
+                {
+                    _analyticsService.Track(AnalyticsEvent.GifSelected, new AnalyticsProperties { Outcome = AnalyticsOutcome.Cancelled });
+                    return;
+                }
 
-            ClearGeneratedGif();
-            _lockscreenService.CurrentImage = file;
-            currentImage.Source = _lockscreenService.CurrentImageBitmap!;
+                // Decode before committing so a failed replacement cannot discard the previous draft.
+                var bitmap = await PrepareGifPreviewAsync(file);
+                if (!Flow.IsCurrentOperation(token))
+                {
+                    return;
+                }
+                ReleaseVideoDraft();
+                _sourceFile = _preparedGif = file;
+                _editSignature = null;
+                ClearGeneratedGif();
+                _lockscreenService.SetCurrentImage(file, LockscreenSourceKind.UserGif);
+                currentImage.Source = bitmap;
+                Flow.TryCommitSelection(token, MainFlowSource.Gif);
+                _analyticsService.Track(AnalyticsEvent.GifSelected, new AnalyticsProperties { Outcome = AnalyticsOutcome.Succeeded });
+            }
+            catch (Exception ex)
+            {
+                _analyticsService.TrackFailure(AnalyticsEvent.GifSelected, ex);
+                throw;
+            }
         });
 
+    private static async Task<BitmapImage> PrepareGifPreviewAsync(StorageFile file)
+    {
+        using var stream = await file.OpenReadAsync();
+        var bitmap = new BitmapImage();
+        await bitmap.SetSourceAsync(stream);
+        return bitmap;
+    }
+
     private async void OpenVideoButton_click(object sender, RoutedEventArgs e) =>
-        await RunActionAsync(async () =>
+        await RunActionAsync(async flowToken =>
         {
-            var file = await PickFileAsync(PickerLocationId.VideosLibrary, ".mp4", ".mkv");
+            StorageFile? file;
+            try
+            {
+                file = await PickFileAsync(PickerLocationId.VideosLibrary, ".mp4", ".mkv");
+            }
+            catch (Exception ex)
+            {
+                _analyticsService.TrackFailure(AnalyticsEvent.VideoLoadCompleted, ex);
+                throw;
+            }
             if (file is null)
             {
+                _analyticsService.Track(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    new AnalyticsProperties { Outcome = AnalyticsOutcome.Cancelled }
+                );
                 return;
             }
 
-            PausePreview();
-            GenerateButton.IsEnabled = false;
-            _videoLoadCts?.Dispose();
-            var loadSource = _videoLoadCts = new CancellationTokenSource();
-            var token = loadSource.Token;
-            BeginVideoLoading(file.Name);
+            var operationId = Guid.NewGuid();
+            var timer = Stopwatch.StartNew();
+            _analyticsService.Track(AnalyticsEvent.VideoLoadStarted, new AnalyticsProperties { OperationId = operationId });
             MediaPlayer? preparedPlayer = null;
             var scanning = false;
             try
             {
+                PausePreview();
+                GenerateButton.IsEnabled = false;
+                _videoLoadCts?.Dispose();
+                var loadSource = _videoLoadCts = new CancellationTokenSource();
+                var token = loadSource.Token;
+                BeginVideoLoading(file.Name);
                 var (fps, width, height) = await Task.Run(() => GetVideoInfoAsync(file), token).WaitAsync(token);
                 if (fps is null || !double.IsFinite(fps.Value) || fps <= 0 || width == 0 || height == 0)
                 {
@@ -166,17 +253,27 @@ public sealed partial class MainPage
                 VideoLoadStatus.Text = $"Read {frames.Count:N0} frames. Opening preview…";
                 preparedPlayer = await OpenPreviewPlayerAsync(file, token);
                 token.ThrowIfCancellationRequested();
+                if (!Flow.IsCurrentOperation(flowToken))
+                {
+                    return;
+                }
 
                 // Keep the previous selection intact until both scanning and media opening succeed.
                 _previewCts?.Cancel();
                 _editorCts?.Cancel();
                 _editorCts?.Dispose();
                 _editorCts = new CancellationTokenSource();
+                _previewErrorReported = false;
+                _thumbnailErrorReported = false;
                 _previewCache.Clear();
                 PreviewStill.Source = null;
                 PreviewStill.Visibility = Visibility.Collapsed;
                 ClearGeneratedGif();
                 _videoFile = file;
+                _sourceFile = file;
+                _preparedGif = null;
+                currentImage.Source = null;
+                _editSignature = null;
                 _frames = frames;
                 _startFrame = _previewFrame = 0;
                 _endFrame = frames.Count;
@@ -187,17 +284,7 @@ public sealed partial class MainPage
                 PopulateFpsList();
                 TrimTimeline.Configure(frames);
                 GenerateLoading.Visibility = Visibility.Collapsed;
-                if (_session is not null)
-                {
-                    _session.SeekCompleted -= Session_SeekCompleted;
-                }
-
-                if (VideoPreview.MediaPlayer is { } oldPlayer)
-                {
-                    oldPlayer.MediaEnded -= VideoPreview_MediaEnded;
-                    oldPlayer.MediaFailed -= VideoPreview_MediaFailed;
-                    oldPlayer.Dispose();
-                }
+                ReleasePreviewPlayer();
                 VideoPreview.SetMediaPlayer(preparedPlayer);
                 preparedPlayer = null; // The page now owns this player.
                 VideoPreview.MediaPlayer.MediaEnded += VideoPreview_MediaEnded;
@@ -207,16 +294,41 @@ public sealed partial class MainPage
                 _mediaReady = true;
                 ShowVideoUi();
                 UpdateEditor();
+                Flow.TryCommitSelection(flowToken, MainFlowSource.Video);
+                SyncDraftState();
                 ShowFrame(0);
                 _ = LoadThumbnailsAsync(file.Path, frames, _editorCts.Token);
+                _analyticsService.Track(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    new AnalyticsProperties
+                    {
+                        OperationId = operationId,
+                        Outcome = AnalyticsOutcome.Succeeded,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                    }
+                );
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException ex)
             {
+                _analyticsService.TrackFailure(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    ex,
+                    new AnalyticsProperties { OperationId = operationId, DurationMs = timer.Elapsed.TotalMilliseconds }
+                );
                 OperationStatus.Title = "Video loading cancelled";
                 OperationStatus.Message = _videoFile is null
                     ? "Choose a video when you're ready."
                     : "Your previous selection has been kept.";
                 OperationStatus.IsOpen = true;
+            }
+            catch (Exception ex)
+            {
+                _analyticsService.TrackFailure(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    ex,
+                    new AnalyticsProperties { OperationId = operationId, DurationMs = timer.Elapsed.TotalMilliseconds }
+                );
+                throw;
             }
             finally
             {

@@ -136,6 +136,151 @@ internal static class PermissionTransportTests
         );
     }
 
+    public static async Task ConnectionDeadlineIsFailure()
+    {
+        using var fixture = new CacheFixture();
+        var launches = 0;
+        Process? peer = null;
+        var session = new CachePermissionSession(
+            fixture.Root,
+            PermissionSessionTests.CurrentSid(),
+            _ =>
+            {
+                launches++;
+                return peer = LaunchUnconnectedPeer();
+            },
+            connectionTimeout: TimeSpan.FromMilliseconds(50)
+        );
+        TimeoutException? first = null;
+        try
+        {
+            for (var attempt = 0; attempt < 2; attempt++)
+            {
+                try
+                {
+                    await session.GrantAsync(fixture.MainImage, true, default).WaitAsync(TimeSpan.FromSeconds(5));
+                    throw new Exception("The unconnected helper unexpectedly granted access.");
+                }
+                catch (TimeoutException ex) when (ex.InnerException is OperationCanceledException)
+                {
+                    first ??= ex;
+                    PermissionSessionTests.Check(
+                        ReferenceEquals(first, ex),
+                        "A failed connection retains the original timeout without relaunching."
+                    );
+                }
+            }
+            PermissionSessionTests.Check(
+                launches == 1 && first is not null,
+                "The helper deadline is a real failure and elevation is not repeated."
+            );
+        }
+        finally
+        {
+            await StopUnconnectedPeerAsync(peer, session);
+        }
+    }
+
+    public static async Task ConnectionCancellation()
+    {
+        using var fixture = new CacheFixture();
+        using var cancellation = new CancellationTokenSource();
+        Process? peer = null;
+        var session = new CachePermissionSession(
+            fixture.Root,
+            PermissionSessionTests.CurrentSid(),
+            _ =>
+            {
+                peer = LaunchUnconnectedPeer();
+                cancellation.CancelAfter(TimeSpan.FromMilliseconds(50));
+                return peer;
+            },
+            connectionTimeout: TimeSpan.FromSeconds(5)
+        );
+        try
+        {
+            try
+            {
+                await session.GrantAsync(fixture.MainImage, true, cancellation.Token).WaitAsync(TimeSpan.FromSeconds(5));
+                throw new Exception("Caller cancellation was ignored.");
+            }
+            catch (OperationCanceledException)
+            {
+                PermissionSessionTests.Check(
+                    cancellation.IsCancellationRequested,
+                    "Caller cancellation stays distinct from the internal deadline."
+                );
+            }
+        }
+        finally
+        {
+            await StopUnconnectedPeerAsync(peer, session);
+        }
+    }
+
+    public static async Task RequestDeadlineIsFailure()
+    {
+        using var fixture = new CacheFixture();
+        var launches = 0;
+        await using var session = new CachePermissionSession(
+            fixture.Root,
+            PermissionSessionTests.CurrentSid(),
+            info =>
+            {
+                launches++;
+                return LaunchEcho(info, false);
+            },
+            requestTimeout: TimeSpan.FromMilliseconds(50)
+        );
+        // Grants have no request deadline and establish the authenticated connection first.
+        PermissionSessionTests.Check(await session.GrantAsync(fixture.MainImage, true, default) == 0, "The connection is ready.");
+        TimeoutException? failure = null;
+        try
+        {
+            // The echo peer delays trace replies for 150 ms, exceeding the 50 ms test deadline.
+            await session.ReadTraceAsync(default).WaitAsync(TimeSpan.FromSeconds(5));
+            throw new Exception("The slow trace reply unexpectedly completed.");
+        }
+        catch (TimeoutException ex) when (ex.InnerException is OperationCanceledException)
+        {
+            failure = ex;
+        }
+        try
+        {
+            await session.GrantAsync(fixture.MainImage, true, default);
+            throw new Exception("A timed-out transport unexpectedly remained usable.");
+        }
+        catch (IOException ex) when (ReferenceEquals(ex.InnerException, failure)) { }
+        PermissionSessionTests.Check(
+            failure is not null && launches == 1,
+            "A transport deadline stays a failure and never starts another helper."
+        );
+    }
+
+    private static Process LaunchUnconnectedPeer()
+    {
+        var info = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe"))
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+        };
+        foreach (var argument in new[] { "-NoLogo", "-NoProfile", "-NonInteractive", "-Command", "Start-Sleep -Seconds 30" })
+        {
+            info.ArgumentList.Add(argument);
+        }
+        return Process.Start(info) ?? throw new Exception("Could not start the unelevated unconnected test peer.");
+    }
+
+    private static async Task StopUnconnectedPeerAsync(Process? peer, CachePermissionSession session)
+    {
+        if (peer is not null && !peer.HasExited)
+        {
+            peer.Kill();
+            await peer.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(5));
+        }
+        await session.DisposeAsync();
+    }
+
     private static Process LaunchEcho(ProcessStartInfo production, bool exitAfterReply)
     {
         var pipeName = production.ArgumentList[0];

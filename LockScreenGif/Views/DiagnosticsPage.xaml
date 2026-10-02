@@ -86,7 +86,7 @@
                             <ToggleSwitch
                                 AutomationProperties.Name="Set the lock screen through Windows before applying the GIF"
                                 IsEnabled="{x:Bind ViewModel.CanConfigure, Mode=OneWay}"
-                                IsOn="{x:Bind ViewModel.UseWindowsApi, Mode=TwoWay}"
+                                IsOn="{x:Bind ViewModel.Preferences.UseWindowsApi, Mode=TwoWay}"
                                 OffContent="Windows API step off"
                                 OnContent="Windows API step on">
                                 <ToggleSwitch.Header>
@@ -95,8 +95,11 @@
                             </ToggleSwitch>
                             <TextBlock
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                Text="If your GIF is not working, turning this on may help. Windows will set the lock-screen image before the app applies the GIF. Try enabling it and running the test again."
+                                Text="If your GIF is not working, turning this on may help. Windows will set the lock-screen image before the app applies the GIF. This preference is shared with Settings, also applies to normal lockscreen applies, and is saved between restarts."
                                 TextWrapping="Wrap" />
+                            <InfoBar IsOpen="{x:Bind ViewModel.Preferences.HasSaveError, Mode=OneWay}"
+                                IsClosable="False" Severity="Warning" Title="Could not save the lockscreen preference"
+                                Message="The setting applies for this session, but could not be saved. Toggle it again to retry before closing the app." />
                         </StackPanel>
                         <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
                         <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.SetupWarningsVisibility, Mode=OneWay}">
@@ -213,11 +216,11 @@
                     Content="Export report"
                     IsEnabled="{x:Bind ViewModel.CanExport, Mode=OneWay}"
                     Style="{StaticResource AccentButtonStyle}"
-                    ToolTipService.ToolTip="Export the timeline, file checks, and app details as a ZIP report." />
+                    ToolTipService.ToolTip="Export the timeline, file checks, app details, and recent application logs as a ZIP report." />
                 <TextBlock
                     FontSize="12"
                     Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                    Text="Personal paths are redacted. Source media and screenshots are excluded. Review the report before sharing it."
+                    Text="Includes recent application logs. Personal paths are redacted. Source media and screenshots are excluded. Review the report before sharing it."
                     TextWrapping="Wrap" />
                 <TextBlock
                     FontSize="12"

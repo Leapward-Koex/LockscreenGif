@@ -21,15 +21,17 @@ internal sealed class VerifiedCacheWriter(CachePermissions permissions)
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
-            permissions.ValidatePath(result.Path);
-            permissions.ValidatePath(stagedPath);
+            await permissions.ValidateWithRepairAsync(result.Path, true, progress, cancellationToken);
             try
             {
+                permissions.ValidatePath(stagedPath);
                 await StageAsync(sourcePath, stagedPath, sourceHash, cancellationToken);
             }
             catch (Exception ex) when (CachePermissions.IsAccessDenied(ex))
             {
                 await permissions.GrantAsync(Path.GetDirectoryName(result.Path)!, true, progress, cancellationToken);
+                permissions.ValidatePath(result.Path);
+                permissions.ValidatePath(stagedPath);
                 await StageAsync(sourcePath, stagedPath, sourceHash, cancellationToken);
             }
             progress.Report("Staged", "The staged GIF matches the source. Committing the replacement.", result.Path);
@@ -43,6 +45,10 @@ internal sealed class VerifiedCacheWriter(CachePermissions permissions)
             result.Verified = string.Equals(sourceHash, result.Sha256, StringComparison.OrdinalIgnoreCase);
             result.VerifiedAt = result.Verified ? DateTimeOffset.UtcNow : null;
             result.Error = result.Verified ? null : "The destination hash does not match the source GIF.";
+            if (!result.Verified)
+            {
+                result.FailureException = new InvalidDataException("The committed destination hash did not match the source GIF.");
+            }
             progress.Report(
                 "Verification",
                 result.Verified ? "The destination matches the source GIF." : result.Error!,
@@ -57,6 +63,7 @@ internal sealed class VerifiedCacheWriter(CachePermissions permissions)
         }
         catch (Exception ex)
         {
+            result.FailureException = ex;
             result.Error = ApplyProgress.Describe(ex);
             progress.Report("FileFailed", result.Error, result.Path, "Error");
             Logger.Error($"Failed to apply lockscreen file {result.Path}", ex);

@@ -7,6 +7,23 @@ internal static class Program
 {
     private static async Task<int> Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--native-permissions")
+        {
+            try
+            {
+                await NativePermissionTests.RunAsync();
+                await File.WriteAllTextAsync(
+                    args[1],
+                    "Native permission fixture passed: protected metadata, link rejection, unchanged process privileges, scoped takeown/icacls, verified writes. No real lock-screen cache was touched."
+                );
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                await File.WriteAllTextAsync(args[1], ex.ToString());
+                return 1;
+            }
+        }
         if (args.Length > 0 && args[0] == "--fixture")
         {
             NativeCollectorTests.Fixture(args[1]);
@@ -45,6 +62,7 @@ internal static class Program
         await ShutdownProgressTests.RunAsync();
         await ProtocolTests.RunAsync();
         await PermissionScopeTests.RunAsync();
+        await ProtectedMetadataTests.RunAsync();
         Console.WriteLine("All isolated tracing checks passed. No elevation or native tracing was requested.");
         return 0;
     }

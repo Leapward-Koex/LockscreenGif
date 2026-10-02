@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
     <RootNamespace>LockscreenGif</RootNamespace>
     <Version Condition="'$(Version)' == ''">3.0.0-local</Version>
     <ApplicationIcon>Assets/WindowIcon.ico</ApplicationIcon>
@@ -17,10 +17,13 @@
     <WindowsPackageType>None</WindowsPackageType>
     <PackageIcon>WindowIcon.png</PackageIcon>
     <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
+    <WindowsSdkPackageVersion>10.0.26100.87</WindowsSdkPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <Manifest Include="$(ApplicationManifest)" />
+    <!-- Captured at compile time: local Debug and Release builds always use development analytics. -->
+    <AssemblyMetadata Include="GitHubActionsBuild" Value="true" Condition="'$(GITHUB_ACTIONS)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,10 +78,10 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../LockscreenGif.Privileged.Contracts/LockscreenGif.Privileged.Contracts.csproj" />
-    <ProjectReference Include="../LockscreenGif.Privileged.Helper/LockscreenGif.Privileged.Helper.csproj" ReferenceOutputAssembly="false" GlobalPropertiesToRemove="Platform;PublishProfile;PublishSingleFile" />
+    <ProjectReference Include="../LockscreenGif.Privileged.Helper/LockscreenGif.Privileged.Helper.csproj" ReferenceOutputAssembly="false" Private="false" GlobalPropertiesToRemove="Platform;PublishProfile;PublishSingleFile" />
   </ItemGroup>
   <Target Name="CopyPrivilegedHelper" AfterTargets="Build">
-    <ItemGroup><HelperFiles Include="../LockscreenGif.Privileged.Helper/bin/$(Configuration)/net9.0-windows/win-x64/**/*" /></ItemGroup>
+    <ItemGroup><HelperFiles Include="../LockscreenGif.Privileged.Helper/bin/$(Configuration)/net10.0-windows/win-x64/**/*" /></ItemGroup>
     <Copy SourceFiles="@(HelperFiles)" DestinationFiles="@(HelperFiles->'$(OutDir)Helpers/Privileged/%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="PublishPrivilegedHelper" BeforeTargets="ComputeFilesToPublish" DependsOnTargets="CopyPrivilegedHelper">
@@ -87,6 +90,21 @@
         <RelativePath>Helpers/Privileged/%(RecursiveDir)%(Filename)%(Extension)</RelativePath>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+  <!-- Unpackaged WinUI build assets must also be present in the actual publish directory. -->
+  <Target Name="PublishWinUiAssets" AfterTargets="ComputeFilesToPublish">
+    <ItemGroup>
+      <_AppAsset Include="$(OutDir)Assets/**/*" />
+      <_AppXbf Include="$(OutDir)**/*.xbf" />
+      <ResolvedFileToPublish Include="@(_AppAsset)">
+        <RelativePath>Assets/%(_AppAsset.RecursiveDir)%(_AppAsset.Filename)%(_AppAsset.Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="@(_AppXbf)">
+        <RelativePath>%(_AppXbf.RecursiveDir)%(_AppXbf.Filename)%(_AppXbf.Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </ResolvedFileToPublish>
     </ItemGroup>
   </Target>

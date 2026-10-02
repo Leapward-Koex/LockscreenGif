@@ -1,4 +1,6 @@
+using LockscreenGif.Contracts.Services;
 using LockscreenGif.Privileged;
+using LockscreenGif.Services.Analytics;
 
 namespace LockscreenGif.Services.Diagnostics;
 
@@ -6,12 +8,16 @@ namespace LockscreenGif.Services.Diagnostics;
 internal sealed class DiagnosticProcessTrace(
     IPrivilegedOperationSession helper,
     DiagnosticRecorder recorder,
-    Func<CancellationToken, Task>? waitForPoll = null
+    Func<CancellationToken, Task>? waitForPoll = null,
+    IErrorReporter? errorReporter = null,
+    AnalyticsWorkflow workflow = AnalyticsWorkflow.Diagnostics,
+    TimeSpan? finalDrainLimit = null
 )
 {
     private readonly CancellationTokenSource _pollStop = new();
     private Task? _poll;
     private bool _started;
+    private int _errorReported;
     private readonly object _finishGate = new();
     private Task? _finish;
     private long _retainedBytes;
@@ -37,6 +43,7 @@ internal sealed class DiagnosticProcessTrace(
         }
         catch (Exception ex)
         {
+            ReportError(ex);
             Unavailable($"Process tracing could not start: {ex.Message} Basic checks continue.");
         }
     }
@@ -65,6 +72,7 @@ internal sealed class DiagnosticProcessTrace(
         catch (OperationCanceledException) when (_pollStop.IsCancellationRequested) { }
         catch (Exception ex)
         {
+            ReportError(ex);
             Unavailable($"Process tracing disconnected: {ex.Message}");
         }
     }
@@ -91,9 +99,9 @@ internal sealed class DiagnosticProcessTrace(
             _pollStop.Dispose();
             return;
         }
+        using var timeout = new CancellationTokenSource(finalDrainLimit ?? TimeSpan.FromSeconds(10));
         try
         {
-            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
             await helper.StopTraceAsync(timeout.Token);
             TraceBatch batch;
             do
@@ -102,8 +110,14 @@ internal sealed class DiagnosticProcessTrace(
                 Merge(batch);
             } while (batch.HasMore);
         }
+        catch (OperationCanceledException ex) when (timeout.IsCancellationRequested)
+        {
+            ReportError(new TimeoutException("Final trace collection timed out.", ex));
+            Unavailable("Final trace collection timed out.");
+        }
         catch (Exception ex)
         {
+            ReportError(ex);
             Unavailable($"Final trace collection failed: {ex.GetType().Name}.");
         }
         finally
@@ -149,4 +163,12 @@ internal sealed class DiagnosticProcessTrace(
             s.ProcessTrace.State = s.ProcessTrace.StartedAt is null ? "Unavailable" : "Incomplete";
             s.ProcessTrace.Reason = reason;
         });
+
+    private void ReportError(Exception exception)
+    {
+        if (!DiagnosticErrorReporting.IsCancellation(exception) && Interlocked.Exchange(ref _errorReported, 1) == 0)
+        {
+            DiagnosticErrorReporting.Capture(errorReporter, exception, AnalyticsErrorContext.DiagnosticTrace, workflow);
+        }
+    }
 }

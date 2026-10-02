@@ -1,11 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <WindowsSdkPackageVersion>10.0.26100.87</WindowsSdkPackageVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../ProtectedCacheFixture.cs" Link="Fixtures/ProtectedCacheFixture.cs" />
+    <Compile Include="../../LockScreenGif/Services/LockscreenPreferences.cs" Link="Production/LockscreenPreferences.cs" />
     <Compile Include="../../LockScreenGif/Models/LockscreenApplyResult.cs" Link="Production/LockscreenApplyResult.cs" />
     <Compile Include="../../LockScreenGif/Services/Lockscreen/ApplyProgress.cs" Link="Production/ApplyProgress.cs" />
     <Compile Include="../../LockScreenGif/Services/Lockscreen/CachePermissions.cs" Link="Production/CachePermissions.cs" />

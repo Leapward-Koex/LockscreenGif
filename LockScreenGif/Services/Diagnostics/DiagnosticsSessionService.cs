@@ -1,4 +1,5 @@
 using LockscreenGif.Contracts.Services;
+using LockscreenGif.Models;
 using LockscreenGif.Models.Diagnostics;
 
 namespace LockscreenGif.Services.Diagnostics;
@@ -9,21 +10,36 @@ public sealed class DiagnosticsSessionService
     private readonly ILockscreenService _lockscreen;
     private readonly WindowsSessionMonitor _windows;
     private readonly PrivilegedSessionFactory _privileged;
+    private readonly LockscreenVerificationService? _verification;
+    private readonly IErrorReporter? _errorReporter;
     private DiagnosticRun? _run;
     private IReadOnlyList<DiagnosticCheck> _readiness = Array.Empty<DiagnosticCheck>();
     private int _starting;
     public event EventHandler? Changed;
 
-    public DiagnosticsSessionService(ILockscreenService lockscreen, WindowsSessionMonitor windows, PrivilegedSessionFactory privileged)
+    public DiagnosticsSessionService(
+        ILockscreenService lockscreen,
+        WindowsSessionMonitor windows,
+        PrivilegedSessionFactory privileged,
+        LockscreenVerificationService? verification = null,
+        IErrorReporter? errorReporter = null
+    )
     {
         _lockscreen = lockscreen;
         _windows = windows;
         _privileged = privileged;
+        _verification = verification;
+        _errorReporter = errorReporter;
+        if (_verification is not null)
+        {
+            _verification.Changed += (_, _) => Notify();
+        }
     }
 
     public DiagnosticSession? Current => _run?.Recorder.Snapshot();
     public DiagnosticSession? CurrentForDisplay => _run?.Recorder.Snapshot(includeTraceDetails: false);
     public bool IsRunning => Volatile.Read(ref _starting) != 0 || _run is { IsFinished: false };
+    public bool IsVerificationRunning => _verification?.IsRunning == true;
     public IReadOnlyList<DiagnosticCheck> Readiness => _readiness;
 
     public async Task StartAsync(bool useReference, bool useWindowsApi)
@@ -35,19 +51,27 @@ public sealed class DiagnosticsSessionService
 
         try
         {
-            if (_run is { IsFinished: false } || _lockscreen.IsApplying)
+            if (_run is { IsFinished: false } || _lockscreen.IsApplying || IsVerificationRunning)
             {
                 throw new InvalidOperationException("Wait for the current operation to finish.");
             }
 
-            var source = _lockscreen.CurrentImage?.Path ?? "";
+            var source = _lockscreen.CurrentSource;
             var session = new DiagnosticSession { UseReference = useReference, UseWindowsApi = useWindowsApi };
             if (_run is not null)
             {
                 _run.Recorder.Changed -= Notify;
                 _run.Finished -= OnFinished;
             }
-            var run = new DiagnosticRun(_lockscreen, _windows, session, source, _privileged.Create(_lockscreen.CacheDirectory));
+            var run = new DiagnosticRun(
+                _lockscreen,
+                _windows,
+                session,
+                source?.Path ?? "",
+                _privileged.Create(_lockscreen.CacheDirectory),
+                sourceKind: source?.Kind ?? LockscreenSourceKind.Unknown,
+                errorReporter: _errorReporter
+            );
             _run = run;
             run.Recorder.Changed += Notify;
             run.Finished += OnFinished;
@@ -120,7 +144,7 @@ public sealed class DiagnosticsSessionService
     public async Task<string> ExportAsync(string destinationPath)
     {
         var session = Current ?? throw new InvalidOperationException("Start a test first.");
-        await DiagnosticReportWriter.ExportAsync(session, destinationPath);
+        await DiagnosticReportWriter.ExportAsync(session, destinationPath, getLogDirectory: Logger.GetLogPath);
         return destinationPath;
     }
 

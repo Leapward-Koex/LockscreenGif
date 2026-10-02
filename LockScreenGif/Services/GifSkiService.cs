@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using GifskiNet;
 
 namespace LockscreenGif.Services;
@@ -67,23 +68,6 @@ public class GifSkiService
 
         return await Task.Run(() =>
         {
-            var baseDir = AppContext.BaseDirectory;
-            var gifskiDll = Path.Combine(baseDir, "Vendor", "gifski", "gifski.dll");
-
-            using var gifski = Gifski.Create(
-                gifskiDll,
-                settings =>
-                {
-                    settings.Quality = 100;
-                    settings.Extra = true;
-                }
-            );
-
-            var outputFolder = CreateTempDirectory();
-
-            var outputFile = Path.Combine(outputFolder, "output.gif");
-            gifski.SetFileOutput(outputFile);
-
             var frames = Directory
                 .EnumerateFiles(inputDirectory, "frame_*.png")
                 .Select(path =>
@@ -105,24 +89,96 @@ public class GifSkiService
             {
                 throw new InvalidDataException("Extracted frame timing does not match the selected clip.");
             }
-            // Gifski uses a positive first timestamp as the final frame delay.
-            // Offset every PTS equally to retain all intermediate (including VFR) delays.
-            var finalDelay = duration - presentationTimes[^1];
 
-            for (var i = 0; i < frames.Length; i++)
-            {
-                var timestamp = presentationTimes[i] + finalDelay;
-                gifski.AddFramePngFile(frameNumber: (uint)i, presentationTimestamp: timestamp, filePath: frames[i].Path);
-                onPercentageProgress(((double)i / frames.Length) * 100);
-            }
+            var (width, height) = ReadPngDimensions(frames[0].Path);
+            var gifskiDll = Path.Combine(AppContext.BaseDirectory, "Vendor", "gifski", "gifski.dll");
+            var outputFile = Path.Combine(CreateTempDirectory(), "output.gif");
+            using var gifski = Gifski.Create(
+                gifskiDll,
+                settings =>
+                {
+                    // FFmpeg has already applied the selected resolution. Gifski's
+                    // unspecified dimensions automatically shrink large images.
+                    settings.Width = width;
+                    settings.Height = height;
+                    settings.Quality = 100;
+                    settings.Extra = true;
+                }
+            );
 
-            var err = gifski.Finish();
-            if (err != GifskiError.OK)
-            {
-                throw new Exception($"Gifski failed: {err}");
-            }
+            SubmitAndFinish(
+                () =>
+                {
+                    ThrowIfFailed(gifski.SetFileOutput(outputFile), "set output");
+
+                    // Gifski uses a positive first timestamp as the final frame delay.
+                    // Offset every PTS equally to retain all intermediate (including VFR) delays.
+                    var finalDelay = duration - presentationTimes[^1];
+
+                    for (var i = 0; i < frames.Length; i++)
+                    {
+                        var timestamp = presentationTimes[i] + finalDelay;
+                        ThrowIfFailed(
+                            gifski.AddFramePngFile(frameNumber: (uint)i, presentationTimestamp: timestamp, filePath: frames[i].Path),
+                            "add frame"
+                        );
+                        onPercentageProgress(((double)i / frames.Length) * 100);
+                    }
+                },
+                gifski.Finish
+            );
 
             return outputFile;
         });
+    }
+
+    internal static void SubmitAndFinish(Action submit, Func<GifskiError> finish)
+    {
+        try
+        {
+            submit();
+        }
+        catch
+        {
+            // Gifski.Net 1.2.0 Dispose unloads the DLL, but only Finish releases the native encoder.
+            // Keep its first setup/submission failure even when final cleanup also fails.
+            try
+            {
+                finish();
+            }
+            catch { }
+            throw;
+        }
+
+        // Keep this outside the catch: Finish consumes the native handle even when it reports an error.
+        ThrowIfFailed(finish(), "finish");
+    }
+
+    private static void ThrowIfFailed(GifskiError error, string action)
+    {
+        if (error != GifskiError.OK)
+        {
+            throw new MediaProcessingException(MediaProcessingComponent.Gifski, (int)error, $"Gifski failed to {action}: {error}");
+        }
+    }
+
+    private static (uint Width, uint Height) ReadPngDimensions(string path)
+    {
+        Span<byte> header = stackalloc byte[24];
+        using var stream = File.OpenRead(path);
+        stream.ReadExactly(header);
+        if (!header[..8].SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }) || !header[12..16].SequenceEqual("IHDR"u8))
+        {
+            throw new InvalidDataException("The exported frame is not a PNG image.");
+        }
+
+        var width = BinaryPrimitives.ReadUInt32BigEndian(header[16..20]);
+        var height = BinaryPrimitives.ReadUInt32BigEndian(header[20..24]);
+        if (width is 0 or > ushort.MaxValue || height is 0 or > ushort.MaxValue)
+        {
+            throw new InvalidDataException("The exported frame dimensions cannot be represented by a GIF.");
+        }
+
+        return (width, height);
     }
 }

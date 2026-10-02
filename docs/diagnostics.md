@@ -4,7 +4,7 @@ Open **Diagnostics**, select the current GIF or the reference animation, then ch
 
 Setup shows the source and optional Windows step, followed by the Start test button. Normal readiness states are not displayed. Before the first test, unavailable monitoring or cache inspection produces a plain-language warning with a Check again action; source-selection guidance stays beside its controls. During and after a test, progress and Findings describe what happened instead of repeating preparation statuses.
 
-The experimental **Windows API step** toggle defaults to off. When enabled, it awaits `LockScreen.SetImageFileAsync` before cache discovery and replacement. If a GIF is not working, enabling this option and starting another test may help. Each new test records the selected toggle setting.
+The experimental **Windows API step** toggle defaults to off. It shares one saved preference with **Enable Windows lockscreen API** on Settings, persists between restarts, and also controls normal lockscreen applies. When enabled, it awaits `LockScreen.SetImageFileAsync` before cache discovery and replacement. If a GIF is not working, enabling this option and starting another test may help. Each new test records the selected toggle setting; changing the preference affects future applies, not a test already in progress.
 
 Findings use a check mark for verified results, a warning for concrete problems or incomplete collection, and a neutral information icon for inconclusive evidence. A completed external read of any verified GIF copy passes the overall image-access check; other cached copies do not all need to be read. Missing reads and optional variants remain informational. Expand a file-check group to see each image, its individual status, and expected versus observed hashes. The report contains the same detailed findings.
 
@@ -22,6 +22,12 @@ Findings use a check mark for verified results, a warning for concrete problems 
 Every valid diagnostic test automatically requests one elevated helper before the baseline and apply. The app stays unelevated. That connection is shared by ETW tracing and any cache permission repairs for the whole test; declining elevation or losing the helper never prompts again in that test. Basic monitoring and applying with existing access continue. If applying needs unavailable access, its failure is reported. Ordinary Apply/Remove operations still launch a short-lived helper only when a permission check actually fails.
 
 The helper authenticates the initiating process, executable location and user SID; the app verifies the helper's pipe PID. Requests use bounded, versioned messages and monotonic request IDs. Repairs retain the previous per-path rules, read/Modify rights, reparse-point rejection and nonrecursive ownership fallback. The cache scope is recomputed from the initiating SID, including when different administrator credentials are supplied.
+
+An access-denied attribute check can be deferred to that helper during an apply repair request. The client still rejects paths outside its cache and any visible link. For a protected ancestor, the helper temporarily enables `SeBackupPrivilege` on a duplicated thread token and opens a metadata-only handle with backup semantics and `OPEN_REPARSE_POINT`. It checks the link itself; the process token and permission-tool tokens are unchanged. If protected inspection is unavailable, repair stops before changing permissions.
+
+Repair grants the initiating user non-inherited `ReadAttributes` access (plus the ACL API's synchronization bit) on the fixed SID parent of `ReadOnly`. It uses the ACL API directly, with nonrecursive `takeown /a` only when the parent ACL is inaccessible. This matters because `icacls` can reject unreadable parent attributes even after ownership recovery. Other ACL entries and inheritance settings are preserved. The grant adds no directory-listing, image-read, or write rights on that parent. Cache targets still use scoped `icacls` grants of Read/Execute or Modify, with the existing nonrecursive ownership fallback. There are no grants on the `SystemData` directory, recursive grants, or Everyone grants. Strict client validation runs again before discovery or copying; still-inaccessible ancestors and links remain failures.
+
+Apply failures distinguish inaccessible cache files from a missing cache directory or a completed discovery with no destinations. The normal apply screen and diagnostic findings provide the matching recovery instruction: retry and approve a permission request when access was denied, or choose a Picture lock screen in Windows Settings when the cache is missing or empty. Persistent problems direct the user to export a report. `ApplyResult.FailureReason` records the category, while the local apply events retain technical exception details. Failed and partial analytics completion events include the bounded `apply_failure_reason` described in [the analytics contract](analytics.md); success and cancellation omit it. These results describe applying and verifying cache files, not visible animation.
 
 A dedicated, fixed-name, fixed-GUID real-time system logger captures only Process, Thread, DiskFileIO, FileIO and FileIOInit keywords. It does not enable stacks, sampling, registry or network events, and never configures an ETL output file. The helper normalizes device paths and discards unrelated file-operation details before transport. Process/thread generations, file mappings and IRPs correlate starts with completions; unresolved attribution stays explicit. No command lines, process paths, file contents or raw payloads are logged.
 
@@ -53,6 +59,19 @@ Only the current test is held in memory. Starting a new test replaces it; closin
 
 The activity timeline and technical details are collected for export rather than shown on the page. An export contains `summary.md`, `session.json`, and `events.jsonl`. Report schema 2 includes `ProcessTrace` collection times, status/reason, counters, operations and per-file/process aggregates. The page receives status/findings snapshots without serializing raw operation lists. Source/cache/rename paths and any path-valued trace fields pass through the same recursive redaction as the rest of the report. Source media and screenshots are excluded. A five-minute collection deadline and bounded event, inventory, and snapshot retention prevent indefinite monitoring; any evidence discarded by a limit is flagged. Inspect the report before publishing it.
 
+Diagnostics exports also include redacted application `app_*.log` files under
+`logs/`, using the same report-scoped aliases as the structured evidence. Log
+snapshots are collected in the background at export time and can include activity
+outside the current test. The eight most recently modified logs are considered,
+with at most the last 2 MiB of each. Only complete lines are retained at snapshot
+boundaries. `logs/manifest.json` records collection time, missing/unreadable files,
+omitted older files, truncation, and dropped partial lines. Nonstandard log names
+use generic ZIP entry names. An unavailable log directory or individual file does
+not prevent exporting the rest of the report; output/ZIP write errors still fail
+the export. Settings files, crash dumps, linked files, and subdirectories are not
+included. **Settings > Logs > Save logs as ZIP** remains the separate export of
+the original application logs without report redaction or these snapshot limits.
+
 ## Trace shutdown evidence
 
 The optional `ProcessTrace.Shutdown` section adds bounded measurements to schema 2: stop request, native stop result/duration, consumer return, disposal/correlation completion, and progress snapshots at stop, native return and deadline. A dispatch hook counts callbacks and records event/delivery timestamps without retaining unrelated payloads. Native STOP buffer statistics are labeled separately from consumer progress. Missing fields in older reports remain unknown.
@@ -81,7 +100,7 @@ Hash-change findings compare fresh reads from snapshots begun after verification
 
 ### Running the checks
 
-Run from the repository root using .NET 9:
+Run from the repository root using the .NET 10 SDK selected by `global.json`:
 
 ```powershell
 dotnet build LockScreenGif/LockscreenGif.csproj --configuration Debug -p:Platform=x64
@@ -92,6 +111,10 @@ dotnet run --project Tests/Session.Tests/Session.Tests.csproj --configuration Re
 ```
 
 The console harnesses exercise production classes against temporary files. Windows session and apply operations in lifecycle tests are test doubles; the apply-file tests explicitly disable elevation. Permission regressions use injected failures, an unelevated echo peer, and mocked native access commands to verify one-helper reuse and the original per-path repair scope. They never apply a real lock screen, lock the desktop, or change cache permissions.
+
+Protected-parent regression fixtures also use real restrictive ACLs on temporary directories, restoring them during cleanup. They verify that the first denied parent check reaches one helper session, metadata-only parent access permits strict revalidation without directory listing, and scoped cache grants lead to verified copies. Helper tests separately cover ownership failures and links revealed during protected inspection.
+
+Run `./Tests/Run-NativePermissions.ps1 -Elevate` for the opt-in native permission fixture. It requests UAC, uses real protected temporary directories, inspects metadata and links with the production backup-token code, and runs real `takeown`/`icacls` commands. Controlled initial failures force both ownership fallback paths; they do not simulate Windows changing a real cache owner. It verifies writes and unchanged process privileges, restores the temporary fixture, and saves a result under the ignored test `bin` directory. A real VM Apply/lock/unlock/reapply cycle remains a separate acceptance check.
 
 To inspect an existing ZIP with the current C# analyzer without extracting or modifying it, run `dotnet run --project Tests/Diagnostics.Tests/Diagnostics.Tests.csproj -c Release -- --analyze-report "path/to/report.zip"`. The normal regression suite uses synthetic evidence; user reports must not be committed as fixtures.
 

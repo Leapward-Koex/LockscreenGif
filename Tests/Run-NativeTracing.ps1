@@ -1,12 +1,12 @@
 param(
     [ValidateSet('Collector','Transport')][string]$Mode = 'Collector',
-    [string]$HelperDirectory = "$PSScriptRoot/../LockScreenGif/bin/Release/net9.0-windows10.0.26100.0/win-x64/Helpers/Privileged"
+    [string]$HelperDirectory = "$PSScriptRoot/../artifacts/app/Helpers/Privileged"
 )
 $ErrorActionPreference = 'Stop'
 $project = Join-Path $PSScriptRoot 'ProcessTracing.Tests/ProcessTracing.Tests.csproj'
 dotnet build $project -c Release --verbosity quiet
 if ($LASTEXITCODE -ne 0) { throw 'Test harness build failed' }
-$output = Join-Path $PSScriptRoot 'ProcessTracing.Tests/bin/Release/net9.0-windows/win-x64'
+$output = Join-Path $PSScriptRoot 'ProcessTracing.Tests/bin/Release/net10.0-windows/win-x64'
 $report = Join-Path $PSScriptRoot "ProcessTracing.Tests/bin/native-$Mode-result.txt"
 if ($Mode -eq 'Collector') {
     $process = Start-Process -FilePath (Join-Path $output 'ProcessTracing.Tests.exe') -ArgumentList @('--native', ('"' + $report + '"')) -Verb RunAs -WindowStyle Hidden -PassThru

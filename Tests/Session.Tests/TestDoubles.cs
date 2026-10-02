@@ -8,6 +8,7 @@ namespace LockscreenGif.Contracts.Services
     public interface ILockscreenService
     {
         SourceFile? CurrentImage { get; set; }
+        LockscreenSource? CurrentSource { get; }
         string CacheDirectory { get; }
         bool IsApplying { get; }
         Task WaitForIdleAsync();
@@ -16,20 +17,26 @@ namespace LockscreenGif.Contracts.Services
             bool useWindowsApi,
             Action<LockscreenApplyEvent>? progress = null,
             CancellationToken cancellationToken = default,
-            LockscreenGif.Services.Lockscreen.ICachePermissionSession? permissionSession = null
+            LockscreenGif.Services.Lockscreen.ICachePermissionSession? permissionSession = null,
+            LockscreenSourceKind sourceKind = LockscreenSourceKind.Unknown
         );
     }
 
     internal sealed class FakeLockscreenService(string cacheDirectory) : ILockscreenService
     {
-        public SourceFile? CurrentImage { get; set; }
+        public SourceFile? CurrentImage
+        {
+            get => CurrentSource is { } source ? new(source.Path) : null;
+            set => CurrentSource = value is null ? null : new(value.Path, LockscreenSourceKind.UserGif);
+        }
+        public LockscreenSource? CurrentSource { get; set; }
         public string CacheDirectory { get; } = cacheDirectory;
         public bool IsApplying { get; private set; }
         public bool BlockApply { get; set; }
         public bool DeferCancellation { get; set; }
         public TaskCompletionSource ReleaseApply { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource ApplyEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        public List<(byte[] Bytes, bool UseWindowsApi)> Applies { get; } = [];
+        public List<(byte[] Bytes, bool UseWindowsApi, string SourcePath, LockscreenSourceKind SourceKind)> Applies { get; } = [];
 
         public async Task WaitForIdleAsync()
         {
@@ -44,14 +51,15 @@ namespace LockscreenGif.Contracts.Services
             bool useWindowsApi,
             Action<LockscreenApplyEvent>? progress = null,
             CancellationToken cancellationToken = default,
-            LockscreenGif.Services.Lockscreen.ICachePermissionSession? permissionSession = null
+            LockscreenGif.Services.Lockscreen.ICachePermissionSession? permissionSession = null,
+            LockscreenSourceKind sourceKind = LockscreenSourceKind.Unknown
         )
         {
             IsApplying = true;
             try
             {
                 var bytes = await File.ReadAllBytesAsync(sourcePath, cancellationToken);
-                Applies.Add((bytes, useWindowsApi));
+                Applies.Add((bytes, useWindowsApi, sourcePath, sourceKind));
                 ApplyEntered.TrySetResult();
                 if (DeferCancellation)
                 {
@@ -104,6 +112,9 @@ namespace LockscreenGif.Services.Diagnostics
     public sealed class WindowsSessionMonitor
     {
         public bool IsRegistered { get; set; } = true;
+        public int SessionId { get; set; } = 1;
+        public bool LockSucceeds { get; set; } = true;
+        public int LockRequests { get; private set; }
         public bool PowerNotificationsAvailable { get; set; } = true;
         public string? PowerError { get; set; }
         public string? Error { get; set; }
@@ -113,8 +124,9 @@ namespace LockscreenGif.Services.Diagnostics
 
         public bool TryLock(out string? error)
         {
-            error = null;
-            return true;
+            LockRequests++;
+            error = LockSucceeds ? null : "Synthetic lock request failure";
+            return LockSucceeds;
         }
     }
 
@@ -127,5 +139,13 @@ namespace LockscreenGif.Services.Diagnostics
 
 public static class Logger
 {
+    // This absent synthetic directory prevents session exports from touching the developer's real application logs.
+    private static readonly string LogPath = Path.Combine(
+        Path.GetTempPath(),
+        "LockscreenGif-absent-test-logs-" + Guid.NewGuid().ToString("N")
+    );
+
+    public static string GetLogPath() => LogPath;
+
     public static void Warn(string message) => Console.WriteLine("LOG " + message);
 }

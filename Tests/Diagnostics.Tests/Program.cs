@@ -32,6 +32,8 @@ internal static class Program
             await TraceReportTests.RunAsync(directory);
             await ShutdownReportTests.RunAsync(directory);
             await CacheTests.RunAsync(directory);
+            await LogArchiveTests.RunAsync(directory);
+            await DiagnosticLogAttachmentTests.RunAsync(directory);
             Console.WriteLine("All diagnostics checks passed.");
         }
         finally

@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Models.Diagnostics;
+using LockscreenGif.Services;
+using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -12,22 +15,29 @@ public sealed class DiagnosticsViewModel : ObservableObject
 {
     private readonly DiagnosticsSessionService _service;
     private readonly ILockscreenService _lockscreen;
+    private readonly AnalyticsService _analytics;
     private DispatcherQueue? _dispatcher;
     private DispatcherQueueTimer? _timer;
     private DiagnosticSession? _session;
     private bool _busy;
     private bool _stopping;
     private bool _useReference;
-    private bool _useWindowsApi;
     private bool _attached;
     private string _notice = string.Empty;
     private int _refreshQueued;
     private string? _findingsSession;
 
-    public DiagnosticsViewModel(DiagnosticsSessionService service, ILockscreenService lockscreen)
+    public DiagnosticsViewModel(
+        DiagnosticsSessionService service,
+        ILockscreenService lockscreen,
+        AnalyticsService analytics,
+        LockscreenPreferences preferences
+    )
     {
         _service = service;
         _lockscreen = lockscreen;
+        _analytics = analytics;
+        Preferences = preferences;
     }
 
     public ObservableCollection<DiagnosticSetupWarning> SetupWarnings { get; } = [];
@@ -47,11 +57,7 @@ public sealed class DiagnosticsViewModel : ObservableObject
             }
         }
     }
-    public bool UseWindowsApi
-    {
-        get => _useWindowsApi;
-        set => SetProperty(ref _useWindowsApi, value);
-    }
+    public LockscreenPreferences Preferences { get; }
     public string Notice
     {
         get => _notice;
@@ -64,7 +70,7 @@ public sealed class DiagnosticsViewModel : ObservableObject
     public bool HasNotice => !string.IsNullOrWhiteSpace(Notice);
     public bool IsRunning => _service.IsRunning;
     public bool CanConfigure => !_busy && !_stopping && !IsRunning;
-    public bool CanStart => CanConfigure && (UseReference || _lockscreen.CurrentImage is not null);
+    public bool CanStart => CanConfigure && !_service.IsVerificationRunning && (UseReference || _lockscreen.CurrentImage is not null);
     public bool CanStop => IsRunning && !_stopping;
     public bool CanLock => !_busy && !_stopping && IsRunning && _session?.Phase == "Waiting for lock";
     public bool CanExport => CanConfigure && _session is not null;
@@ -163,7 +169,20 @@ public sealed class DiagnosticsViewModel : ObservableObject
 
     public Task RefreshReadinessAsync() => RunAsync(_service.RefreshReadinessAsync);
 
-    public Task StartAsync() => RunAsync(() => _service.StartAsync(UseReference, UseWindowsApi));
+    public Task StartAsync() =>
+        RunAsync(async () =>
+        {
+            _analytics.Track(
+                AnalyticsEvent.DiagnosticTestRequested,
+                new()
+                {
+                    Workflow = AnalyticsWorkflow.Diagnostics,
+                    UsesReferenceGif = UseReference,
+                    ApiRequested = Preferences.UseWindowsApi,
+                }
+            );
+            await _service.StartAsync(UseReference, Preferences.UseWindowsApi);
+        });
 
     public async Task StopAsync()
     {
@@ -173,6 +192,7 @@ public sealed class DiagnosticsViewModel : ObservableObject
         }
 
         _stopping = true;
+        _analytics.Track(AnalyticsEvent.DiagnosticStopRequested, new() { Workflow = AnalyticsWorkflow.Diagnostics });
         Refresh();
         try
         {
@@ -192,8 +212,34 @@ public sealed class DiagnosticsViewModel : ObservableObject
     public async Task ExportAsync(string path) =>
         await RunAsync(async () =>
         {
-            var exportedPath = await _service.ExportAsync(path);
-            Notice = $"Report saved to {exportedPath}";
+            var started = Stopwatch.GetTimestamp();
+            try
+            {
+                var exportedPath = await _service.ExportAsync(path);
+                Notice = $"Report saved to {exportedPath}";
+                _analytics.Track(
+                    AnalyticsEvent.DiagnosticReportExportCompleted,
+                    new()
+                    {
+                        Workflow = AnalyticsWorkflow.Diagnostics,
+                        Outcome = AnalyticsOutcome.Succeeded,
+                        DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+                    }
+                );
+            }
+            catch (Exception ex)
+            {
+                _analytics.TrackFailure(
+                    AnalyticsEvent.DiagnosticReportExportCompleted,
+                    ex,
+                    new AnalyticsProperties
+                    {
+                        Workflow = AnalyticsWorkflow.Diagnostics,
+                        DurationMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds,
+                    }
+                );
+                throw;
+            }
         });
 
     public void LockNow()
@@ -211,7 +257,15 @@ public sealed class DiagnosticsViewModel : ObservableObject
         }
     }
 
-    public void ShowError(Exception error) => Notice = $"{error.GetType().Name}: {error.Message}";
+    public void ShowError(Exception error)
+    {
+        _analytics.CaptureException(
+            error,
+            AnalyticsErrorContext.DiagnosticsAction,
+            new AnalyticsProperties { Workflow = AnalyticsWorkflow.Diagnostics }
+        );
+        Notice = $"{error.GetType().Name}: {error.Message}";
+    }
 
     private async Task RunAsync(Func<Task> action)
     {
