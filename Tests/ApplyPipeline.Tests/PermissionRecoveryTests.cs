@@ -267,12 +267,17 @@ internal static class PermissionRecoveryTests
         CancellationToken token = default,
         Action<LockscreenApplyEvent>? progress = null
     ) =>
-        new LockscreenApplyPipeline(new CacheLayout(fixture.Root, permissions), new VerifiedCacheWriter(permissions)).ApplyAsync(
-            fixture.Source,
-            false,
-            new(progress),
-            token
-        );
+        new LockscreenApplyPipeline(
+            new CacheLayout(fixture.Root, permissions),
+            new VerifiedCacheWriter(permissions),
+            () =>
+                new()
+                {
+                    QueryStatus = 0,
+                    RuntimeState = 1,
+                    OverrideExists = false,
+                }
+        ).ApplyAsync(fixture.Source, false, new(progress), token);
 
     private static bool SamePath(string left, string right) => left.Equals(right, StringComparison.OrdinalIgnoreCase);
 

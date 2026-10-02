@@ -125,7 +125,11 @@ public sealed class LockscreenService : ILockscreenService
         {
             Volatile.Write(ref _applying, 1);
             await using var permissions = new CachePermissions(CacheDirectory, _userSid, borrowedSession: permissionSession);
-            var pipeline = new LockscreenApplyPipeline(new CacheLayout(CacheDirectory, permissions), new VerifiedCacheWriter(permissions));
+            var pipeline = new LockscreenApplyPipeline(
+                new CacheLayout(CacheDirectory, permissions),
+                new VerifiedCacheWriter(permissions),
+                WindowsImageFeatureSettings.Current.Read
+            );
             return await pipeline.ApplyAsync(sourcePath, useWindowsApi, reporter, cancellationToken);
         }
         finally

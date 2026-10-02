@@ -152,6 +152,7 @@ public static class DiagnosticReportWriter
                 text.AppendLine($"- {file.Path}: {file.Error}");
             }
         }
+        DiagnosticWindowsImageFeature.AppendTo(text, session);
         text.AppendLine();
         var trace = session.ProcessTrace;
         text.AppendLine(

@@ -1,6 +1,7 @@
 using LockscreenGif;
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Services.Diagnostics;
+using LockscreenGif.Services.Lockscreen;
 using LockscreenGif.Views;
 
 namespace WindowLifecycle.Tests;
@@ -14,6 +15,7 @@ internal static class Program
         PlaybackLifetime();
         await IdleCloseAsync();
         await PendingCloseAsync();
+        await PendingFeatureCloseAsync();
         await FailedVerificationAsync();
         DispatcherShutdown();
         Console.WriteLine($"All {_checks} window lifecycle checks passed. No native APIs or analytics transports were used.");
@@ -68,6 +70,7 @@ internal static class Program
         DiagnosticsSessionService Diagnostics,
         LockscreenVerificationService Verification,
         FakeLockscreenService Lockscreen,
+        WindowsImageFeatureService WindowsFeature,
         WindowsSessionMonitor Monitor
     ) Setup()
     {
@@ -75,13 +78,15 @@ internal static class Program
         var diagnostics = new DiagnosticsSessionService();
         var verification = new LockscreenVerificationService();
         var lockscreen = new FakeLockscreenService();
+        var windowsFeature = new WindowsImageFeatureService();
         var monitor = new WindowsSessionMonitor();
         App.Register(diagnostics);
         App.Register(verification);
         App.Register<ILockscreenService>(lockscreen);
+        App.Register(windowsFeature);
         App.Register(monitor);
         App.Register<IErrorReporter>(new FakeErrorReporter());
-        return (diagnostics, verification, lockscreen, monitor);
+        return (diagnostics, verification, lockscreen, windowsFeature, monitor);
     }
 
     private static async Task IdleCloseAsync()
@@ -131,6 +136,34 @@ internal static class Program
         apply.SetResult();
         await window.CloseCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Check(window.CloseCalls == 1 && services.Monitor.DisposeCalls == 1, "pending shutdown automatically closes once after cleanup");
+    }
+
+    private static async Task PendingFeatureCloseAsync()
+    {
+        var services = Setup();
+        var featureAction = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        services.WindowsFeature.Idle = featureAction.Task;
+        var window = App.MainWindow;
+        Check(window.AppWindow.RequestClose(), "defer close while an explicit Windows feature action is in flight");
+        window.DispatcherQueue.Pump();
+        Check(
+            services.WindowsFeature.WaitCalls == 1 && window.CloseCalls == 0 && !window.CloseCompleted.Task.IsCompleted,
+            "window shutdown awaits the feature action instead of abandoning its dispatched change"
+        );
+        Check(
+            services.Monitor.DisposeCalls == 0 && App.AnalyticsStops == 0,
+            "keep monitoring and analytics alive until the feature action has drained"
+        );
+        Check(window.AppWindow.RequestClose() && window.DispatcherQueue.Count == 0, "repeated close does not start a second feature drain");
+        featureAction.SetResult();
+        await window.CloseCompleted.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Check(
+            services.WindowsFeature.WaitCalls == 1
+                && window.CloseCalls == 1
+                && services.Monitor.DisposeCalls == 1
+                && App.AnalyticsStops == 1,
+            "completion of the feature action automatically finalizes shutdown exactly once"
+        );
     }
 
     private static async Task FailedVerificationAsync()

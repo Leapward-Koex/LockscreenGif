@@ -29,6 +29,7 @@ public sealed class DiagnosticSession
     public GifInspection? Gif { get; set; }
     public LockscreenApplyResult? ApplyResult { get; set; }
     public List<DiagnosticEvent> Events { get; set; } = new();
+    public List<DiagnosticActionEvent> PrerequisiteActions { get; set; } = new();
     public List<CacheSnapshot> Snapshots { get; set; } = new();
     public List<DiagnosticFinding> Findings { get; set; } = new();
 }

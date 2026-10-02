@@ -76,7 +76,7 @@ internal sealed class CachePermissions(
             "Permissions",
             firstRequest
                 ? "Access was denied. Requesting permission once for this operation's required cache repairs."
-                : "Reusing the approved permission helper for this path; no additional elevation is requested.",
+                : "Requesting cache access through this operation's shared permission helper.",
             path
         );
         var exitCode = await _session.GrantAsync(path, write, cancellationToken);

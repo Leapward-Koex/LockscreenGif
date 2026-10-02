@@ -20,6 +20,7 @@ public sealed class LockscreenApplyResult
     public bool Cancelled { get; set; }
     public bool ApiRequested { get; set; }
     public bool ApiCompleted { get; set; }
+    public LockscreenGif.Privileged.WindowsImageFeatureState? WindowsImageFeatureAtApply { get; set; }
 
     // Metadata from the held source stream, not a sum of cache copies or a display resolution.
     public long? SourceSizeBytes { get; set; }

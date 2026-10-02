@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using LockscreenGif.Privileged;
+using LockscreenGif.Services.Lockscreen;
 using Microsoft.Win32;
 
 namespace LockscreenGif.Services.Diagnostics;
@@ -54,6 +56,10 @@ public static class EnvironmentCollector
         Capture("Session ID", () => Process.GetCurrentProcess().SessionId.ToString());
         Capture("Remote session", () => (GetSystemMetrics(0x1000) != 0).ToString());
         Capture("Animation effects", () => new Windows.UI.ViewManagement.UISettings().AnimationsEnabled.ToString());
+        Capture(
+            DiagnosticWindowsImageFeature.EnvironmentKey,
+            () => WindowsImageFeature.Describe(WindowsImageFeatureSettings.Current.Read())
+        );
         Capture("Energy saver", () => Windows.System.Power.PowerManager.EnergySaverStatus.ToString());
         Capture("Power supply", () => Windows.System.Power.PowerManager.PowerSupplyStatus.ToString());
         Capture("Lock screen mode (heuristic)", ReadMode);

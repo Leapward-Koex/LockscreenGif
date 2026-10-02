@@ -121,12 +121,17 @@ internal static class FailureReasonTests
         CachePermissions permissions,
         Action<LockscreenApplyEvent>? progress = null
     ) =>
-        new LockscreenApplyPipeline(new CacheLayout(root, permissions), new VerifiedCacheWriter(permissions)).ApplyAsync(
-            source,
-            false,
-            new ApplyProgress(progress),
-            CancellationToken.None
-        );
+        new LockscreenApplyPipeline(
+            new CacheLayout(root, permissions),
+            new VerifiedCacheWriter(permissions),
+            () =>
+                new()
+                {
+                    QueryStatus = 0,
+                    RuntimeState = 1,
+                    OverrideExists = false,
+                }
+        ).ApplyAsync(source, false, new ApplyProgress(progress), CancellationToken.None);
 
     private static void CheckFailure(LockscreenApplyResult result, LockscreenApplyFailureReason reason, string recoveryAction) =>
         Check(

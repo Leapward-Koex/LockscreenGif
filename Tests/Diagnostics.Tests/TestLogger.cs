@@ -4,4 +4,6 @@ namespace LockscreenGif.Services.Diagnostics;
 internal static class Logger
 {
     public static void Warn(string message) { }
+
+    public static void Info(string message) { }
 }

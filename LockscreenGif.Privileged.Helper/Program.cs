@@ -46,6 +46,22 @@ internal static class Program
                 {
                     switch (request.Command)
                     {
+                        case "DisableWindowsImageFeatureById":
+                        case "EnableWindowsImageFeatureById":
+                            if (request.Path is not null || request.Scope is not null || request.Write || request.FeatureId is null or 0)
+                            {
+                                throw new InvalidDataException(
+                                    "A feature command requires a positive identifier and does not accept paths, scopes or write flags."
+                                );
+                            }
+                            reply = new(
+                                1,
+                                request.Id,
+                                WindowsImageFeature: request.Command == "EnableWindowsImageFeatureById"
+                                    ? WindowsImageFeatureRepair.EnsureEnabled(request.FeatureId.Value)
+                                    : WindowsImageFeatureRepair.EnsureDisabled(request.FeatureId.Value)
+                            );
+                            break;
                         case "Grant":
                             if (request.Path is null || request.Path.Length > 4096)
                             {

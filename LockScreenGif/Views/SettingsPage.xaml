@@ -9,7 +9,7 @@
             <TextBlock Text="Lockscreen" Style="{StaticResource SubtitleTextBlockStyle}" />
             <Border Padding="24" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="16">
-                    <ToggleSwitch Header="Enable Windows lockscreen API"
+                    <ToggleSwitch x:Name="WindowsApiToggle" Header="Enable Windows lockscreen API"
                         IsOn="{x:Bind ViewModel.Preferences.UseWindowsApi, Mode=TwoWay}"
                         OnContent="Enabled" OffContent="Disabled" />
                     <TextBlock TextWrapping="Wrap"
@@ -49,6 +49,37 @@
                     <InfoBar x:Name="AnalyticsSettingsError" IsOpen="False" Severity="Warning"
                         Title="Could not save the analytics preference"
                         Message="Sharing is off for this session, but the preference could not be saved. Try again before closing the app." />
+                </StackPanel>
+            </Border>
+            <Border Padding="20" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Lock-screen feature ID" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock Text="This feature ID may change in future versions of Windows. Only use a replacement ID that has been verified for your Windows version."
+                               TextWrapping="Wrap" />
+                    <TextBox x:Name="FeatureIdInput" Header="Feature ID" InputScope="Number"
+                             MaxWidth="300" HorizontalAlignment="Left" MinWidth="220" />
+                    <TextBlock x:Name="DefaultFeatureIdText" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="SaveFeatureIdButton" Content="Save ID" Click="SaveFeatureId_Click" />
+                        <Button x:Name="ResetFeatureIdButton" Content="Reset to default" Click="ResetFeatureId_Click" />
+                    </StackPanel>
+                    <TextBlock Text="Saving or resetting the ID updates which feature the app checks and controls. It does not enable, disable, or restore any Windows feature."
+                               TextWrapping="Wrap" />
+                    <InfoBar x:Name="FeatureIdStatus" IsOpen="False" />
+                </StackPanel>
+            </Border>
+            <Border Padding="20" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Windows lock-screen feature" Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock Text="Enable the Windows image-loading feature that animated GIF support disables."
+                               TextWrapping="Wrap" />
+                    <InfoBar IsOpen="True" IsClosable="False" Severity="Warning"
+                             Title="This will break animated GIF lockscreens"
+                             Message="Enabling this feature will break animated GIF lockscreens on Windows 11 25H2 or later. Keep it disabled to use animated GIFs." />
+                    <TextBlock x:Name="FeatureStateText" Text="Reading the current Windows feature state…" TextWrapping="Wrap" />
+                    <Button x:Name="EnableWindowsImageFeatureButton" Content="Enable Windows lock-screen feature"
+                            Click="EnableWindowsImageFeature_Click" IsEnabled="False" />
+                    <InfoBar x:Name="FeatureActionStatus" IsOpen="False" />
                 </StackPanel>
             </Border>
             <Grid Padding="16" ColumnSpacing="16"

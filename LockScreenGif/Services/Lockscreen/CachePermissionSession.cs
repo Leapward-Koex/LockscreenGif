@@ -29,6 +29,46 @@ internal sealed class CachePermissionSession(
     public async Task<int> GrantAsync(string path, bool write, CancellationToken token) =>
         (await RequestAsync(new(1, 0, "Grant", path, write), token)).ExitCode;
 
+    public Task<WindowsImageFeatureResult> DisableWindowsImageFeatureAsync(
+        CancellationToken token,
+        uint featureId = WindowsImageFeature.DefaultFeatureId
+    ) => RequestFeatureAsync("DisableWindowsImageFeatureById", "Disabled", featureId, token);
+
+    public Task<WindowsImageFeatureResult> EnableWindowsImageFeatureAsync(
+        CancellationToken token,
+        uint featureId = WindowsImageFeature.DefaultFeatureId
+    ) => RequestFeatureAsync("EnableWindowsImageFeatureById", "Enabled", featureId, token);
+
+    private async Task<WindowsImageFeatureResult> RequestFeatureAsync(
+        string command,
+        string desired,
+        uint featureId,
+        CancellationToken token
+    )
+    {
+        ArgumentOutOfRangeException.ThrowIfZero(featureId);
+        var reply = await RequestAsync(new(1, 0, command, FeatureId: featureId), token);
+        try
+        {
+            EnsureSuccess(reply);
+            var result = reply.WindowsImageFeature ?? throw new InvalidDataException("Missing Windows image feature response.");
+            if (
+                result.FeatureId != featureId
+                || result.DesiredState != desired
+                || (result.Before is not null && result.Before.FeatureId != featureId)
+                || (result.After is not null && result.After.FeatureId != featureId)
+            )
+            {
+                throw new InvalidDataException("The Windows image feature response does not match the selected identifier and state.");
+            }
+            return result;
+        }
+        catch (Exception ex)
+        {
+            throw new WindowsImageFeatureDispatchException("The dispatched Windows feature request returned an invalid result.", ex);
+        }
+    }
+
     public async Task StartTraceAsync(TraceScope scope, CancellationToken token) =>
         EnsureSuccess(await RequestAsync(new(1, 0, "StartTrace", Scope: scope), token));
 
@@ -64,6 +104,7 @@ internal sealed class CachePermissionSession(
             token.ThrowIfCancellationRequested();
             request = request with { Id = ++_requestId };
             var replyConsumed = false;
+            var dispatchAttempted = false;
             try
             {
                 // Once a repair is dispatched, drain it before observing cancellation.
@@ -74,6 +115,7 @@ internal sealed class CachePermissionSession(
                     timeout.CancelAfter(requestTimeout ?? TimeSpan.FromSeconds(30));
                 }
 
+                dispatchAttempted = true;
                 await PipeProtocol.WriteAsync(_pipe!, request, timeout.Token);
                 var reply = await PipeProtocol.ReadAsync<HelperReply>(_pipe!, timeout.Token);
                 if (reply.Version != 1 || reply.Id != request.Id)
@@ -104,6 +146,13 @@ internal sealed class CachePermissionSession(
             {
                 _broken = ex;
                 _pipe?.Dispose();
+                if (dispatchAttempted && request.Command is "DisableWindowsImageFeatureById" or "EnableWindowsImageFeatureById")
+                {
+                    throw new WindowsImageFeatureDispatchException(
+                        "The Windows feature request was dispatched, but its result could not be received.",
+                        ex
+                    );
+                }
                 throw;
             }
         }

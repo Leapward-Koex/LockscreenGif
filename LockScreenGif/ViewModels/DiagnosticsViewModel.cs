@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using LockscreenGif.Contracts.Services;
@@ -56,6 +57,11 @@ public sealed class DiagnosticsViewModel : ObservableObject
                 Refresh();
             }
         }
+    }
+    public bool UseWindowsApi
+    {
+        get => Preferences.UseWindowsApi;
+        set => Preferences.UseWindowsApi = value;
     }
     public LockscreenPreferences Preferences { get; }
     public string Notice
@@ -123,6 +129,7 @@ public sealed class DiagnosticsViewModel : ObservableObject
         _attached = true;
         _dispatcher = dispatcher;
         _service.Changed += OnServiceChanged;
+        Preferences.PropertyChanged += OnPreferencesChanged;
         _timer = dispatcher.CreateTimer();
         _timer.Interval = TimeSpan.FromSeconds(1);
         _timer.Tick += OnTimerTick;
@@ -134,6 +141,7 @@ public sealed class DiagnosticsViewModel : ObservableObject
     {
         _attached = false;
         _service.Changed -= OnServiceChanged;
+        Preferences.PropertyChanged -= OnPreferencesChanged;
         if (_timer is not null)
         {
             _timer.Stop();
@@ -144,6 +152,14 @@ public sealed class DiagnosticsViewModel : ObservableObject
     }
 
     private void OnTimerTick(DispatcherQueueTimer sender, object args) => OnPropertyChanged(nameof(SessionDescription));
+
+    private void OnPreferencesChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName is nameof(LockscreenPreferences.UseWindowsApi) or nameof(LockscreenPreferences.HasSaveError))
+        {
+            OnServiceChanged(sender, EventArgs.Empty);
+        }
+    }
 
     private void OnServiceChanged(object? sender, EventArgs args)
     {
@@ -319,6 +335,7 @@ public sealed class DiagnosticsViewModel : ObservableObject
             var property in new[]
             {
                 nameof(IsRunning),
+                nameof(UseWindowsApi),
                 nameof(CanConfigure),
                 nameof(CanStart),
                 nameof(CanStop),

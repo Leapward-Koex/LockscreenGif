@@ -34,6 +34,7 @@ namespace LockscreenGif.Contracts.Services
         public bool IsApplying { get; private set; }
         public bool BlockApply { get; set; }
         public bool DeferCancellation { get; set; }
+        public LockscreenGif.Privileged.WindowsImageFeatureState? WindowsImageFeatureAtApply { get; set; }
         public TaskCompletionSource ReleaseApply { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public TaskCompletionSource ApplyEntered { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
         public List<(byte[] Bytes, bool UseWindowsApi, string SourcePath, LockscreenSourceKind SourceKind)> Applies { get; } = [];
@@ -85,6 +86,7 @@ namespace LockscreenGif.Contracts.Services
                 return new()
                 {
                     Success = true,
+                    WindowsImageFeatureAtApply = WindowsImageFeatureAtApply,
                     ApiRequested = useWindowsApi,
                     ApiCompleted = useWindowsApi,
                     Files =
@@ -139,6 +141,8 @@ namespace LockscreenGif.Services.Diagnostics
 
 public static class Logger
 {
+    public static void Info(string message) => Console.WriteLine("LOG " + message);
+
     // This absent synthetic directory prevents session exports from touching the developer's real application logs.
     private static readonly string LogPath = Path.Combine(
         Path.GetTempPath(),

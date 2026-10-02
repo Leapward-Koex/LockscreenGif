@@ -1,4 +1,5 @@
 using LockscreenGif.Models;
+using LockscreenGif.Privileged;
 using LockscreenGif.Services.Lockscreen;
 
 sealed class CacheFixture : IDisposable
@@ -10,7 +11,11 @@ sealed class CacheFixture : IDisposable
     public CachePermissions Permissions { get; }
     private readonly LockscreenApplyPipeline _pipeline;
 
-    public CacheFixture(bool createFolder = true)
+    public CacheFixture(
+        bool createFolder = true,
+        Func<WindowsImageFeatureState>? readFeature = null,
+        ICachePermissionSession? permissionSession = null
+    )
     {
         Directory.CreateDirectory(Root);
         if (createFolder)
@@ -19,8 +24,21 @@ sealed class CacheFixture : IDisposable
         }
         // Valid small GIF fixture; no test invokes Windows image APIs or access repair.
         File.WriteAllBytes(Source, Convert.FromBase64String("R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"));
-        Permissions = new CachePermissions(Root, "S-1-5-21-0-0-0-1000", allowElevation: false);
-        _pipeline = new LockscreenApplyPipeline(new CacheLayout(Root, Permissions), new VerifiedCacheWriter(Permissions));
+        Permissions = new CachePermissions(Root, "S-1-5-21-0-0-0-1000", allowElevation: false, borrowedSession: permissionSession);
+        _pipeline = new LockscreenApplyPipeline(
+            new CacheLayout(Root, Permissions),
+            new VerifiedCacheWriter(Permissions),
+            readFeature
+                ?? (
+                    () =>
+                        new WindowsImageFeatureState
+                        {
+                            QueryStatus = 0,
+                            RuntimeState = 1,
+                            OverrideExists = false,
+                        }
+                )
+        );
     }
 
     public Task<LockscreenApplyResult> Apply(Action<LockscreenApplyEvent>? progress = null, CancellationToken token = default) =>

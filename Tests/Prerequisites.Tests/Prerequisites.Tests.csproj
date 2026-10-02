@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/LockscreenSettings.cs" Link="Production/LockscreenSettings.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/LockscreenPrerequisites.cs" Link="Production/LockscreenPrerequisites.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/WindowsImageFeatureSettings.cs" Link="Production/WindowsImageFeatureSettings.cs" />
+    <ProjectReference Include="../../LockscreenGif.Privileged.Contracts/LockscreenGif.Privileged.Contracts.csproj" />
+  </ItemGroup>
+</Project>

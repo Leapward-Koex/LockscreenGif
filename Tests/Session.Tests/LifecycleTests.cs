@@ -7,6 +7,7 @@ internal static class LifecycleTests
 {
     public static async Task RunAsync(string root)
     {
+        await ReadOnlyFeatureAndActionsAsync(root);
         await using var context = await TestContext.CreateAsync(root, "complete-and-compare");
         var service = context.Service;
         await service.RefreshReadinessAsync();
@@ -82,6 +83,61 @@ internal static class LifecycleTests
                 && archive.GetEntry("logs/manifest.json") is not null
                 && !archive.Entries.Any(entry => entry.FullName.StartsWith("comparison/")),
             "explicit export contains the current test and application log manifest"
+        );
+    }
+
+    private static async Task ReadOnlyFeatureAndActionsAsync(string root)
+    {
+        await using var context = await TestContext.CreateAsync(root, "feature-read-only");
+        context.Lockscreen.WindowsImageFeatureAtApply = new()
+        {
+            QueryStatus = 0,
+            RuntimeState = 2,
+            RuntimePriority = 0,
+            OverrideExists = true,
+            OverrideState = 1,
+            OverrideOptions = 0,
+        };
+        DiagnosticsActionLog.Record("OpenLockscreenSettings", "Succeeded", "Before test");
+        var blocked = new DiagnosticsSessionService(context.Lockscreen, context.Windows, context.Factory, featureOperationBusy: () => true);
+        try
+        {
+            await blocked.StartAsync(false, false);
+            throw new InvalidOperationException("Feature action should block starting a concurrent test.");
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "Wait for the current operation to finish.")
+        {
+            Program.Check(
+                !blocked.IsRunning && blocked.Current is null,
+                "concurrent feature action prevents diagnostic startup without creating a test"
+            );
+        }
+        await context.Service.StartAsync(false, false);
+        var session = context.Service.Current!;
+        Program.Check(
+            context.Service.IsRunning && session.Phase == "Waiting for lock" && session.ApplyResult!.Success,
+            "feature state is recorded without deferring the diagnostic lock cycle"
+        );
+        Program.Check(
+            context.Service.TryLock(out _) && session.ApplyResult!.WindowsImageFeatureAtApply!.RuntimeState == 2,
+            "enabled runtime and differing stored override do not block locking"
+        );
+        Program.Check(
+            session.PrerequisiteActions.Any(a => a.Detail == "Before test"),
+            "actions before test creation are included in the current snapshot"
+        );
+        session.PrerequisiteActions.Clear();
+        Program.Check(context.Service.CurrentForDisplay!.PrerequisiteActions.Count > 0, "display action snapshots are independent copies");
+        await context.CompleteLockCycleAsync();
+        DiagnosticsActionLog.Record("EnableWindowsImageFeature", "Succeeded", "After finished test");
+        var destination = Path.Combine(context.DirectoryPath, "feature-actions.zip");
+        await context.Service.ExportAsync(destination);
+        using var zip = ZipFile.OpenRead(destination);
+        using var reader = new StreamReader(zip.GetEntry("session.json")!.Open());
+        var json = await reader.ReadToEndAsync();
+        Program.Check(
+            json.Contains("Before test") && json.Contains("After finished test") && json.Contains("WindowsImageFeatureAtApply"),
+            "export includes actions before and after the test while preserving the apply snapshot"
         );
     }
 }

@@ -1,0 +1,56 @@
+# Windows image compatibility feature
+
+The default Windows feature ID is **38943831**, which controls an image-loading path associated with static GIF playback in the controlled investigation. The compatibility target is **Disabled (1)**. Disabling it restored animation in the tested Windows 11 25H2 environment with Windows Animation effects on. This does not establish a universal version-specific fault or guarantee visible animation on another machine or for another feature ID.
+
+## Explicit controls and read-only Apply
+
+Settings allows editing the feature ID and resetting it to **38943831**. An ID must be a positive unsigned 32-bit integer (`1` through `4294967295`). Windows updates may retire a feature or replace its ID, so the preference can be updated without changing the application. Choosing another ID does not establish that it controls lock-screen animation. Saving or resetting the preference changes which feature is read and targeted by future explicit buttons; it does not enable, disable, or restore either the previously selected or newly selected Windows feature.
+
+The first page has two prerequisites: Picture mode with at least one existing lock-screen cache folder, and a disabled feature on Windows 11 25H2 or later (build 26200 onward). Both rows have status icons, and the section is yellow while either check needs attention. The first button opens Windows lock-screen settings for manual configuration; opening it does not establish that the user subsequently selected Picture. The second button explicitly disables the feature. Settings has an enable button with a warning that enabling it will break animated GIF lockscreens on 25H2 or later.
+
+Some earlier Windows 11 25H2 builds animate GIFs without this feature being available. An unavailable query remains unknown, and the disable button stays unavailable; it does not establish a failed lock-screen configuration. The prerequisite text explains that the feature may be absent and that users whose GIF already animates can continue. Apply does not require this check to be satisfied.
+
+Picture mode is inferred only when both the Slideshow and Spotlight selection switches are explicitly off. Missing, malformed or conflicting values remain unknown. The cache check counts immediate `LockScreen*` folders under the current user's cache and excludes reparse points; missing or unreadable folders do not satisfy the check. Read-only polling refreshes the checklist without changing cache permissions or requesting elevation.
+
+**GIF Apply never changes this feature.** It records a fresh read-only `WindowsImageFeatureAtApply` snapshot and continues the ordinary copy/verification path regardless of Enabled, Disabled or Unknown feature state. The diagnostic lock cycle also continues normally. Feature actions cannot run alongside a GIF apply or diagnostic test. After a confirmed successful disable, a dialog explains that a reboot might be needed to see the change and offers **Not now** and **Reboot**. **Not now** is the default and dismisses the dialog; **Reboot** explicitly requests a local Windows restart. The dialog reminds the user to save their work and apply the GIF again after startup. Failed or uncertain feature actions do not offer reboot, and leaving the page or closing the window dismisses the prompt. No restart is enforced before Apply. Enable feedback also explains that a restart may be needed before the lock screen uses the changed setting.
+
+The reboot request uses the system `shutdown.exe /r /t 0`, without forced application closure. A nonzero timeout would imply `/f`, so it is deliberately zero ([Microsoft shutdown command documentation](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/shutdown)). Windows can block the restart for unsaved work or permissions. Launch failures and rejected requests show manual-restart guidance while retaining the successful feature-disable result. Local diagnostic action history records `RestartWindows` as Requested, RequestAccepted, Failed or Unobserved; command acceptance is not proof that Windows finished rebooting. Waiting for the command is bounded to ten seconds; a timeout is Unobserved because Windows may still restart. No usage analytics event is added for the prompt.
+
+When a user explicitly enables or disables the selected feature, the authenticated elevated helper captures that feature ID for the operation, requests the state through the native runtime setter, and persists the same state. For the default ID, the registry location is:
+
+```text
+HKLM\SYSTEM\CurrentControlSet\Control\FeatureManagement\Overrides\8\2920700556
+    EnabledState        REG_DWORD  1 (Disabled) or 2 (Enabled)
+    EnabledStateOptions REG_DWORD  0
+```
+
+Other IDs use their corresponding encoded leaf under the same priority-8 override root. The helper verifies runtime and registry readbacks independently. Native-set failures, registry failures, denied elevation, partial changes and uncertain outcomes remain distinct. The request accepts a validated positive feature ID and the enable/disable operation; callers cannot supply an arbitrary path, priority or registry data. Existing unrelated registry metadata is retained.
+
+This is a persistent, machine-wide setting. Apply and Remove do not reset it. Settings > Enable writes Enabled; it does not restore the historical absence of an override or recreate a previous registry snapshot. A true rollback would need evidence of the prior state and ownership, preserve unrelated metadata, and account for subsequent changes. Deleting the leaf is not a general rollback instruction.
+
+Windows Settings > Accessibility > Visual effects > **Animation effects** is recorded independently. The reproduced workaround used this setting on. Effects Off can still leave the image still or black even with the expected feature state and intact GIF cache files. The app does not change this accessibility preference.
+
+## Implementation evidence and limits
+
+ViVe implements separate runtime and registry-backed configuration, with Disabled=1 and Enabled=2. The explicit button uses that runtime-plus-persistence approach, without bundling a ViVe executable or library or modifying Windows binaries. The reader uses `RtlQueryFeatureConfiguration`; the runtime writer uses `RtlSetFeatureConfigurations` for the selected feature and requested state. Both are undocumented Windows internals rather than a supported personalization API. Native return codes and fresh readbacks are retained instead of treating invocation alone as success.
+
+The original controlled disable/remove/reapply crossover used a registry intervention followed by restart. Actual app verification has also shown that secure-screen playback can remain still after a successfully verified runtime and persistent disable, then animate after Windows restarts. The UI therefore offers restart guidance without treating a successful setter as immediate playback success or imposing an automatic restart. Actual animation still needs observation on the lock and sign-in screens. A diagnostic caller's queried configuration does not prove LogonUI's exact state, executed branch or frame scheduling.
+
+Sources reviewed for the interface and behavior:
+
+- [ViVe native declarations](https://github.com/thebookisclosed/ViVe/blob/master/ViVe/NativeMethods.Ntdll.cs), [native structure layout](https://github.com/thebookisclosed/ViVe/blob/master/ViVe/NativeStructs.cs) and [state/priority/store enums](https://github.com/thebookisclosed/ViVe/blob/master/ViVe/NativeEnums.cs).
+- [ViVe feature manager](https://github.com/thebookisclosed/ViVe/blob/master/ViVe/FeatureManager.cs) and [ViVeTool action flow](https://github.com/thebookisclosed/ViVe/blob/master/ViVeTool/Program.cs) for runtime configuration and persistent overrides.
+- [ViVe feature-ID encoding](https://github.com/thebookisclosed/ViVe/blob/master/ViVe/ObfuscationHelpers.cs) for deriving the registry leaf from the selected ID.
+- [System Informer native runtime declarations](https://github.com/winsiderss/phnt/blob/master/ntrtl.h) for independent native-interface comparison. Private interfaces can evolve; unexpected results must remain visible rather than inferred as success.
+
+## Diagnostic evidence
+
+`ApplyResult.WindowsImageFeatureAtApply` contains only the read-only state observed during Apply, including the actual feature ID. Baseline and later environment observations retain configuration under the generic `Windows image feature` key alongside Animation effects. These values report native query status, caller runtime state/priority, stored override existence/state/options and errors. The analysis helper also accepts the older `Windows image feature 38943831` environment key. Missing evidence in older reports is unknown rather than false or failed.
+
+`PrerequisiteActions` separately records the latest 100 actions from the current app lifetime. Each timestamped entry contains the action, outcome, optional detail and optional feature result. Feature results include desired state, native-set status, attempted change, observed runtime/overall change, uncertain-outcome flag, errors and before/after snapshots. The same entries go to the existing application log; this action history and feature evidence are not sent to external usage analytics. Export captures the latest action history, including actions before the test started or after it finished, and redacts personal details. A bounded history can omit older entries and is not a complete audit trail.
+
+`Changed` means an observed runtime or registry change, not playback success. Partial changes can coexist with failure. `ChangeOutcomeUnknown` means the final response or readback was unavailable: `Changed=false` then does not prove nothing changed. Re-check or repeat the explicit action to resolve a failed preparation; applying a GIF will not repair it. The analysis helper retains older `ApplyResult.WindowsImageFeature` objects as legacy evidence, separate from new read-only snapshots and button actions.
+
+Feature results and before/after snapshots retain the actual ID captured for the operation. ID preference edits and resets have separate `ChangeWindowsImageFeatureId` and `ResetWindowsImageFeatureId` action records with old/new selections in the detail. Changing the current preference never relabels historical snapshots or actions as belonging to the newly selected feature.
+
+Synthetic tests cover state findings, independent snapshots, custom IDs and preference-history separation, legacy environment-key compatibility, export redaction, action retention, actions before/after a test, concurrent-operation guards and normal diagnostic progression across differing feature states. These checks do not change a real Windows feature or verify secure-screen playback.

@@ -7,10 +7,8 @@ using LockscreenGif.Models;
 using LockscreenGif.Services;
 using LockscreenGif.Services.Analytics;
 using LockscreenGif.ViewModels;
-using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
 using Windows.Media.Core;
 using Windows.Media.Editing;
 using Windows.Media.Playback;
@@ -29,7 +27,6 @@ public sealed partial class MainPage : Page
     private readonly AnalyticsService _analyticsService;
 
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _lockscreenModeTimer;
-    private LockscreenService.LockScreenMode _lastLockScreenMode = LockscreenService.LockScreenMode.Unknown;
 
     private StorageFile? _videoFile;
     private uint _videoWidth;
@@ -65,82 +62,6 @@ public sealed partial class MainPage : Page
 
         Unloaded += MainPage_Unloaded;
         App.MainWindow.Closed += MainWindow_Closed;
-    }
-
-    private void StartLockscreenModePolling()
-    {
-        _lockscreenModeTimer ??= DispatcherQueue.CreateTimer();
-        _lockscreenModeTimer.Interval = TimeSpan.FromSeconds(5);
-        _lockscreenModeTimer.IsRepeating = true;
-        _lockscreenModeTimer.Tick -= LockscreenModeTimer_Tick;
-        _lockscreenModeTimer.Tick += LockscreenModeTimer_Tick;
-
-        RefreshLockscreenModeUi();
-        _lockscreenModeTimer.Start();
-    }
-
-    private void StopLockscreenModePolling()
-    {
-        if (_lockscreenModeTimer is null)
-        {
-            return;
-        }
-
-        _lockscreenModeTimer.Stop();
-        _lockscreenModeTimer.Tick -= LockscreenModeTimer_Tick;
-        _lockscreenModeTimer = null;
-    }
-
-    private void LockscreenModeTimer_Tick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args)
-    {
-        RefreshLockscreenModeUi();
-    }
-
-    private void RefreshLockscreenModeUi()
-    {
-        var mode = LockscreenService.TryGetLockScreenMode();
-        _lastLockScreenMode = mode;
-
-        var ok = mode is LockscreenService.LockScreenMode.PictureOrOther;
-
-        if (PrereqWarningIcon != null)
-        {
-            PrereqWarningIcon.Visibility = ok ? Visibility.Collapsed : Visibility.Visible;
-        }
-
-        if (LockscreenModeWarning != null)
-        {
-            LockscreenModeWarning.IsOpen = !ok;
-            LockscreenModeWarning.Title = "Check your lock screen mode";
-            var message =
-                mode == LockscreenService.LockScreenMode.Unknown
-                    ? "Windows lock screen mode could not be checked. Make sure Picture is selected in Windows Settings."
-                    : "Windows may be using Slideshow or Spotlight. Choose Picture in Windows Settings before setting your animation.";
-            LockscreenModeWarning.Message = message;
-            SetModeWarning.Message = message;
-        }
-
-        if (PrereqStep1Badge != null)
-        {
-            PrereqStep1Badge.Background = ok
-                ? (Brush)Application.Current.Resources["AccentFillColorDefaultBrush"]
-                : new SolidColorBrush(Colors.OrangeRed);
-        }
-
-        if (PrereqStep1Title != null)
-        {
-            PrereqStep1Title.Foreground = ok
-                ? (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"]
-                : new SolidColorBrush(Colors.OrangeRed);
-        }
-
-        if (PrereqStep1Body != null)
-        {
-            PrereqStep1Body.Foreground = ok
-                ? (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"]
-                : new SolidColorBrush(Colors.OrangeRed);
-        }
-        RefreshFlowUi();
     }
 
     static double RoundToSigFigs(double value, int digits = 2)

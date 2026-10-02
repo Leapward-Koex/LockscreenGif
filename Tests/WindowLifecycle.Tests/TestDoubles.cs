@@ -101,6 +101,21 @@ namespace LockscreenGif.Services.Diagnostics
     }
 }
 
+namespace LockscreenGif.Services.Lockscreen
+{
+    public sealed class WindowsImageFeatureService
+    {
+        public Task Idle { get; set; } = Task.CompletedTask;
+        public int WaitCalls { get; private set; }
+
+        public Task WaitForIdleAsync()
+        {
+            WaitCalls++;
+            return Idle;
+        }
+    }
+}
+
 namespace WindowLifecycle.Tests
 {
     public sealed class FakeErrorReporter : LockscreenGif.Contracts.Services.IErrorReporter
