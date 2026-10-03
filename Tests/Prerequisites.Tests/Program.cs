@@ -29,22 +29,62 @@ var enabled = new WindowsImageFeatureState
     OverrideExists = false,
 };
 Check(LockscreenSettings.InferMode(0, 0) == LockscreenService.LockScreenMode.PictureOrOther, "Both explicit off switches identify Picture");
+var pictureWithMissingSlideshow = LockscreenSettings.InferMode(null, 0, slideshowValueMissing: true);
+Check(
+    pictureWithMissingSlideshow == LockscreenService.LockScreenMode.PictureOrOther,
+    "An absent Slideshow value under an existing key identifies Picture when Spotlight is explicitly off"
+);
+Check(
+    LockscreenSettings.InferMode(null, 0) == LockscreenService.LockScreenMode.Unknown,
+    "A null Slideshow read without confirmed absence never identifies Picture"
+);
+Check(
+    LockscreenSettings.InferMode(null, 0, slideshowValueMissing: false) == LockscreenService.LockScreenMode.Unknown,
+    "An absent Lock Screen key or a present Slideshow name with unreadable data never identifies Picture"
+);
 Check(LockscreenSettings.InferMode(1, 0) == LockscreenService.LockScreenMode.Slideshow, "Slideshow does not satisfy Picture");
 Check(LockscreenSettings.InferMode(0, 1) == LockscreenService.LockScreenMode.Spotlight, "Spotlight does not satisfy Picture");
-foreach (var pair in new (object? Slide, object? Spotlight)[] { (null, null), (0, null), (null, 0), (1, 1), ("0", 0), (0, 7) })
+Check(
+    LockscreenSettings.InferMode(null, 1, slideshowValueMissing: true) == LockscreenService.LockScreenMode.Spotlight,
+    "An absent Slideshow value never overrides explicitly enabled Spotlight"
+);
+foreach (
+    var pair in new (object? Slide, object? Spotlight)[]
+    {
+        (null, null),
+        (0, null),
+        (1, 1),
+        ("0", 0),
+        (7, 0),
+        (Array.Empty<byte>(), 0),
+        (new byte[] { 0, 0 }, 0),
+        (new byte[] { 7 }, 0),
+        (0, 7),
+        (null, "0"),
+        (null, new byte[] { 0, 0 }),
+    }
+)
 {
     Check(
         LockscreenSettings.InferMode(pair.Slide, pair.Spotlight) == LockscreenService.LockScreenMode.Unknown,
-        "Absent, malformed or conflicting switch values never report Picture"
+        "Missing Spotlight, malformed or conflicting switch values never report Picture"
+    );
+    Check(
+        LockscreenSettings.InferMode(pair.Slide, pair.Spotlight, slideshowValueMissing: true) == LockscreenService.LockScreenMode.Unknown,
+        "The absence flag cannot override malformed, conflicting or missing Spotlight data"
     );
 }
 Check(
     LockscreenPrerequisites.Evaluate(LockscreenService.LockScreenMode.PictureOrOther, 1, current, disabled).Satisfied,
     "Picture plus an existing cache and a disabled feature satisfy both entries"
 );
+Check(
+    LockscreenPrerequisites.Evaluate(pictureWithMissingSlideshow, 1, current, disabled).Satisfied,
+    "Picture inferred from an absent Slideshow value clears the prerequisite with an existing cache and a disabled feature"
+);
 foreach (var count in new int?[] { 0, null })
 {
-    var result = LockscreenPrerequisites.Evaluate(LockscreenService.LockScreenMode.PictureOrOther, count, current, disabled);
+    var result = LockscreenPrerequisites.Evaluate(pictureWithMissingSlideshow, count, current, disabled);
     Check(
         !result.PictureAndCache.Satisfied && !result.Satisfied && result.PictureAndCache.CanAct,
         "Picture alone is insufficient with an absent or unreadable cache"
@@ -119,7 +159,8 @@ finally
     Directory.Delete(resolved, recursive: true);
 }
 FeaturePreferenceTests.Run(Check);
-Console.WriteLine($"{checks} prerequisite and feature preference checks passed. No Windows feature settings changed.");
+SessionMonitorTests.Run(Check);
+Console.WriteLine($"{checks} prerequisite, feature preference and session monitor checks passed. No Windows feature settings changed.");
 
 namespace LockscreenGif.Services
 {

@@ -18,6 +18,7 @@ public sealed class WindowsSessionMonitor : IDisposable
     public bool PowerNotificationsAvailable { get; private set; }
     public string? PowerError { get; private set; }
     public event Action<string>? Observed;
+    public event Action? WindowActivated;
 
     public void Start(IntPtr window)
     {
@@ -76,10 +77,22 @@ public sealed class WindowsSessionMonitor : IDisposable
         return process.SessionId;
     }
 
-    private void OnMessage(object? sender, WindowMessageEventArgs e)
+    private void OnMessage(object? sender, WindowMessageEventArgs e) =>
+        ObserveMessage(e.Message.MessageId, e.Message.WParam.ToUInt64(), e.Message.LParam);
+
+    internal void ObserveMessage(uint messageId, ulong wParam, IntPtr lParam)
     {
-        var code = unchecked((int)e.Message.WParam.ToUInt64());
-        if (e.Message.MessageId == 0x02B1 && e.Message.LParam.ToInt64() == _sessionId)
+        var code = unchecked((int)wParam);
+        if (messageId == 0x001C)
+        {
+            // WM_ACTIVATEAPP is the native cross-application focus notification.
+            // Keep it separate from diagnostic observations and leave the message unhandled.
+            if (wParam != 0)
+            {
+                WindowActivated?.Invoke();
+            }
+        }
+        else if (messageId == 0x02B1 && lParam.ToInt64() == _sessionId)
         {
             var name = code switch
             {
@@ -97,11 +110,11 @@ public sealed class WindowsSessionMonitor : IDisposable
                 Observed?.Invoke(name);
             }
         }
-        else if (e.Message.MessageId == 0x007E)
+        else if (messageId == 0x007E)
         {
             Observed?.Invoke("DisplayConfigurationChanged");
         }
-        else if (e.Message.MessageId == 0x0218)
+        else if (messageId == 0x0218)
         {
             if (code == 4)
             {
@@ -111,19 +124,19 @@ public sealed class WindowsSessionMonitor : IDisposable
             {
                 Observed?.Invoke("SystemResume");
             }
-            else if (code == 0x8013 && e.Message.LParam != IntPtr.Zero)
+            else if (code == 0x8013 && lParam != IntPtr.Zero)
             {
                 // POWERBROADCAST_SETTING: GUID, DWORD length, DWORD display state.
-                if (Marshal.PtrToStructure<Guid>(e.Message.LParam) != DisplayStateSetting)
+                if (Marshal.PtrToStructure<Guid>(lParam) != DisplayStateSetting)
                 {
                     return;
                 }
 
-                var length = Marshal.ReadInt32(e.Message.LParam, 16);
+                var length = Marshal.ReadInt32(lParam, 16);
                 if (length == 4)
                 {
                     Observed?.Invoke(
-                        Marshal.ReadInt32(e.Message.LParam, 20) switch
+                        Marshal.ReadInt32(lParam, 20) switch
                         {
                             0 => "DisplayOff",
                             1 => "DisplayOn",

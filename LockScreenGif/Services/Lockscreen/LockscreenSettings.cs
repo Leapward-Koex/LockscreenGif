@@ -10,9 +10,17 @@ internal static class LockscreenSettings
         {
             using var settings = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Lock Screen");
             using var delivery = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager");
+            var slideshow = settings?.GetValue("SlideshowEnabled");
+            var spotlight = delivery?.GetValue("RotatingLockScreenEnabled");
+            var slideshowValueMissing =
+                settings is not null
+                && slideshow is null
+                && !settings.GetValueNames().Contains("SlideshowEnabled", StringComparer.OrdinalIgnoreCase);
             // CreativeId/CreativeJson can remain after leaving Spotlight. Read the selection
-            // switches instead, and require explicit off values before inferring Picture.
-            return InferMode(settings?.GetValue("SlideshowEnabled"), delivery?.GetValue("RotatingLockScreenEnabled"));
+            // switches instead. Windows can leave SlideshowEnabled absent after selecting Picture;
+            // accept that only when its name is confirmed absent from an existing key and
+            // Spotlight is explicitly disabled. A null read alone does not establish absence.
+            return InferMode(slideshow, spotlight, slideshowValueMissing);
         }
         catch
         {
@@ -20,7 +28,7 @@ internal static class LockscreenSettings
         }
     }
 
-    internal static LockscreenService.LockScreenMode InferMode(object? slideshow, object? spotlight)
+    internal static LockscreenService.LockScreenMode InferMode(object? slideshow, object? spotlight, bool slideshowValueMissing = false)
     {
         var slide = ReadSwitch(slideshow);
         var rotate = ReadSwitch(spotlight);
@@ -36,7 +44,7 @@ internal static class LockscreenSettings
         {
             return LockscreenService.LockScreenMode.Spotlight;
         }
-        return slide == false && rotate == false
+        return (slide == false || slideshow is null && slideshowValueMissing) && rotate == false
             ? LockscreenService.LockScreenMode.PictureOrOther
             : LockscreenService.LockScreenMode.Unknown;
     }

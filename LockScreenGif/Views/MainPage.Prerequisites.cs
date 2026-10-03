@@ -12,6 +12,7 @@ public sealed partial class MainPage
 {
     private bool _prerequisitesLoaded;
     private bool _refreshingPrerequisites;
+    private bool _prerequisiteRefreshPending;
     private LockscreenPrerequisiteStatus? _prerequisites;
     private bool? _lastPrerequisitesSatisfied;
     private ContentDialog? _featureRebootDialog;
@@ -26,6 +27,11 @@ public sealed partial class MainPage
         _lockscreenModeTimer.Tick += PrerequisitesTimer_Tick;
         App.MainWindow.Activated -= PrerequisitesWindow_Activated;
         App.MainWindow.Activated += PrerequisitesWindow_Activated;
+        var sessions = App.GetService<WindowsSessionMonitor>();
+        sessions.Observed -= PrerequisitesSession_Observed;
+        sessions.Observed += PrerequisitesSession_Observed;
+        sessions.WindowActivated -= PrerequisitesNativeWindow_Activated;
+        sessions.WindowActivated += PrerequisitesNativeWindow_Activated;
         _lockscreenModeTimer.Start();
         _ = RefreshPrerequisitesAsync();
     }
@@ -33,9 +39,13 @@ public sealed partial class MainPage
     private void StopLockscreenModePolling()
     {
         _prerequisitesLoaded = false;
+        _prerequisiteRefreshPending = false;
         _featureRebootDialog?.Hide();
         _lockscreenModeTimer?.Stop();
         App.MainWindow.Activated -= PrerequisitesWindow_Activated;
+        var sessions = App.GetService<WindowsSessionMonitor>();
+        sessions.Observed -= PrerequisitesSession_Observed;
+        sessions.WindowActivated -= PrerequisitesNativeWindow_Activated;
     }
 
     private void PrerequisitesTimer_Tick(Microsoft.UI.Dispatching.DispatcherQueueTimer sender, object args) =>
@@ -45,16 +55,42 @@ public sealed partial class MainPage
     {
         if (args.WindowActivationState != WindowActivationState.Deactivated)
         {
-            _ = RefreshPrerequisitesAsync();
+            RequestPrerequisiteRefresh("WindowActivated");
         }
+    }
+
+    private void PrerequisitesSession_Observed(string observation)
+    {
+        if (observation == "SessionUnlock")
+        {
+            RequestPrerequisiteRefresh("SessionUnlock");
+        }
+    }
+
+    private void PrerequisitesNativeWindow_Activated() => RequestPrerequisiteRefresh("WindowActivated");
+
+    private void RequestPrerequisiteRefresh(string reason)
+    {
+        if (!_prerequisitesLoaded)
+        {
+            return;
+        }
+        Logger.Info($"Prerequisite refresh requested: {reason}.");
+        _ = RefreshPrerequisitesAsync();
     }
 
     private async Task RefreshPrerequisitesAsync()
     {
-        if (_refreshingPrerequisites || !_prerequisitesLoaded)
+        if (!_prerequisitesLoaded)
         {
             return;
         }
+        if (_refreshingPrerequisites)
+        {
+            _prerequisiteRefreshPending = true;
+            return;
+        }
+        _prerequisiteRefreshPending = false;
         _refreshingPrerequisites = true;
         try
         {
@@ -95,6 +131,10 @@ public sealed partial class MainPage
             if (_prerequisitesLoaded)
             {
                 RefreshFlowUi();
+                if (_prerequisiteRefreshPending)
+                {
+                    _ = RefreshPrerequisitesAsync();
+                }
             }
         }
     }
@@ -219,7 +259,7 @@ public sealed partial class MainPage
             Content = new TextBlock
             {
                 Text =
-                    "The Windows feature is disabled. You might have to reboot to see the change. Save your work before rebooting, then apply your GIF again after Windows starts.",
+                    "The Windows feature is disabled. You might have to reboot to see the change. Save your work before rebooting, then check your lock screen after Windows starts.",
                 TextWrapping = TextWrapping.Wrap,
             },
             PrimaryButtonText = "Reboot",
@@ -273,8 +313,8 @@ public sealed partial class MainPage
             Logger.Error("Windows restart request failed", ex);
             OperationStatus.Title = unknown ? "Restart request not confirmed" : "Windows could not be restarted";
             OperationStatus.Message = unknown
-                ? "The restart request could not be confirmed. If Windows does not restart, restart manually, then apply your GIF again."
-                : "The feature is disabled. Restart Windows manually to see the change, then apply your GIF again.";
+                ? "The restart request could not be confirmed. If Windows does not restart, restart manually, then check your lock screen."
+                : "The feature is disabled. Restart Windows manually to see the change, then check your lock screen.";
             OperationStatus.Severity = InfoBarSeverity.Warning;
             OperationStatus.IsOpen = true;
         }
@@ -287,7 +327,7 @@ public sealed partial class MainPage
             ? $"Windows feature {result.FeatureId} disabled"
             : $"Windows feature {result.FeatureId} was not configured";
         OperationStatus.Message = success
-            ? "The selected Windows feature is disabled. Apply your GIF to check the animation. If the image stays still, restart Windows, then apply your GIF again."
+            ? "The selected Windows feature is disabled. Lock your screen to check the animation. If the image stays still, restart Windows and check again."
             : result.Error ?? "Run a diagnostic test for more details.";
         if (result.ChangeOutcomeUnknown)
         {

@@ -9,6 +9,7 @@
     <Compile Include="../../LockScreenGif/Services/Lockscreen/LockscreenSettings.cs" Link="Production/LockscreenSettings.cs" />
     <Compile Include="../../LockScreenGif/Services/Lockscreen/LockscreenPrerequisites.cs" Link="Production/LockscreenPrerequisites.cs" />
     <Compile Include="../../LockScreenGif/Services/Lockscreen/WindowsImageFeatureSettings.cs" Link="Production/WindowsImageFeatureSettings.cs" />
+    <Compile Include="../../LockScreenGif/Services/Diagnostics/WindowsSessionMonitor.cs" Link="Production/WindowsSessionMonitor.cs" />
     <ProjectReference Include="../../LockscreenGif.Privileged.Contracts/LockscreenGif.Privileged.Contracts.csproj" />
   </ItemGroup>
 </Project>
