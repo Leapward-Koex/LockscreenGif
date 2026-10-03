@@ -59,6 +59,8 @@ public enum AnalyticsErrorKind
     NativeFailure,
     InvalidState,
     InvalidArgument,
+    CodecMissing,
+    SecurityPolicyBlocked,
 }
 
 public enum AnalyticsExceptionType
@@ -93,4 +95,17 @@ public enum AnalyticsGenerationStage
     OpeningOutput,
     LoadingPreview,
     Completing,
+}
+
+public enum AnalyticsMediaLoadStage
+{
+    PickingFile,
+    ReadingMetadata,
+    IndexingFrames,
+    OpeningPreview,
+    OpeningFile,
+    DecodingImage,
+    Completing,
+    PlayingPreview,
+    ReadingFallbackMetadata,
 }

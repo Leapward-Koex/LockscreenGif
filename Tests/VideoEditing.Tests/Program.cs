@@ -156,6 +156,7 @@ try
     );
     var singleGif = await GifSkiService.CreateGif(single.Directory, _ => { }, single.Timestamps, cfrIndex.TimeAt(12) - cfrIndex.TimeAt(11));
     Check(File.Exists(singleGif) && new FileInfo(singleGif).Length > 0, "single-frame GIF generation succeeds");
+    await MetadataTests.RunAsync(cfr, vfr);
     await ResolutionTests.RunAsync();
     await MediaFailureTests.RunAsync(allFiles[0]);
     using var activeCancellation = new CancellationTokenSource();

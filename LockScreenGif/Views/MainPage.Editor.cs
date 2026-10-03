@@ -54,6 +54,10 @@ public sealed partial class MainPage
 
     private void SetPreviewStatus(string? message)
     {
+        if (message is null && _mediaReady && VideoPreview.MediaPlayer is null)
+        {
+            message = "Playback unavailable. You can still preview frames, trim the clip and generate a GIF.";
+        }
         PreviewStatus.Text = message ?? "";
         PreviewStatus.Visibility = string.IsNullOrEmpty(message) ? Visibility.Collapsed : Visibility.Visible;
     }
@@ -391,7 +395,7 @@ public sealed partial class MainPage
 
     private void StartPlayback(bool fromStart = true)
     {
-        if (_frames is null || !_mediaReady || !CanInteractWithEditor)
+        if (_frames is null || !_mediaReady || !CanInteractWithEditor || VideoPreview.MediaPlayer is null)
         {
             return;
         }
@@ -634,15 +638,35 @@ public sealed partial class MainPage
                 return;
             }
 
-            CapturePreviewError(args.ExtendedErrorCode ?? new InvalidDataException("The video preview failed."));
-            _mediaReady = false;
+            var error = args.ExtendedErrorCode ?? new InvalidDataException("The video preview failed.");
+            _analyticsService.CaptureException(
+                error,
+                AnalyticsErrorContext.VideoPreview,
+                new AnalyticsProperties { MediaLoadStage = AnalyticsMediaLoadStage.PlayingPreview, PlaybackAvailable = false }
+            );
+            Logger.Error("Windows video playback failed; keeping frame editing and conversion", error);
             PausePreview();
-            HideVideoUi();
+            ReleasePreviewPlayer(preserveEditor: true);
             UpdateGenerateEnabled();
-            OperationStatus.Title = "Video preview could not open";
-            OperationStatus.Message = "Choose another MP4 or MKV video.";
-            OperationStatus.IsOpen = true;
+            ShowPlaybackUnavailable(error);
+            if (CanInteractWithEditor)
+            {
+                ShowFrame(_previewFrame);
+            }
         });
+
+    private void ShowPlaybackUnavailable(Exception exception)
+    {
+        OperationStatus.Title = "Video playback is unavailable";
+        OperationStatus.Message =
+            (
+                AnalyticsProperties.ClassifyError(exception) == AnalyticsErrorKind.CodecMissing
+                    ? "Windows could not find a compatible playback codec."
+                    : MediaFailureGuidance.Message(exception, "Windows could not play this video.")
+            ) + " You can still preview individual frames, trim the clip and generate your GIF.";
+        OperationStatus.Severity = InfoBarSeverity.Warning;
+        OperationStatus.IsOpen = true;
+    }
 
     private void CapturePreviewError(Exception exception)
     {

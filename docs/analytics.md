@@ -45,9 +45,9 @@ use synthetic tokens and fake HTTP transports.
 | `app_opened` | App activation completed, with the Windows compatibility fields listed below when available. |
 | `analytics_opted_out` | Final best-effort event captured when enabled sharing is turned off; only the preference transition can emit it. |
 | `page_viewed` | Lockscreen, Diagnostics, or Settings was opened. |
-| `gif_selected` | GIF selection completed, failed, or was cancelled; not a decoding or playback check. |
+| `gif_selected` | GIF selection and preview initialization completed, failed, or were cancelled. Success does not prove every frame decoded or Windows lock-screen playback. |
 | `video_load_started` | A selected video began indexing and preview initialization. |
-| `video_load_completed` | Video indexing and preview initialization completed, failed, or were cancelled. |
+| `video_load_completed` | Video loading completed, failed, or was cancelled. Success means frame editing is available; `playback_available=false` identifies a load that succeeded without Windows video playback. |
 | `gif_generation_started` | Conversion began with the requested clip and output settings. |
 | `gif_generation_completed` | GIF generation completed, failed, or was cancelled. |
 | `gif_save_completed` | Saving and file-provider completion finished, failed, or were cancelled. |
@@ -79,7 +79,7 @@ Properties use a fixed typed allowlist:
 | `outcome`, `page`, `error_kind` | Bounded categories for results, navigation, and errors. |
 | `exception_type`, `error_hresult` | Allowlisted exception family and signed 32-bit HRESULT on exception failures. Unknown types use `other`; runtime type names and exception text are never sent. |
 | `error_context` | On `$exception`, the fixed error boundary, such as `gif_generation`, `video_load`, `lockscreen_apply`, `diagnostic_run`, or `app_crash`. |
-| `error_component`, `native_error_code` | `ffmpeg` or `gifski` and their numeric exit/return code for structured media failures. A Win32 exception also supplies its numeric native error code, without a media component. |
+| `error_component`, `native_error_code` | `ffmpeg` or `gifski` and their numeric exit/return code for structured media failures. Win32 exceptions and failed `HRESULT_FROM_WIN32` values also supply their numeric Win32 code, without implying a media component. Other HRESULT facilities retain only `error_hresult`. |
 | `operation_id`, `workflow` | Attempt correlation and `lockscreen` versus `diagnostics` apply context. |
 | `lockscreen_source` | Origin of the GIF on both `lockscreen_apply_started` and `lockscreen_apply_completed`: `video` (generated in the app), `user_gif` (picked by the user), or `bundled_gif` (the diagnostic reference animation). `unknown` is used when an internal caller cannot supply provenance. |
 | `duration_ms` | Elapsed operation time, excluding the file picker where applicable. |
@@ -87,6 +87,8 @@ Properties use a fixed typed allowlist:
 | `requested_fps_mode`, `source_fps` | Mode is `all_source_frames` for requested FPS `0`, otherwise `target`. Source FPS is nominal video metadata when known, not measured output FPS. Zero remains in `requested_fps` for compatibility. |
 | `clip_duration_seconds`, `selected_frame_count` | The requested conversion range. |
 | `extracted_frame_count` | Frames reported by FFmpeg after successful extraction. May be fewer than selected source frames when a target FPS is used; omitted if extraction fails. |
+| `media_load_stage` | Last observed GIF selection or video load stage: `picking_file`, `reading_metadata`, `indexing_frames`, `opening_preview`, `opening_file`, `decoding_image`, `completing`, `playing_preview`, or `reading_fallback_metadata`. Retained on terminal events and companion errors when available. |
+| `metadata_fallback_used`, `playback_available` | Optional video load observations: whether the bundled FFmpeg metadata reader was attempted, and whether Windows video playback initialized. `false` is an observed result; an absent value means not yet known. Runtime playback failures report `playback_available=false`. These do not certify successful GIF generation or lockscreen playback. |
 | `failure_stage`, `failure_stage_duration_ms` | Generation stage where an exception was caught, and elapsed time within that stage. Stages are `preparing`, `extracting_frames`, `encoding_gif`, `opening_output`, `loading_preview`, and `completing`. |
 | `extraction_duration_ms`, `encoding_duration_ms`, `preview_duration_ms` | Elapsed times for completed generation stages, retained if a later stage fails. A missing value means the stage did not complete, not zero time. |
 | `uses_reference_gif` | Whether a diagnostic test requested the bundled reference GIF. |
@@ -135,6 +137,8 @@ Each `$exception` contains:
   `handled=true`; the existing fatal handler uses `false`.
 - `$exception_fingerprint`: a stable SHA-256 of the approved boundary, exception
   family, category, generation stage, HRESULT, native component and native code.
+  A known media load stage also distinguishes failures; missing or invalid stages
+  leave the previous grouping unchanged. Recovery flags do not split issues.
   Operation IDs, source selections, durations, app versions and installation IDs
   do not split an issue into new fingerprints.
 - The available typed operation ID, workflow, source, timing and error properties
@@ -157,9 +161,11 @@ because the same exception reaches another boundary.
 Covered boundaries include GIF selection/generation/save, video load and preview,
 log/report export, lockscreen apply/removal, main-action and diagnostics UI
 fallbacks, log-folder opening, shutdown failures, actual diagnostic run/trace
-failures, lockscreen verification failures, and the fatal handler. Preview and
+failures, lockscreen verification failures, and the fatal handler. Still-preview and
 thumbnail failures are each limited to one report per successfully loaded video;
-trace failures are limited per trace lifetime. Expected cancellation, diagnostic
+Windows playback failure is recorded separately before releasing the failed player,
+so an earlier still-preview error cannot hide a loss of playback.
+Trace failures are limited per trace lifetime. Expected cancellation, diagnostic
 observations, successful permission retries, ordinary polling/probe misses and
 analytics' own failures do not create issues.
 
@@ -183,6 +189,43 @@ Delivery remains best effort: opt-out, offline connections, queue pressure or
 immediate process termination may prevent an error from arriving. Error reporting
 does not delay fatal shutdown to force delivery.
 
+### Investigating GIF selection and video load failures
+
+Break down failed `gif_selected` and `video_load_completed` events by
+`media_load_stage`, then `error_kind` and `error_hresult`. Join their companion
+`$exception` by `operation_id` when supplied. A generic `E_FAIL` alone does not
+identify a corrupt file, missing codec, picker failure, or an app bug; the stage
+narrows which operation failed without collecting file names or exception text.
+Older events without a stage cannot be diagnosed retroactively.
+
+| Evidence | Interpretation |
+| --- | --- |
+| `error_hresult=-2147467259` (`0x80004005`) | `E_FAIL`, an unspecified native failure. Keep `native_failure`; do not infer a particular codec or security product. |
+| `error_hresult=-1072868846` (`0xC00D5212`) | `MF_E_TOPO_CODEC_NOT_FOUND`, now `codec_missing`. Windows could not find a compatible encode/decode transform; this does not identify the missing codec. |
+| `error_hresult=-2147020345` (`0x800711C7`) or `native_error_code=4551` | `ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION`, now `security_policy_blocked`. Windows Application Control blocked a file; the error alone does not identify which file or policy. |
+| Win32 `1260` or `577`, including their `HRESULT_FROM_WIN32` forms | `security_policy_blocked`: group-policy blocking or failed digital-signature verification respectively. These need trusted installation/policy review, not decoder retries. |
+
+The numeric definitions come from Microsoft's
+[Windows SDK error constants](https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/shared/winerror.h),
+[Media Foundation error constants](https://github.com/microsoft/win32metadata/blob/main/generation/WinSDK/RecompiledIdlHeaders/um/Mferror.h),
+[group-policy error reference](https://learn.microsoft.com/windows/win32/debug/system-error-codes--1000-1299-),
+and [signature-verification error reference](https://learn.microsoft.com/windows/win32/debug/system-error-codes--500-999-).
+Only the Win32 facility is decoded into `native_error_code`; `E_FAIL` and Media
+Foundation codes remain full HRESULTs. Raw messages, codec names, paths, and
+security-product names are not inspected or transmitted. Better classification
+and newly recorded stages can create new issue fingerprints after an update;
+compare error codes and app versions when relating them to historical issues.
+
+Use `metadata_fallback_used` and `playback_available` alongside the actual load
+outcome to distinguish recovered loads from failed attempts. A successful load
+with `playback_available=false` still needs separate generation and apply outcomes;
+it is not proof that conversion or Windows lockscreen playback succeeded.
+Windows metadata failure can produce a handled `$exception` followed by a successful
+load using the bundled FFmpeg reader. Windows preview failure can likewise produce
+a handled `$exception` while frame preview, trimming and conversion remain available.
+Count terminal `video_load_completed` outcomes when measuring unusable video loads;
+counting all handled exceptions would also include these recovered attempts.
+
 ### Investigating generation failures
 
 Break down `gif_generation_completed` with `outcome=failed` by `failure_stage`,
@@ -192,7 +235,7 @@ operation events. Result-based failures without an exception can still have only
 an outcome or coarse category. The fixed error families include cancellation,
 permission denied, invalid media, I/O, timeout, out of memory, disk full, missing
 or incompatible dependencies, native failure, invalid state, invalid argument,
-and other. Classification uses exception types and numeric codes; it never
+missing codecs, security-policy blocks, and other. Classification uses exception types and numeric codes; it never
 parses error messages. Known single-cause exception wrappers are unwrapped up
 to eight levels; multiple-cause aggregates remain aggregates.
 

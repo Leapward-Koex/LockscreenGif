@@ -64,6 +64,21 @@ internal static class Program
         App.MainWindow.Close();
         draft.Unload();
         Check(replaced.DisposeCalls == 1 && !draft.HasSession, "releasing a draft before window close remains safe");
+
+        _ = new App();
+        var failedPlayer = new FakePlayer();
+        var editable = new MainPage(failedPlayer);
+        editable.LosePlayback();
+        Check(
+            editable.MediaReady && !editable.HasSession && !editable.PlaybackEnabled,
+            "playback failure preserves editing and disables Play"
+        );
+        Check(failedPlayer.DisposeCalls == 1 && failedPlayer.Subscribers == 0, "failed playback releases native resources and callbacks");
+        editable.Unload();
+        Check(editable.MediaReady, "navigation preserves a draft with frame-only preview");
+        App.MainWindow.Close();
+        editable.Unload();
+        Check(!editable.MediaReady && failedPlayer.DisposeCalls == 1, "closing a frame-only draft remains safe");
     }
 
     private static (
