@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using GifskiNet;
 using LockscreenGif.Services;
 
@@ -42,6 +43,21 @@ internal static class MediaFailureTests
                 "Gifski preserves the native code when rejecting a corrupt input frame"
             );
         }
+        CheckLibraryLifetime();
+    }
+
+    public static void CheckLibraryLifetime()
+    {
+        // Gifski's Rust worker teardown can outlive Finish. This check does not
+        // acquire a library reference itself, which would hide premature unloading.
+        var expected = Path.Combine(AppContext.BaseDirectory, "Vendor", "gifski", "gifski.dll");
+        using var process = Process.GetCurrentProcess();
+        Check(
+            process
+                .Modules.Cast<ProcessModule>()
+                .Any(module => string.Equals(module.FileName, expected, StringComparison.OrdinalIgnoreCase)),
+            "Gifski module remains loaded after encoder success or failure while native workers finish exiting"
+        );
     }
 
     private static void CheckEncoderLifecycle()
