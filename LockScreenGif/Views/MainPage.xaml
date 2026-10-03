@@ -87,7 +87,7 @@
                         <StackPanel x:Name="ChooseStagePanel" Spacing="16">
                             <Border x:Name="PrerequisitesPanel" Padding="16"
                                     Style="{StaticResource PrerequisitesWarningStyle}" CornerRadius="8">
-                                <Expander IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                <Expander x:Name="PrerequisitesExpander" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
                                           Background="Transparent" AutomationProperties.Name="Prerequisites">
                                     <Expander.Resources>
                                         <SolidColorBrush x:Key="ExpanderHeaderBackground" Color="Transparent" />

@@ -13,6 +13,7 @@ public sealed partial class SettingsPage
     private bool _busy;
     private bool _loaded;
     private bool _refreshing;
+    private ContentDialog? _featureIdDialog;
     private Microsoft.UI.Dispatching.DispatcherQueueTimer? _refreshTimer;
 
     private void InitializeWindowsImageFeatureSettings()
@@ -35,6 +36,7 @@ public sealed partial class SettingsPage
         Unloaded += (_, _) =>
         {
             _loaded = false;
+            _featureIdDialog?.Hide();
             _refreshTimer?.Stop();
             App.MainWindow.Activated -= Window_Activated;
         };
@@ -142,6 +144,15 @@ public sealed partial class SettingsPage
         DiagnosticsActionLog.Record(action, "Started", $"PreviousFeatureId={previous}; FeatureId={featureId}.");
         try
         {
+            if (!reset && !await ConfirmFeatureIdChangeAsync(featureId))
+            {
+                DiagnosticsActionLog.Record(
+                    action,
+                    "Cancelled",
+                    $"PreviousFeatureId={previous}; RequestedFeatureId={featureId}; WindowsFeaturesChanged=False."
+                );
+                return;
+            }
             if (reset)
             {
                 settings.Reset();
@@ -181,6 +192,39 @@ public sealed partial class SettingsPage
             _busy = false;
             UpdatePreferenceControls();
             await RefreshFeatureAsync();
+        }
+    }
+
+    private async Task<bool> ConfirmFeatureIdChangeAsync(uint featureId)
+    {
+        if (!_loaded)
+        {
+            return false;
+        }
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            RequestedTheme = (XamlRoot.Content as FrameworkElement)?.RequestedTheme ?? ElementTheme.Default,
+            Title = "Change the Windows feature ID?",
+            Content = new TextBlock
+            {
+                Text =
+                    $"Only change this ID if you're sure you know what you're doing. The app will check and control Windows feature {featureId}. Using the wrong ID could affect an unrelated Windows feature.",
+                TextWrapping = TextWrapping.Wrap,
+            },
+            PrimaryButtonText = "Save ID",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+        };
+        _featureIdDialog = dialog;
+        try
+        {
+            var choice = await dialog.ShowAsync();
+            return _loaded && choice == ContentDialogResult.Primary;
+        }
+        finally
+        {
+            _featureIdDialog = null;
         }
     }
 

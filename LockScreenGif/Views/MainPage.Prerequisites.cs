@@ -13,6 +13,7 @@ public sealed partial class MainPage
     private bool _prerequisitesLoaded;
     private bool _refreshingPrerequisites;
     private LockscreenPrerequisiteStatus? _prerequisites;
+    private bool? _lastPrerequisitesSatisfied;
     private ContentDialog? _featureRebootDialog;
 
     private void StartLockscreenModePolling()
@@ -63,6 +64,7 @@ public sealed partial class MainPage
                 return;
             }
             _prerequisites = state;
+            UpdatePrerequisiteExpansion(state.Satisfied);
             PicturePrerequisiteDetail.Text = state.PictureAndCache.Detail;
             FeaturePrerequisiteDetail.Text = state.ImageFeature.Detail;
             SetPrerequisiteIcon(PicturePrerequisiteIcon, state.PictureAndCache.Satisfied);
@@ -84,6 +86,7 @@ public sealed partial class MainPage
             SetPrerequisiteIcon(PicturePrerequisiteIcon, false);
             SetPrerequisiteIcon(FeaturePrerequisiteIcon, false);
             PrerequisitesPanel.Style = (Style)Resources["PrerequisitesWarningStyle"];
+            UpdatePrerequisiteExpansion(false);
             DisableWindowsImageFeatureButton.IsEnabled = false;
         }
         finally
@@ -94,6 +97,16 @@ public sealed partial class MainPage
                 RefreshFlowUi();
             }
         }
+    }
+
+    private void UpdatePrerequisiteExpansion(bool satisfied)
+    {
+        if (_lastPrerequisitesSatisfied == satisfied)
+        {
+            return;
+        }
+        _lastPrerequisitesSatisfied = satisfied;
+        PrerequisitesExpander.IsExpanded = !satisfied;
     }
 
     private void SetPrerequisiteIcon(FontIcon icon, bool satisfied)
