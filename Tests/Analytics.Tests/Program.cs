@@ -28,6 +28,7 @@ internal static class AnalyticsTests
         await ReliabilityTests.RunAsync();
         await WindowsContextTests.RunAsync();
         await GenerationErrorTests.RunAsync();
+        await MediaLoadErrorTests.RunAsync();
         await ErrorTrackingTests.RunAsync();
         await ApplySourceTests.RunAsync();
         await ApplyFailureTests.RunAsync();

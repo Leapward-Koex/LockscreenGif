@@ -281,6 +281,7 @@ namespace LockscreenGif.Views
         public bool PreviewLoading { get; private set; } = true;
         public bool HasSession => _session is not null;
         public bool MediaReady => _mediaReady;
+        public bool PlaybackEnabled => PlaySelectionButton.IsEnabled;
         public bool PlaybackStopped => !_playing && !Rendering && !_playbackSeekPending;
         public bool Suspended => PlaybackStopped && !_resumeAfterInteraction && !_interacting && !PreviewLoading;
         public bool WorkCancelled =>
@@ -303,6 +304,12 @@ namespace LockscreenGif.Views
         public void Unload() => MainPage_Unloaded(this, new());
 
         public void Release() => ReleasePreviewPlayer();
+
+        public void LosePlayback()
+        {
+            PausePreview();
+            ReleasePreviewPlayer(preserveEditor: true);
+        }
 
         private void StopLockscreenModePolling() => Polling = false;
 

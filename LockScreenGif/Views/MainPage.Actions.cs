@@ -168,6 +168,9 @@ public sealed partial class MainPage
     private async void OpenGifButton_click(object sender, RoutedEventArgs e) =>
         await RunActionAsync(async token =>
         {
+            var stage = AnalyticsMediaLoadStage.PickingFile;
+            var operation = new AnalyticsProperties { OperationId = Guid.NewGuid() };
+            var timer = Stopwatch.StartNew();
             try
             {
                 var file = await PickFileAsync(PickerLocationId.PicturesLibrary, ".gif");
@@ -178,11 +181,12 @@ public sealed partial class MainPage
                 }
 
                 // Decode before committing so a failed replacement cannot discard the previous draft.
-                var bitmap = await PrepareGifPreviewAsync(file);
+                var bitmap = await PrepareGifPreviewAsync(file, value => stage = value);
                 if (!Flow.IsCurrentOperation(token))
                 {
                     return;
                 }
+                stage = AnalyticsMediaLoadStage.Completing;
                 ReleaseVideoDraft();
                 _sourceFile = _preparedGif = file;
                 _editSignature = null;
@@ -190,18 +194,44 @@ public sealed partial class MainPage
                 _lockscreenService.SetCurrentImage(file, LockscreenSourceKind.UserGif);
                 currentImage.Source = bitmap;
                 Flow.TryCommitSelection(token, MainFlowSource.Gif);
-                _analyticsService.Track(AnalyticsEvent.GifSelected, new AnalyticsProperties { Outcome = AnalyticsOutcome.Succeeded });
+                _analyticsService.Track(
+                    AnalyticsEvent.GifSelected,
+                    operation with
+                    {
+                        Outcome = AnalyticsOutcome.Succeeded,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                    }
+                );
             }
             catch (Exception ex)
             {
-                _analyticsService.TrackFailure(AnalyticsEvent.GifSelected, ex);
-                throw;
+                _analyticsService.TrackFailure(
+                    AnalyticsEvent.GifSelected,
+                    ex,
+                    operation with
+                    {
+                        MediaLoadStage = stage,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                    }
+                );
+                Logger.Error($"GIF selection failed at {stage}", ex);
+                ShowMediaFailure("GIF could not be opened", ex, "The GIF could not be opened. Try a local copy or another GIF.");
             }
         });
 
-    private static async Task<BitmapImage> PrepareGifPreviewAsync(StorageFile file)
+    private void ShowMediaFailure(string title, Exception exception, string fallback)
     {
+        OperationStatus.Title = title;
+        OperationStatus.Message = MediaFailureGuidance.Message(exception, fallback);
+        OperationStatus.Severity = InfoBarSeverity.Error;
+        OperationStatus.IsOpen = true;
+    }
+
+    private static async Task<BitmapImage> PrepareGifPreviewAsync(StorageFile file, Action<AnalyticsMediaLoadStage>? onStage = null)
+    {
+        onStage?.Invoke(AnalyticsMediaLoadStage.OpeningFile);
         using var stream = await file.OpenReadAsync();
+        onStage?.Invoke(AnalyticsMediaLoadStage.DecodingImage);
         var bitmap = new BitmapImage();
         await bitmap.SetSourceAsync(stream);
         return bitmap;
@@ -217,8 +247,14 @@ public sealed partial class MainPage
             }
             catch (Exception ex)
             {
-                _analyticsService.TrackFailure(AnalyticsEvent.VideoLoadCompleted, ex);
-                throw;
+                _analyticsService.TrackFailure(
+                    AnalyticsEvent.VideoLoadCompleted,
+                    ex,
+                    new AnalyticsProperties { MediaLoadStage = AnalyticsMediaLoadStage.PickingFile }
+                );
+                Logger.Error("Video picker failed", ex);
+                ShowMediaFailure("Video could not be selected", ex, "The file picker could not open the video. Try a readable local copy.");
+                return;
             }
             if (file is null)
             {
@@ -231,8 +267,11 @@ public sealed partial class MainPage
 
             var operationId = Guid.NewGuid();
             var timer = Stopwatch.StartNew();
-            _analyticsService.Track(AnalyticsEvent.VideoLoadStarted, new AnalyticsProperties { OperationId = operationId });
+            var operation = new AnalyticsProperties { OperationId = operationId, MetadataFallbackUsed = false };
+            var stage = AnalyticsMediaLoadStage.ReadingMetadata;
+            _analyticsService.Track(AnalyticsEvent.VideoLoadStarted, operation);
             MediaPlayer? preparedPlayer = null;
+            Exception? playbackError = null;
             var scanning = false;
             try
             {
@@ -242,13 +281,25 @@ public sealed partial class MainPage
                 var loadSource = _videoLoadCts = new CancellationTokenSource();
                 var token = loadSource.Token;
                 BeginVideoLoading(file.Name);
-                var (fps, width, height) = await Task.Run(() => GetVideoInfoAsync(file), token).WaitAsync(token);
-                if (fps is null || !double.IsFinite(fps.Value) || fps <= 0 || width == 0 || height == 0)
+                double fps;
+                uint width,
+                    height;
+                try
                 {
-                    throw new InvalidDataException("This video has no usable video stream.");
+                    (fps, width, height) = await Task.Run(() => GetVideoInfoAsync(file), token).WaitAsync(token);
+                }
+                catch (Exception ex) when (!token.IsCancellationRequested && MediaFailureGuidance.CanUseVideoFallback(ex))
+                {
+                    operation = operation with { MetadataFallbackUsed = true };
+                    _analyticsService.CaptureException(ex, AnalyticsErrorContext.VideoLoad, operation with { MediaLoadStage = stage });
+                    Logger.Error("Windows video metadata failed; trying the bundled decoder", ex);
+                    stage = AnalyticsMediaLoadStage.ReadingFallbackMetadata;
+                    var metadata = await VideoFrameService.ReadMetadataAsync(file.Path, token);
+                    (fps, width, height) = (metadata.Fps, metadata.Width, metadata.Height);
                 }
 
                 token.ThrowIfCancellationRequested();
+                stage = AnalyticsMediaLoadStage.IndexingFrames;
                 scanning = true;
                 VideoLoadStatus.Text = "Reading video frames…";
                 var progress = new Progress<int>(count =>
@@ -258,18 +309,38 @@ public sealed partial class MainPage
                         VideoLoadStatus.Text = $"Reading video frames… {count:N0} found";
                     }
                 });
-                var frames = await VideoFrameService.IndexAsync(file.Path, fps.Value, progress, token);
+                var frames = await VideoFrameService.IndexAsync(file.Path, fps, progress, token);
                 scanning = false;
                 token.ThrowIfCancellationRequested();
                 VideoLoadStatus.Text = $"Read {frames.Count:N0} frames. Opening preview…";
-                preparedPlayer = await OpenPreviewPlayerAsync(file, token);
+                stage = AnalyticsMediaLoadStage.OpeningPreview;
+                try
+                {
+                    preparedPlayer = await OpenPreviewPlayerAsync(file, token);
+                }
+                catch (Exception ex) when (!token.IsCancellationRequested && MediaFailureGuidance.CanUseVideoFallback(ex))
+                {
+                    playbackError = ex;
+                    _analyticsService.CaptureException(
+                        ex,
+                        AnalyticsErrorContext.VideoPreview,
+                        operation with
+                        {
+                            MediaLoadStage = stage,
+                            PlaybackAvailable = false,
+                        }
+                    );
+                    Logger.Error("Windows video playback unavailable; keeping frame editing and conversion", ex);
+                }
+                operation = operation with { PlaybackAvailable = preparedPlayer is not null };
                 token.ThrowIfCancellationRequested();
                 if (!Flow.IsCurrentOperation(flowToken))
                 {
                     return;
                 }
 
-                // Keep the previous selection intact until both scanning and media opening succeed.
+                stage = AnalyticsMediaLoadStage.Completing;
+                // Commit only after decoding/indexing succeeds. Windows playback is optional.
                 _previewCts?.Cancel();
                 _editorCts?.Cancel();
                 _editorCts?.Dispose();
@@ -296,24 +367,31 @@ public sealed partial class MainPage
                 TrimTimeline.Configure(frames);
                 GenerateLoading.Visibility = Visibility.Collapsed;
                 ReleasePreviewPlayer();
-                VideoPreview.SetMediaPlayer(preparedPlayer);
-                preparedPlayer = null; // The page now owns this player.
-                VideoPreview.MediaPlayer.MediaEnded += VideoPreview_MediaEnded;
-                VideoPreview.MediaPlayer.MediaFailed += VideoPreview_MediaFailed;
-                _session = VideoPreview.MediaPlayer.PlaybackSession;
-                _session.SeekCompleted += Session_SeekCompleted;
+                if (preparedPlayer is not null)
+                {
+                    VideoPreview.SetMediaPlayer(preparedPlayer);
+                    preparedPlayer = null; // The page now owns this player.
+                    VideoPreview.MediaPlayer.MediaEnded += VideoPreview_MediaEnded;
+                    VideoPreview.MediaPlayer.MediaFailed += VideoPreview_MediaFailed;
+                    _session = VideoPreview.MediaPlayer.PlaybackSession;
+                    _session.SeekCompleted += Session_SeekCompleted;
+                }
                 _mediaReady = true;
+                UpdatePlaybackButtons();
                 ShowVideoUi();
                 UpdateEditor();
                 Flow.TryCommitSelection(flowToken, MainFlowSource.Video);
                 SyncDraftState();
                 ShowFrame(0);
                 _ = LoadThumbnailsAsync(file.Path, frames, _editorCts.Token);
+                if (playbackError is not null)
+                {
+                    ShowPlaybackUnavailable(playbackError);
+                }
                 _analyticsService.Track(
                     AnalyticsEvent.VideoLoadCompleted,
-                    new AnalyticsProperties
+                    operation with
                     {
-                        OperationId = operationId,
                         Outcome = AnalyticsOutcome.Succeeded,
                         DurationMs = timer.Elapsed.TotalMilliseconds,
                     }
@@ -324,7 +402,11 @@ public sealed partial class MainPage
                 _analyticsService.TrackFailure(
                     AnalyticsEvent.VideoLoadCompleted,
                     ex,
-                    new AnalyticsProperties { OperationId = operationId, DurationMs = timer.Elapsed.TotalMilliseconds }
+                    operation with
+                    {
+                        MediaLoadStage = stage,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                    }
                 );
                 OperationStatus.Title = "Video loading cancelled";
                 OperationStatus.Message = _videoFile is null
@@ -337,9 +419,18 @@ public sealed partial class MainPage
                 _analyticsService.TrackFailure(
                     AnalyticsEvent.VideoLoadCompleted,
                     ex,
-                    new AnalyticsProperties { OperationId = operationId, DurationMs = timer.Elapsed.TotalMilliseconds }
+                    operation with
+                    {
+                        MediaLoadStage = stage,
+                        DurationMs = timer.Elapsed.TotalMilliseconds,
+                    }
                 );
-                throw;
+                Logger.Error($"Video loading failed at {stage}", ex);
+                ShowMediaFailure(
+                    "Video could not be opened",
+                    ex,
+                    "The video could not be read or decoded. Try a local copy or another video."
+                );
             }
             finally
             {

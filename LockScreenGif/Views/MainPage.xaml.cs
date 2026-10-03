@@ -285,8 +285,8 @@ public sealed partial class MainPage : Page
             var generated = await StorageFile.GetFileFromPathAsync(gifLocation);
             stage = AnalyticsGenerationStage.LoadingPreview;
             stageTimer.Restart();
-            var bitmap = await PrepareGifPreviewAsync(generated);
-            operation = operation with { PreviewDurationMs = stageTimer.Elapsed.TotalMilliseconds };
+            var bitmap = await PrepareGifPreviewAsync(generated, value => operation = operation with { MediaLoadStage = value });
+            operation = operation with { PreviewDurationMs = stageTimer.Elapsed.TotalMilliseconds, MediaLoadStage = null };
             if (!Flow.IsCurrentOperation(flowToken))
             {
                 _analyticsService.Track(
@@ -330,7 +330,10 @@ public sealed partial class MainPage : Page
             );
             GenerateLoading.ShowError = true;
             OperationStatus.Title = "GIF generation failed";
-            OperationStatus.Message = "The selected clip could not be converted. Try another selection or video.";
+            OperationStatus.Message = MediaFailureGuidance.Message(
+                ex,
+                "The selected clip could not be converted. Try another selection or video."
+            );
             OperationStatus.Severity = InfoBarSeverity.Error;
             OperationStatus.IsOpen = true;
             Flow.TryCompleteGeneration(flowToken, false);
@@ -348,13 +351,9 @@ public sealed partial class MainPage : Page
         return;
     }
 
-    public static async Task<(double? Fps, uint Width, uint Height)> GetVideoInfoAsync(StorageFile file)
+    public static async Task<(double Fps, uint Width, uint Height)> GetVideoInfoAsync(StorageFile file)
     {
-        if (file is null)
-        {
-            Logger.Error("File missing");
-            return (null, 0, 0);
-        }
+        ArgumentNullException.ThrowIfNull(file);
 
         try
         {
@@ -362,8 +361,12 @@ public sealed partial class MainPage : Page
             var props = clip.GetVideoEncodingProperties();
 
             double? fps = props.FrameRate.Denominator == 0 ? null : (double)props.FrameRate.Numerator / props.FrameRate.Denominator;
+            if (fps is null || !double.IsFinite(fps.Value) || fps <= 0 || props.Width == 0 || props.Height == 0)
+            {
+                throw new InvalidDataException("This video has no usable video stream metadata.");
+            }
 
-            return (fps, props.Width, props.Height);
+            return (fps.Value, props.Width, props.Height);
         }
         catch (Exception ex)
         {

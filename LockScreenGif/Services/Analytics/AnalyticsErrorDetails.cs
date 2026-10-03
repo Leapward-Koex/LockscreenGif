@@ -21,8 +21,7 @@ internal static class AnalyticsErrorDetails
             NativeErrorCode = error switch
             {
                 MediaProcessingException mediaError => mediaError.ErrorCode,
-                Win32Exception win32 => win32.NativeErrorCode,
-                _ => null,
+                _ => Win32Code(error),
             },
         };
     }
@@ -50,12 +49,16 @@ internal static class AnalyticsErrorDetails
         }
 
         // A Win32Exception's HResult does not necessarily contain NativeErrorCode.
-        var code = error is Win32Exception win32 ? win32.NativeErrorCode : error.HResult;
+        var code = Win32Code(error) ?? error.HResult;
         var nativeKind = code switch
         {
-            39 or 112 or unchecked((int)0x80070027) or unchecked((int)0x80070070) => AnalyticsErrorKind.DiskFull,
-            8 or 14 or unchecked((int)0x80070008) or unchecked((int)0x8007000E) => AnalyticsErrorKind.OutOfMemory,
-            5 or unchecked((int)0x80070005) => AnalyticsErrorKind.PermissionDenied,
+            39 or 112 => AnalyticsErrorKind.DiskFull,
+            8 or 14 => AnalyticsErrorKind.OutOfMemory,
+            5 => AnalyticsErrorKind.PermissionDenied,
+            // WinError.h: integrity policy, group policy, or signature verification blocked the file.
+            4551 or 1260 or 577 => AnalyticsErrorKind.SecurityPolicyBlocked,
+            // Mferror.h: MF_E_TOPO_CODEC_NOT_FOUND; does not identify which codec is missing.
+            unchecked((int)0xC00D5212) => AnalyticsErrorKind.CodecMissing,
             _ => (AnalyticsErrorKind?)null,
         };
         return nativeKind
@@ -73,6 +76,18 @@ internal static class AnalyticsErrorDetails
                 ArgumentException => AnalyticsErrorKind.InvalidArgument,
                 _ => AnalyticsErrorKind.Other,
             };
+    }
+
+    private static int? Win32Code(Exception error)
+    {
+        if (error is Win32Exception win32)
+        {
+            return win32.NativeErrorCode;
+        }
+
+        // Only HRESULT_FROM_WIN32 failures contain a Win32 code in their low word.
+        // E_FAIL, Media Foundation, and other facilities must keep their original HRESULT only.
+        return ((uint)error.HResult & 0xFFFF0000U) == 0x80070000U ? error.HResult & 0xFFFF : null;
     }
 
     internal static Exception Unwrap(Exception exception)

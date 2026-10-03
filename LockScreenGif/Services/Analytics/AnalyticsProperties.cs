@@ -33,6 +33,13 @@ public sealed record AnalyticsProperties
 
     public AnalyticsGenerationStage? FailureStage { get; init; }
 
+    public AnalyticsMediaLoadStage? MediaLoadStage { get; init; }
+
+    // Recovery and capability observations; an absent value means not yet known.
+    public bool? MetadataFallbackUsed { get; init; }
+
+    public bool? PlaybackAvailable { get; init; }
+
     public double? FailureStageDurationMs { get; init; }
 
     public double? ExtractionDurationMs { get; init; }

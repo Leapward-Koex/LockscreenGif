@@ -21,25 +21,25 @@ internal static class GenerationErrorTests
 
     private static async Task ErrorFamiliesAsync()
     {
-        var cases = new (Exception Error, AnalyticsErrorKind Kind, string ExceptionType)[]
+        var cases = new (Exception Error, AnalyticsErrorKind Kind, string ExceptionType, int? NativeCode)[]
         {
-            (new OutOfMemoryException(PrivateDetail), AnalyticsErrorKind.OutOfMemory, "out_of_memory"),
-            (new DllNotFoundException(PrivateDetail), AnalyticsErrorKind.DependencyMissing, "dll_not_found"),
-            (new EntryPointNotFoundException(PrivateDetail), AnalyticsErrorKind.DependencyMissing, "entry_point_not_found"),
-            (new BadImageFormatException(PrivateDetail), AnalyticsErrorKind.DependencyIncompatible, "bad_image_format"),
-            (new InvalidOperationException(PrivateDetail), AnalyticsErrorKind.InvalidState, "invalid_operation"),
-            (new ArgumentException(PrivateDetail), AnalyticsErrorKind.InvalidArgument, "argument"),
-            (new FileNotFoundException(PrivateDetail, PrivateDetail), AnalyticsErrorKind.Io, "file_not_found"),
-            (new DirectoryNotFoundException(PrivateDetail), AnalyticsErrorKind.Io, "directory_not_found"),
-            (new IOException(PrivateDetail), AnalyticsErrorKind.Io, "io"),
-            (new IOException(PrivateDetail, unchecked((int)0x80070070)), AnalyticsErrorKind.DiskFull, "io"),
-            (new UnauthorizedAccessException(PrivateDetail), AnalyticsErrorKind.PermissionDenied, "unauthorized_access"),
-            (new SecurityException(PrivateDetail), AnalyticsErrorKind.PermissionDenied, "security"),
-            (new InvalidDataException(PrivateDetail), AnalyticsErrorKind.InvalidMedia, "invalid_data"),
-            (new FormatException(PrivateDetail), AnalyticsErrorKind.InvalidMedia, "format"),
-            (new TimeoutException(PrivateDetail), AnalyticsErrorKind.Timeout, "timeout"),
-            (new COMException(PrivateDetail, unchecked((int)0x80004005)), AnalyticsErrorKind.NativeFailure, "com"),
-            (new PrivateMediaException(PrivateDetail), AnalyticsErrorKind.Other, "other"),
+            (new OutOfMemoryException(PrivateDetail), AnalyticsErrorKind.OutOfMemory, "out_of_memory", 14),
+            (new DllNotFoundException(PrivateDetail), AnalyticsErrorKind.DependencyMissing, "dll_not_found", null),
+            (new EntryPointNotFoundException(PrivateDetail), AnalyticsErrorKind.DependencyMissing, "entry_point_not_found", null),
+            (new BadImageFormatException(PrivateDetail), AnalyticsErrorKind.DependencyIncompatible, "bad_image_format", 11),
+            (new InvalidOperationException(PrivateDetail), AnalyticsErrorKind.InvalidState, "invalid_operation", null),
+            (new ArgumentException(PrivateDetail), AnalyticsErrorKind.InvalidArgument, "argument", 87),
+            (new FileNotFoundException(PrivateDetail, PrivateDetail), AnalyticsErrorKind.Io, "file_not_found", 2),
+            (new DirectoryNotFoundException(PrivateDetail), AnalyticsErrorKind.Io, "directory_not_found", 3),
+            (new IOException(PrivateDetail), AnalyticsErrorKind.Io, "io", null),
+            (new IOException(PrivateDetail, unchecked((int)0x80070070)), AnalyticsErrorKind.DiskFull, "io", 112),
+            (new UnauthorizedAccessException(PrivateDetail), AnalyticsErrorKind.PermissionDenied, "unauthorized_access", 5),
+            (new SecurityException(PrivateDetail), AnalyticsErrorKind.PermissionDenied, "security", null),
+            (new InvalidDataException(PrivateDetail), AnalyticsErrorKind.InvalidMedia, "invalid_data", null),
+            (new FormatException(PrivateDetail), AnalyticsErrorKind.InvalidMedia, "format", null),
+            (new TimeoutException(PrivateDetail), AnalyticsErrorKind.Timeout, "timeout", null),
+            (new COMException(PrivateDetail, unchecked((int)0x80004005)), AnalyticsErrorKind.NativeFailure, "com", null),
+            (new PrivateMediaException(PrivateDetail), AnalyticsErrorKind.Other, "other", null),
         };
         using var context = new TestContext(blockFirst: true);
         using var service = context.Create();
@@ -65,7 +65,14 @@ internal static class GenerationErrorTests
                 "Exception families are allowlisted."
             );
             Check(properties.GetProperty("error_hresult").GetInt32() == cases[index].Error.HResult, "The numeric HRESULT is preserved.");
-            Check(!properties.TryGetProperty("native_error_code", out _), "Managed failures do not invent native error codes.");
+            if (cases[index].NativeCode is { } nativeCode)
+            {
+                Check(properties.GetProperty("native_error_code").GetInt32() == nativeCode, "Win32 HRESULTs expose their numeric code.");
+            }
+            else
+            {
+                Check(!properties.TryGetProperty("native_error_code", out _), "Other HRESULT facilities do not invent Win32 codes.");
+            }
             Check(!properties.TryGetProperty("error_component", out _), "Managed failures do not invent media components.");
             Check(
                 !requests[index].Raw.Contains("private", StringComparison.OrdinalIgnoreCase),

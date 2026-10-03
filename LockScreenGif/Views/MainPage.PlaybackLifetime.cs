@@ -23,9 +23,9 @@ public sealed partial class MainPage
         ReleasePreviewPlayer();
     }
 
-    private void ReleasePreviewPlayer()
+    private void ReleasePreviewPlayer(bool preserveEditor = false)
     {
-        _mediaReady = false;
+        _mediaReady = preserveEditor && _mediaReady;
         _playbackSeekPending = false;
         var session = _session;
         _session = null;
@@ -43,6 +43,7 @@ public sealed partial class MainPage
             VideoPreview.SetMediaPlayer(null);
             player.Dispose();
         }
+        UpdatePlaybackButtons();
     }
 
     private void SuspendEditorPlayback()
@@ -66,6 +67,7 @@ public sealed partial class MainPage
     private void UpdatePlaybackButtons()
     {
         PlaySelectionButton.Content = _playing ? "Pause" : "Play";
+        PlaySelectionButton.IsEnabled = VideoPreview.MediaPlayer is not null;
         SelectionStartButton.IsEnabled = !_playing;
         SelectionEndButton.IsEnabled = !_playing;
     }

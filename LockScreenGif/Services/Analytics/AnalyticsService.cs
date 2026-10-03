@@ -531,6 +531,9 @@ public sealed class AnalyticsService : IDisposable, IErrorReporter
         Add("selected_frame_count", values.SelectedFrameCount is > 0 and <= 10_000_000 ? values.SelectedFrameCount : null);
         Add("extracted_frame_count", values.ExtractedFrameCount is > 0 and <= 10_000_000 ? values.ExtractedFrameCount : null);
         Add("failure_stage", GenerationStageName(values.FailureStage));
+        Add("media_load_stage", MediaLoadStageName(values.MediaLoadStage));
+        Add("metadata_fallback_used", values.MetadataFallbackUsed);
+        Add("playback_available", values.PlaybackAvailable);
         Add("failure_stage_duration_ms", Duration(values.FailureStageDurationMs));
         Add("extraction_duration_ms", Duration(values.ExtractionDurationMs));
         Add("encoding_duration_ms", Duration(values.EncodingDurationMs));
@@ -574,6 +577,10 @@ public sealed class AnalyticsService : IDisposable, IErrorReporter
             nativeCode,
             GenerationStageName(values.FailureStage) ?? "none"
         );
+        if (MediaLoadStageName(values.MediaLoadStage) is { } loadStage)
+        {
+            group += "|media_load:" + loadStage;
+        }
         properties["error_context"] = context;
         properties["$exception_list"] = new[]
         {
@@ -924,6 +931,8 @@ public sealed class AnalyticsService : IDisposable, IErrorReporter
             AnalyticsErrorKind.NativeFailure => "native_failure",
             AnalyticsErrorKind.InvalidState => "invalid_state",
             AnalyticsErrorKind.InvalidArgument => "invalid_argument",
+            AnalyticsErrorKind.CodecMissing => "codec_missing",
+            AnalyticsErrorKind.SecurityPolicyBlocked => "security_policy_blocked",
             _ => null,
         };
 
@@ -938,6 +947,21 @@ public sealed class AnalyticsService : IDisposable, IErrorReporter
             AnalyticsGenerationStage.OpeningOutput => "opening_output",
             AnalyticsGenerationStage.LoadingPreview => "loading_preview",
             AnalyticsGenerationStage.Completing => "completing",
+            _ => null,
+        };
+
+    private static string? MediaLoadStageName(AnalyticsMediaLoadStage? value) =>
+        value switch
+        {
+            AnalyticsMediaLoadStage.PickingFile => "picking_file",
+            AnalyticsMediaLoadStage.ReadingMetadata => "reading_metadata",
+            AnalyticsMediaLoadStage.IndexingFrames => "indexing_frames",
+            AnalyticsMediaLoadStage.OpeningPreview => "opening_preview",
+            AnalyticsMediaLoadStage.OpeningFile => "opening_file",
+            AnalyticsMediaLoadStage.DecodingImage => "decoding_image",
+            AnalyticsMediaLoadStage.Completing => "completing",
+            AnalyticsMediaLoadStage.PlayingPreview => "playing_preview",
+            AnalyticsMediaLoadStage.ReadingFallbackMetadata => "reading_fallback_metadata",
             _ => null,
         };
 
