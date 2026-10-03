@@ -148,7 +148,9 @@ try
         "reduced GIF frames retain the actual boundary images"
     );
 
+    Console.WriteLine("RUN native GIF encoding and decoder round-trip");
     var gif = await GifSkiService.CreateGif(variable.Directory, _ => { }, variable.Timestamps, vfrIndex.TimeAt(8) - vfrIndex.TimeAt(1));
+    MediaFailureTests.CheckLibraryLifetime();
     var gifIndex = await VideoFrameService.IndexAsync(gif, 25, null, CancellationToken.None);
     Check(
         Close(gifIndex.Duration, vfrIndex.TimeAt(8) - vfrIndex.TimeAt(1), 0.011),

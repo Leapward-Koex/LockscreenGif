@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Runtime.InteropServices;
 using GifskiNet;
 
 namespace LockscreenGif.Services;
@@ -8,6 +9,26 @@ public class GifSkiService
     private static readonly List<string> _tracked = [];
     private static readonly string _tempRoot = TempDirectoryService.GetAppTempRoot();
     private const string _prefix = "gifski_temp_";
+    private static readonly object _libraryLock = new();
+    private static nint _libraryHandle;
+
+    private static string EnsureLibraryLoaded()
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Vendor", "gifski", "gifski.dll");
+        lock (_libraryLock)
+        {
+            if (_libraryHandle == 0)
+            {
+                // Gifski.Net.Dispose frees its library reference, but Gifski's
+                // Rust/Rayon worker teardown can outlive Finish. Keep one reference
+                // for the process lifetime so workers cannot return into unmapped code.
+                // Each encoder must still Finish exactly once to release its own state.
+                // Assign only after success so a failed load does not poison retries.
+                _libraryHandle = NativeLibrary.Load(path);
+            }
+        }
+        return path;
+    }
 
     public static string CreateTempDirectory()
     {
@@ -91,7 +112,7 @@ public class GifSkiService
             }
 
             var (width, height) = ReadPngDimensions(frames[0].Path);
-            var gifskiDll = Path.Combine(AppContext.BaseDirectory, "Vendor", "gifski", "gifski.dll");
+            var gifskiDll = EnsureLibraryLoaded();
             var outputFile = Path.Combine(CreateTempDirectory(), "output.gif");
             using var gifski = Gifski.Create(
                 gifskiDll,

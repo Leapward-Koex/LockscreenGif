@@ -47,8 +47,13 @@ jobs:
         shell: pwsh
         run: |
           Get-ChildItem Tests -Recurse -Filter *.csproj | ForEach-Object {
+            Write-Host "Running regression checks: $($_.FullName)"
             dotnet run --project $_.FullName -c Release
-            if ($LASTEXITCODE -ne 0) { throw "Regression checks failed: $($_.Name)" }
+            $testExitCode = $LASTEXITCODE
+            if ($testExitCode -ne 0) {
+              $exitCodeBits = [BitConverter]::ToUInt32([BitConverter]::GetBytes([int]$testExitCode), 0)
+              throw ("Regression checks failed: {0} (exit code {1}, 0x{2:X8})" -f $_.Name, $testExitCode, $exitCodeBits)
+            }
           }
 
       - name: Publish the application
