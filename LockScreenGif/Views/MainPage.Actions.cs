@@ -4,6 +4,7 @@ using LockscreenGif.Models;
 using LockscreenGif.Services;
 using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
+using LockscreenGif.Services.Lockscreen;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -19,6 +20,8 @@ public sealed partial class MainPage
 {
     private bool _actionPending => Flow.IsBusy;
 
+    private Task RunActionAsync(Func<Task> action) => RunActionAsync(_ => action());
+
     private async Task RunActionAsync(
         Func<MainFlowOperationToken, Task> action,
         MainFlowOperation operation = MainFlowOperation.Selecting,
@@ -27,6 +30,14 @@ public sealed partial class MainPage
     {
         if (_actionPending)
         {
+            return;
+        }
+
+        if (changesLockscreen && App.GetService<WindowsImageFeatureService>().IsBusy)
+        {
+            OperationStatus.Title = "A Windows feature action is running";
+            OperationStatus.Message = "Wait for it to finish before changing the lock screen.";
+            OperationStatus.IsOpen = true;
             return;
         }
 

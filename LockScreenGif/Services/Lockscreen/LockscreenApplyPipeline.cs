@@ -1,12 +1,17 @@
 using System.Buffers.Binary;
 using System.Diagnostics;
 using LockscreenGif.Models;
+using LockscreenGif.Privileged;
 using Windows.Storage;
 using Windows.System.UserProfile;
 
 namespace LockscreenGif.Services.Lockscreen;
 
-internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheWriter writer)
+internal sealed class LockscreenApplyPipeline(
+    CacheLayout layout,
+    VerifiedCacheWriter writer,
+    Func<WindowsImageFeatureState> readWindowsImageFeature
+)
 {
     public async Task<LockscreenApplyResult> ApplyAsync(
         string sourcePath,
@@ -49,6 +54,31 @@ internal sealed class LockscreenApplyPipeline(CacheLayout layout, VerifiedCacheW
             source.Position = 0;
             var hash = await VerifiedCacheWriter.HashAsync(source, cancellationToken);
             progress.Report("Source", $"Source verified. Size={source.Length} bytes; SHA256={hash}.", sourcePath);
+
+            cancellationToken.ThrowIfCancellationRequested();
+            try
+            {
+                result.WindowsImageFeatureAtApply = readWindowsImageFeature();
+            }
+            catch (Exception ex)
+            {
+                // Configuration evidence is read-only and must not prevent copying the GIF.
+                result.WindowsImageFeatureAtApply = new WindowsImageFeatureState
+                {
+                    ObservedAt = DateTimeOffset.UtcNow,
+                    QueryError = ApplyProgress.Describe(ex),
+                };
+            }
+            progress.Report(
+                "WindowsImageFeature",
+                $"Windows feature configuration at apply: {WindowsImageFeature.Describe(result.WindowsImageFeatureAtApply)}",
+                severity: result.WindowsImageFeatureAtApply.QueryStatus != 0
+                || result.WindowsImageFeatureAtApply.QueryError is not null
+                || result.WindowsImageFeatureAtApply.OverrideError is not null
+                    ? "Warning"
+                    : "Info"
+            );
+            cancellationToken.ThrowIfCancellationRequested();
 
             if (useWindowsApi)
             {

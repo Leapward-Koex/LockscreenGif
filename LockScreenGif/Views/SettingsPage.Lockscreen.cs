@@ -18,6 +18,16 @@ public sealed partial class SettingsPage
             return;
         }
 
+        if (_busy || App.GetService<LockscreenGif.Services.Lockscreen.WindowsImageFeatureService>().IsBusy)
+        {
+            ShowRemovalStatus(
+                "A Windows feature action is running",
+                "Wait for the current operation to finish before changing the lock screen.",
+                InfoBarSeverity.Warning
+            );
+            return;
+        }
+
         var lockscreen = App.GetService<ILockscreenService>();
         if (App.GetService<DiagnosticsSessionService>().IsRunning)
         {
@@ -48,6 +58,9 @@ public sealed partial class SettingsPage
         }
 
         _removalPending = true;
+        _busy = true;
+        UpdatePreferenceControls();
+        EnableWindowsImageFeatureButton.IsEnabled = false;
         RemoveLockscreenButton.IsEnabled = false;
         RemoveLockscreenButton.Content = "Removing…";
         RemovalStatus.IsOpen = false;
@@ -99,8 +112,10 @@ public sealed partial class SettingsPage
         finally
         {
             _removalPending = false;
-            RemoveLockscreenButton.IsEnabled = true;
+            _busy = false;
+            UpdatePreferenceControls();
             RemoveLockscreenButton.Content = "Remove";
+            await RefreshFeatureAsync();
         }
     }
 

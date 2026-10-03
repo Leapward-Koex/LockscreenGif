@@ -1,6 +1,7 @@
 using LockscreenGif.Contracts.Services;
 using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
+using LockscreenGif.Services.Lockscreen;
 using LockscreenGif.Views;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
@@ -67,6 +68,7 @@ public partial class App
         {
             // Ordinary Lockscreen-page applies also finish their native operations first.
             await lockscreen.WaitForIdleAsync();
+            await GetService<WindowsImageFeatureService>().WaitForIdleAsync();
             StopAnalytics();
             GetService<WindowsSessionMonitor>().Dispose();
             MainWindow.AppWindow.Closing -= MainWindow_Closing;

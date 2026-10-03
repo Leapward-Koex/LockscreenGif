@@ -8,6 +8,7 @@ using LockscreenGif.Notifications;
 using LockscreenGif.Services;
 using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
+using LockscreenGif.Services.Lockscreen;
 using LockscreenGif.ViewModels;
 using LockscreenGif.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -91,7 +92,15 @@ public partial class App : Application
                     services.AddSingleton<WindowsSessionMonitor>();
                     services.AddSingleton<PrivilegedSessionFactory>();
                     services.AddSingleton<LockscreenVerificationService>();
-                    services.AddSingleton<DiagnosticsSessionService>();
+                    services.AddSingleton<WindowsImageFeatureService>();
+                    services.AddSingleton(sp => new DiagnosticsSessionService(
+                        sp.GetRequiredService<ILockscreenService>(),
+                        sp.GetRequiredService<WindowsSessionMonitor>(),
+                        sp.GetRequiredService<PrivilegedSessionFactory>(),
+                        sp.GetRequiredService<LockscreenVerificationService>(),
+                        sp.GetRequiredService<IErrorReporter>(),
+                        () => sp.GetRequiredService<WindowsImageFeatureService>().IsBusy
+                    ));
                     services.AddTransient<DiagnosticsViewModel>();
                     services.AddTransient<DiagnosticsPage>();
 

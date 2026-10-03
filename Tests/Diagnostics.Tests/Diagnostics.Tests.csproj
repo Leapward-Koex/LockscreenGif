@@ -20,6 +20,8 @@
     <Compile Include="../../LockScreenGif/ViewModels/DiagnosticFindingViewModel.cs" Link="ViewModels/DiagnosticFindingViewModel.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticTraceFindings.cs" Link="Services/DiagnosticTraceFindings.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticAnalyzer.cs" Link="Services/DiagnosticAnalyzer.cs" />
+    <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticWindowsImageFeature.cs" Link="Services/DiagnosticWindowsImageFeature.cs" />
+    <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticsActionLog.cs" Link="Services/DiagnosticsActionLog.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticCacheFindings.cs" Link="Services/DiagnosticCacheFindings.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticActivityTiming.cs" Link="Services/DiagnosticActivityTiming.cs" />
     <Compile Include="../../LockScreenGif/Services/Diagnostics/DiagnosticFileFindings.cs" Link="Services/DiagnosticFileFindings.cs" />

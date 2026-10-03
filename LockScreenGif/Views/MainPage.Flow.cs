@@ -123,8 +123,11 @@ public sealed partial class MainPage
                 ? Visibility.Visible
                 : Visibility.Collapsed;
         DiagnosticsButton.IsEnabled = !busy;
-        SetModeWarning.IsOpen =
-            stage == MainFlowStage.Set && _lastLockScreenMode != LockscreenGif.Services.LockscreenService.LockScreenMode.PictureOrOther;
+        SetModeWarning.IsOpen = stage == MainFlowStage.Set && _prerequisites?.PictureAndCache.Satisfied != true;
+        SetModeWarning.Message =
+            _prerequisites?.PictureAndCache.Detail
+            ?? "Picture mode and the lock-screen cache could not be checked. Open Windows lock-screen settings and choose Picture.";
+        UpdatePrerequisiteButtons();
 
         var showProgress = Flow.Operation is MainFlowOperation.Generating or MainFlowOperation.Applying or MainFlowOperation.Saving;
         OperationProgressPanel.Visibility = showProgress ? Visibility.Visible : Visibility.Collapsed;

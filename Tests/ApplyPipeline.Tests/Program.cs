@@ -6,9 +6,10 @@ using LockscreenGif.Services.Lockscreen;
 
 var tests = new (string Name, Func<Task> Run)[]
 {
-    ("Windows API preference defaults off and survives restarts", LockscreenPreferencesTests.Persistence),
-    ("Invalid Windows API preferences default off", LockscreenPreferencesTests.InvalidSettings),
-    ("Failed preference saves preserve the saved value and can retry", LockscreenPreferencesTests.SaveFailure),
+    ("The Windows API preference defaults off and persists both directions", LockscreenPreferencesTests.Persistence),
+    ("Invalid Windows API preferences safely default off", LockscreenPreferencesTests.InvalidSettings),
+    ("Failed Windows API saves retain the session value and support retry", LockscreenPreferencesTests.SaveFailure),
+    ("Shared preference changes notify all current consumers", LockscreenPreferencesTests.SharedNotifications),
     ("All destinations are copied and hash verified", CompleteApply),
     ("Empty cache is a failed apply", EmptyCache),
     ("A locked destination produces a partial failure", PartialFailure),
@@ -50,6 +51,26 @@ var tests = new (string Name, Func<Task> Run)[]
     ("Many path repairs share one helper process", PermissionTransportTests.ReusesOneProcess),
     ("Disconnected helper never relaunches", PermissionTransportTests.DisconnectedHelperDoesNotRelaunch),
     ("Trace startup failure and cancelled draining preserve the session", PermissionTransportTests.TraceFailureAndCancelledRead),
+    ("Applying with an enabled feature reads once without feature helpers", WindowsImageFeatureTests.EnabledFeatureIsReadOnly),
+    ("Unavailable feature evidence never prevents GIF copying", WindowsImageFeatureTests.UnavailableFeatureStillApplies),
+    ("Invalid and precancelled applies do not read the feature", WindowsImageFeatureTests.InvalidAndCancelledDoNotRead),
+    ("The apply-time feature snapshot survives copy failure and JSON serialization", WindowsImageFeatureTests.CopyFailureRetainsSnapshot),
+    ("Cancellation after the read preserves the feature snapshot", WindowsImageFeatureTests.CancellationPreservesSnapshot),
+    ("Explicit feature actions dispatch the requested direction", WindowsImageFeatureActionTests.ExplicitDirections),
+    ("Explicit feature no-ops and precancellation never launch a helper", WindowsImageFeatureActionTests.NoopAndCancellation),
+    ("Explicit feature actions refuse apply overlap", WindowsImageFeatureActionTests.RefusesApplyOverlap),
+    ("Explicit feature actions serialize and drain dispatched changes", WindowsImageFeatureActionTests.SerializesAndDrains),
+    ("Feature errors before dispatch do not imply an unknown mutation", WindowsImageFeatureActionTests.PreDispatchFailureIsKnown),
+    (
+        "Explicit feature actions retain the selected ID and reject mismatched observations",
+        WindowsImageFeatureActionTests.SelectedIdIsCaptured
+    ),
+    (
+        "Feature and permission requests share one connection and preserve cancelled replies",
+        PermissionTransportTests.FeatureRepairReusesConnection
+    ),
+    ("A disconnected feature reply retains change uncertainty", PermissionTransportTests.DisconnectedFeatureRetainsUncertainty),
+    ("Custom feature requests reject invalid IDs and mismatched replies", PermissionTransportTests.FeatureScopeValidation),
 };
 foreach (var test in tests)
 {

@@ -27,7 +27,17 @@ internal static class ProtectedMetadataTests
             created == 1 && helper.Requests.SequenceEqual(new[] { (fixture.Root, false) }),
             "Protected parent metadata must reach the permission helper during discovery."
         );
-        var pipeline = new LockscreenApplyPipeline(layout, new VerifiedCacheWriter(permissions));
+        var pipeline = new LockscreenApplyPipeline(
+            layout,
+            new VerifiedCacheWriter(permissions),
+            () =>
+                new()
+                {
+                    QueryStatus = 0,
+                    RuntimeState = 1,
+                    OverrideExists = false,
+                }
+        );
         var result = await pipeline.ApplyAsync(fixture.Source, false, new(null), default);
         Check(
             result.Success && result.Files.All(file => file.Copied && file.Verified),

@@ -54,6 +54,74 @@ def activity_row(report):
 
 
 class ReportTests(unittest.TestCase):
+    def test_missing_feature_evidence_is_unknown(self):
+        result = summarize(fixture())["WindowsImageFeature"]
+        self.assertFalse(result["Present"])
+        self.assertIsNone(result["AtApply"])
+        self.assertIsNone(result["LegacyApplyAction"])
+        self.assertEqual(result["Actions"], [])
+        self.assertIsNone(result["BaselineAnimationEffects"])
+
+    def test_legacy_feature_result_is_preserved_without_reclassifying_it(self):
+        report = fixture()
+        report["Environment"] = {"Animation effects": "False", "Windows image feature 38943831": "Synthetic baseline"}
+        feature = {
+            "FeatureId": 38943831, "DesiredState": "Disabled", "Outcome": "Failed",
+            "ChangeAttempted": True, "Changed": False, "ChangeOutcomeUnknown": True, "RestartRequired": True,
+            "Before": {"QueryStatus": 0, "RuntimeState": 2, "RuntimePriority": 0, "OverrideExists": False},
+            "After": {"QueryStatus": 0, "RuntimeState": 2, "RuntimePriority": 0,
+                      "OverrideExists": True, "OverrideState": 1, "OverrideOptions": 0},
+            "Error": "Synthetic response failure",
+        }
+        report["ApplyResult"]["WindowsImageFeature"] = feature
+        original = copy.deepcopy(report)
+        result = summarize(report)["WindowsImageFeature"]
+        self.assertTrue(result["Present"])
+        self.assertEqual(result["BaselineAnimationEffects"], "False")
+        self.assertEqual(result["LegacyApplyAction"], feature)
+        self.assertIsNone(result["AtApply"])
+        self.assertEqual(report, original)
+
+    def test_feature_actions_and_readonly_apply_snapshot_are_separate(self):
+        report = fixture()
+        state = {"QueryStatus": 0, "RuntimeState": 2, "RuntimePriority": 0,
+                 "OverrideExists": True, "OverrideState": 1, "OverrideOptions": 0}
+        report["ApplyResult"]["WindowsImageFeatureAtApply"] = state
+        feature = {"FeatureId": 38943831, "DesiredState": "Disabled", "Outcome": "Failed",
+                   "ChangeAttempted": True, "Changed": False, "ChangeOutcomeUnknown": True,
+                   "RuntimeChanged": False, "NativeSetStatus": -1073741790, "Before": state,
+                   "After": {"RuntimeState": 1}, "Error": "Synthetic response failure"}
+        report["PrerequisiteActions"] = [{"Timestamp": "2026-10-02T13:00:00+13:00",
+                                         "Action": "DisableWindowsImageFeature", "Outcome": "Failed",
+                                         "Detail": "Synthetic", "WindowsImageFeature": feature}]
+        original = copy.deepcopy(report)
+        result = summarize(report)["WindowsImageFeature"]
+        self.assertEqual(result["AtApply"], state)
+        self.assertEqual(result["Actions"][0]["WindowsImageFeature"], feature)
+        self.assertEqual(result["Actions"][0]["TimestampUtc"], "2026-10-02T00:00:00Z")
+        self.assertIsNone(result["LegacyApplyAction"])
+        self.assertEqual(report, original)
+
+    def test_configurable_feature_ids_preserve_history_and_environment_key_compatibility(self):
+        report = fixture()
+        report["Environment"] = {"Windows image feature 38943831": "Legacy baseline"}
+        self.assertEqual(summarize(report)["WindowsImageFeature"]["BaselineConfiguration"], "Legacy baseline")
+        report["Environment"]["Windows image feature"] = "Feature=12345678; RuntimeState=Enabled(2)"
+        report["ApplyResult"]["WindowsImageFeatureAtApply"] = {"FeatureId": 12345678, "RuntimeState": 2}
+        report["PrerequisiteActions"] = [
+            {"Action": "ChangeWindowsImageFeatureId", "Outcome": "Succeeded", "Detail": "38943831 -> 12345678"},
+            {"Action": "DisableWindowsImageFeature", "Outcome": "Succeeded", "WindowsImageFeature": {
+                "FeatureId": 87654321, "Before": {"FeatureId": 87654321, "RuntimeState": 2},
+                "After": {"FeatureId": 87654321, "RuntimeState": 1}}},
+            {"Action": "ResetWindowsImageFeatureId", "Outcome": "Succeeded", "Detail": "87654321 -> 38943831"}]
+        original = copy.deepcopy(report)
+        result = summarize(report)["WindowsImageFeature"]
+        self.assertEqual(result["BaselineConfiguration"], report["Environment"]["Windows image feature"])
+        self.assertEqual(result["AtApply"]["FeatureId"], 12345678)
+        self.assertEqual(result["Actions"][1]["WindowsImageFeature"]["After"]["FeatureId"], 87654321)
+        self.assertEqual(result["Actions"][2]["Detail"], "87654321 -> 38943831")
+        self.assertEqual(report, original)
+
     def test_large_baseline_is_not_applied_gif_access(self):
         report = fixture()
         result = summarize(report)

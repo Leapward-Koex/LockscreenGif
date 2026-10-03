@@ -12,4 +12,7 @@
     <Compile Include="../../LockScreenGif/Models/LockscreenSource.cs" Link="Production/LockscreenSource.cs" />
     <Compile Include="../../LockScreenGif/Models/LockscreenApplyResult.cs" Link="Production/LockscreenApplyResult.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../LockscreenGif.Privileged.Contracts/LockscreenGif.Privileged.Contracts.csproj" />
+  </ItemGroup>
 </Project>

@@ -11,17 +11,14 @@ public sealed class LockscreenPreferences : INotifyPropertyChanged
 
     public LockscreenPreferences(string path)
     {
-        _path = path;
+        _path = Path.GetFullPath(path);
         try
         {
-            if (File.Exists(path))
-            {
-                _useWindowsApi = JsonSerializer.Deserialize<SavedPreferences>(File.ReadAllText(path))?.UseWindowsApi == true;
-            }
+            _useWindowsApi = JsonSerializer.Deserialize<SavedPreferences>(File.ReadAllText(_path))?.UseWindowsApi == true;
         }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException or JsonException)
         {
-            // An unreadable preference must never enable the optional Windows API.
+            // Missing, unreadable or malformed preferences must not enable the optional Windows API.
         }
     }
 
@@ -38,21 +35,28 @@ public sealed class LockscreenPreferences : INotifyPropertyChanged
             {
                 return;
             }
-
             _useWindowsApi = value;
+            var temporaryPath = _path + "." + Guid.NewGuid().ToString("N") + ".tmp";
             try
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-                var temporaryPath = _path + ".tmp";
                 File.WriteAllText(temporaryPath, JsonSerializer.Serialize(new SavedPreferences { UseWindowsApi = value }));
                 File.Move(temporaryPath, _path, overwrite: true);
                 HasSaveError = false;
             }
-            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException)
             {
+                // Keep the requested value for this session while preserving the prior saved file.
                 HasSaveError = true;
             }
-
+            finally
+            {
+                try
+                {
+                    File.Delete(temporaryPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Security.SecurityException) { }
+            }
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UseWindowsApi)));
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasSaveError)));
         }

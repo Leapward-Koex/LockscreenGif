@@ -8,5 +8,6 @@
   <ItemGroup>
     <Compile Include="../../LockScreenGif/Models/MainFlowState.cs" Link="Production/MainFlowState.cs" />
     <Compile Include="../../LockScreenGif/Models/LockscreenApplyResult.cs" Link="Production/LockscreenApplyResult.cs" />
+    <ProjectReference Include="../../LockscreenGif.Privileged.Contracts/LockscreenGif.Privileged.Contracts.csproj" />
   </ItemGroup>
 </Project>

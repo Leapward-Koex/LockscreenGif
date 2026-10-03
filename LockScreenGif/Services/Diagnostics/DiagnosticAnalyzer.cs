@@ -26,6 +26,8 @@ public static class DiagnosticAnalyzer
             findings.Add(DiagnosticFileFindings.Applied(apply, session.Gif?.Sha256));
         }
 
+        findings.AddRange(DiagnosticWindowsImageFeature.Analyze(session));
+
         findings.AddRange(DiagnosticCacheFindings.Analyze(session));
         if (DiagnosticFileFindings.AfterUnlock(session) is { } afterUnlock)
         {

@@ -10,6 +10,7 @@ public sealed class DiagnosticsSessionService
     private readonly ILockscreenService _lockscreen;
     private readonly WindowsSessionMonitor _windows;
     private readonly PrivilegedSessionFactory _privileged;
+    private readonly Func<bool>? _featureOperationBusy;
     private readonly LockscreenVerificationService? _verification;
     private readonly IErrorReporter? _errorReporter;
     private DiagnosticRun? _run;
@@ -22,12 +23,14 @@ public sealed class DiagnosticsSessionService
         WindowsSessionMonitor windows,
         PrivilegedSessionFactory privileged,
         LockscreenVerificationService? verification = null,
-        IErrorReporter? errorReporter = null
+        IErrorReporter? errorReporter = null,
+        Func<bool>? featureOperationBusy = null
     )
     {
         _lockscreen = lockscreen;
         _windows = windows;
         _privileged = privileged;
+        _featureOperationBusy = featureOperationBusy;
         _verification = verification;
         _errorReporter = errorReporter;
         if (_verification is not null)
@@ -36,8 +39,8 @@ public sealed class DiagnosticsSessionService
         }
     }
 
-    public DiagnosticSession? Current => _run?.Recorder.Snapshot();
-    public DiagnosticSession? CurrentForDisplay => _run?.Recorder.Snapshot(includeTraceDetails: false);
+    public DiagnosticSession? Current => Snapshot(includeTraceDetails: true);
+    public DiagnosticSession? CurrentForDisplay => Snapshot(includeTraceDetails: false);
     public bool IsRunning => Volatile.Read(ref _starting) != 0 || _run is { IsFinished: false };
     public bool IsVerificationRunning => _verification?.IsRunning == true;
     public IReadOnlyList<DiagnosticCheck> Readiness => _readiness;
@@ -51,7 +54,7 @@ public sealed class DiagnosticsSessionService
 
         try
         {
-            if (_run is { IsFinished: false } || _lockscreen.IsApplying || IsVerificationRunning)
+            if (_run is { IsFinished: false } || _lockscreen.IsApplying || IsVerificationRunning || _featureOperationBusy?.Invoke() == true)
             {
                 throw new InvalidOperationException("Wait for the current operation to finish.");
             }
@@ -86,6 +89,17 @@ public sealed class DiagnosticsSessionService
     }
 
     private void OnFinished(DiagnosticRun completedRun) => Notify();
+
+    private DiagnosticSession? Snapshot(bool includeTraceDetails)
+    {
+        var session = _run?.Recorder.Snapshot(includeTraceDetails);
+        if (session is not null)
+        {
+            session.PrerequisiteActions = DiagnosticsActionLog.Snapshot();
+        }
+
+        return session;
+    }
 
     public async Task StopAsync()
     {

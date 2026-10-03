@@ -3,9 +3,24 @@ using System.Text.Json;
 
 namespace LockscreenGif.Privileged;
 
-public sealed record HelperRequest(int Version, long Id, string Command, string? Path = null, bool Write = false, TraceScope? Scope = null);
+public sealed record HelperRequest(
+    int Version,
+    long Id,
+    string Command,
+    string? Path = null,
+    bool Write = false,
+    TraceScope? Scope = null,
+    uint? FeatureId = null
+);
 
-public sealed record HelperReply(int Version, long Id, int ExitCode = 0, string? Error = null, TraceBatch? Batch = null);
+public sealed record HelperReply(
+    int Version,
+    long Id,
+    int ExitCode = 0,
+    string? Error = null,
+    TraceBatch? Batch = null,
+    WindowsImageFeatureResult? WindowsImageFeature = null
+);
 
 public static class PipeProtocol
 {

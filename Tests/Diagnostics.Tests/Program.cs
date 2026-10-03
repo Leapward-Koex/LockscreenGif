@@ -19,6 +19,7 @@ internal static class Program
         {
             await GifTests.RunAsync(directory);
             await ReportTests.RunAsync(directory);
+            await WindowsImageFeatureTests.RunAsync(directory);
             PrivacyTests.Run();
             await ComparisonReportTests.RunAsync(directory);
             await RecorderTests.RunAsync(directory);

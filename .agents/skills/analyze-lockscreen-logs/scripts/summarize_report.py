@@ -296,6 +296,34 @@ def shutdown_summary(report):
     }
 
 
+def windows_image_feature_summary(report):
+    apply = report.get("ApplyResult") or {}
+    state = apply.get("WindowsImageFeatureAtApply")
+    legacy = apply.get("WindowsImageFeature")
+    actions = report.get("PrerequisiteActions") or []
+    environment = report.get("Environment") or {}
+    return {
+        "Present": isinstance(state, dict) or isinstance(legacy, dict) or bool(actions),
+        "BaselineAnimationEffects": environment.get("Animation effects"),
+        "BaselineConfiguration": environment.get("Windows image feature", environment.get("Windows image feature 38943831")),
+        "AtApply": state if isinstance(state, dict) else None,
+        "LegacyApplyAction": legacy if isinstance(legacy, dict) else None,
+        "Actions": [{"TimestampUtc": iso(timestamp(action.get("Timestamp"))),
+                     "Action": action.get("Action"), "Outcome": action.get("Outcome"),
+                     "Detail": action.get("Detail"), "WindowsImageFeature": action.get("WindowsImageFeature")}
+                    for action in actions if isinstance(action, dict)],
+        "Limitations": [
+            "Missing feature evidence is unknown, not a failed feature check.",
+            "AtApply is a read-only snapshot; only explicit prerequisite or Settings actions change this feature.",
+            "Snapshot FeatureId identifies the selected feature at observation time; changing the preference does not rewrite history or modify Windows feature state.",
+            "Actions span the current app lifetime, may predate or follow this test, and retain at most 100 entries.",
+            "Runtime queries describe the caller; persisted overrides are separate configuration evidence.",
+            "ChangeOutcomeUnknown means Changed=false does not establish that no mutation occurred.",
+            "Disabled state and verified override do not prove visible animation; Animation effects is a separate control.",
+        ],
+    }
+
+
 def summarize(report):
     trace = report.get("ProcessTrace") or {}
     operations = trace.get("Operations") or []
@@ -363,6 +391,7 @@ def summarize(report):
             "LargestKnownFileBytes": max(known_lengths, default=None),
         },
         "ApplySucceeded": (report.get("ApplyResult") or {}).get("Success"),
+        "WindowsImageFeature": windows_image_feature_summary(report),
         "LockObserved": report.get("LockObserved"), "UnlockObserved": report.get("UnlockObserved"),
         "TraceState": trace.get("State"), "TraceReason": trace.get("Reason"),
         "Counters": {name: trace.get(name) for name in COUNTERS},

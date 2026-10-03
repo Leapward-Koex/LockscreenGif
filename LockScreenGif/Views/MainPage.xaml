@@ -7,6 +7,18 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
     <Page.Resources>
+        <Style x:Key="PrerequisitesReadyStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        </Style>
+        <Style x:Key="PrerequisitesWarningStyle" TargetType="Border">
+            <Setter Property="Background" Value="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+        </Style>
+        <Style x:Key="PrerequisiteCompleteIconStyle" TargetType="FontIcon">
+            <Setter Property="Foreground" Value="{ThemeResource SystemFillColorSuccessBrush}" />
+        </Style>
+        <Style x:Key="PrerequisiteWarningIconStyle" TargetType="FontIcon">
+            <Setter Property="Foreground" Value="{ThemeResource SystemFillColorCautionBrush}" />
+        </Style>
         <Style x:Key="CurrentStepStyle" TargetType="Border">
             <Setter Property="Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
             <Setter Property="CornerRadius" Value="6" />
@@ -73,6 +85,50 @@
                                  AutomationProperties.LiveSetting="Polite" />
 
                         <StackPanel x:Name="ChooseStagePanel" Spacing="16">
+                            <Border x:Name="PrerequisitesPanel" Padding="16"
+                                    Style="{StaticResource PrerequisitesWarningStyle}" CornerRadius="8">
+                                <Expander x:Name="PrerequisitesExpander" IsExpanded="True" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch"
+                                          Background="Transparent" AutomationProperties.Name="Prerequisites">
+                                    <Expander.Resources>
+                                        <SolidColorBrush x:Key="ExpanderHeaderBackground" Color="Transparent" />
+                                    </Expander.Resources>
+                                    <Expander.Header>
+                                        <TextBlock Text="Prerequisites" FontSize="18" FontWeight="SemiBold" />
+                                    </Expander.Header>
+                                    <StackPanel Spacing="12" Margin="0,12,0,0">
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <FontIcon x:Name="PicturePrerequisiteIcon" Style="{StaticResource PrerequisiteWarningIconStyle}"
+                                                      Glyph="&#xE7BA;" FontSize="20" VerticalAlignment="Top" Margin="0,3,0,0" />
+                                            <StackPanel Grid.Column="1" Spacing="4">
+                                                <TextBlock Text="Picture lock screen and image cache" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                <TextBlock x:Name="PicturePrerequisiteDetail" Text="Checking Picture mode and the lock-screen cache…" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <Button x:Name="OpenLockscreenSettingsButton" Grid.Column="2" Content="Open lock-screen settings"
+                                                    Click="OpenLockscreenSettings_Click" VerticalAlignment="Center" />
+                                        </Grid>
+                                        <Grid ColumnSpacing="12">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <FontIcon x:Name="FeaturePrerequisiteIcon" Style="{StaticResource PrerequisiteWarningIconStyle}"
+                                                      Glyph="&#xE7BA;" FontSize="20" VerticalAlignment="Top" Margin="0,3,0,0" />
+                                            <StackPanel Grid.Column="1" Spacing="4">
+                                                <TextBlock Text="Animated GIF support on Windows 11 25H2 or later" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                <TextBlock x:Name="FeaturePrerequisiteDetail" Text="Checking the Windows lock-screen feature…" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <Button x:Name="DisableWindowsImageFeatureButton" Grid.Column="2" Content="Disable Windows feature"
+                                                    Click="DisableWindowsImageFeature_Click" VerticalAlignment="Center" IsEnabled="False" />
+                                        </Grid>
+                                    </StackPanel>
+                                </Expander>
+                            </Border>
                             <Button x:Name="BrowseVideoButton" Click="OpenVideoButton_click" Padding="20"
                                     HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
                                 <Grid ColumnSpacing="16">
@@ -105,49 +161,6 @@
                             </Button>
                             <TextBlock x:Name="CurrentSelectionSummary" Visibility="Collapsed" TextWrapping="Wrap"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <Expander IsExpanded="False" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
-                                <Expander.Header>
-                                    <StackPanel Orientation="Horizontal" Spacing="8">
-                                        <FontIcon x:Name="PrereqWarningIcon" FontSize="16" Glyph="&#xE7BA;"
-                                                  Foreground="{ThemeResource SystemFillColorCautionBrush}" Visibility="Collapsed" />
-                                        <TextBlock Text="Getting Started" />
-                                    </StackPanel>
-                                </Expander.Header>
-                                <StackPanel Spacing="16" Margin="0,8,0,0">
-                                    <TextBlock x:Name="PrereqIntroText" Text="Prepare Windows once, then choose an animation."
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
-                                    <InfoBar x:Name="LockscreenModeWarning" Title="Check your lock screen mode"
-                                             IsClosable="False" IsOpen="False" Severity="Warning"
-                                             Message="Windows may be using Slideshow or Spotlight. Choose Picture in Windows Settings before applying an animation." />
-                                    <Grid x:Name="PrereqStep1Root" ColumnSpacing="12">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto" />
-                                            <ColumnDefinition Width="*" />
-                                        </Grid.ColumnDefinitions>
-                                        <Border x:Name="PrereqStep1Badge" Width="28" Height="28" CornerRadius="14"
-                                                VerticalAlignment="Top" Background="{ThemeResource AccentFillColorDefaultBrush}">
-                                            <TextBlock Text="1" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="SemiBold"
-                                                       Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" />
-                                        </Border>
-                                        <StackPanel Grid.Column="1" Spacing="4">
-                                            <TextBlock x:Name="PrereqStep1Title" Text="Choose a picture in Windows Settings"
-                                                       FontWeight="SemiBold" TextWrapping="Wrap" />
-                                            <TextBlock x:Name="PrereqStep1Body" Text="Open Settings → Personalization → Lock screen, choose Picture, and browse to an image on your computer. This is only needed for initial setup."
-                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
-                                        </StackPanel>
-                                    </Grid>
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="2. Lock and unlock once" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                        <TextBlock Text="This lets Windows prepare the lock-screen image cache for your screens."
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="3. Choose, edit, and set" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                        <TextBlock Text="Choose a video or GIF. For video, select a clip and continue to generate a preview. Check the animation, then select Set lock screen. Lock your PC to check playback."
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </StackPanel>
-                            </Expander>
                             <HyperlinkButton x:Name="RemoveAnimationLink" Content="Remove animation in Settings"
                                              Click="OpenSettings_Click" HorizontalAlignment="Left" />
                         </StackPanel>

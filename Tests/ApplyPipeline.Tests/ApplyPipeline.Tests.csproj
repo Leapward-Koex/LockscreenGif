@@ -19,9 +19,12 @@
     <Compile Include="../../LockScreenGif/Services/Lockscreen/CacheFileCommitter.cs" Link="Production/CacheFileCommitter.cs" />
     <Compile Include="../../LockScreenGif/Services/Lockscreen/VerifiedCacheWriter.cs" Link="Production/VerifiedCacheWriter.cs" />
     <Compile Include="../../LockScreenGif/Services/Lockscreen/LockscreenApplyPipeline.cs" Link="Production/LockscreenApplyPipeline.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/WindowsImageFeatureService.cs" Link="Production/WindowsImageFeatureService.cs" />
+    <Compile Include="../../LockScreenGif/Services/Lockscreen/WindowsImageFeatureSettings.cs" Link="Production/WindowsImageFeatureSettings.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="../../LockScreenGif/Services/Lockscreen/CachePermissionSession.cs" Link="Production/CachePermissionSession.cs" />
+    <Compile Include="../../LockScreenGif/Services/Diagnostics/PrivilegedSessionFactory.cs" Link="Production/PrivilegedSessionFactory.cs" />
     <Compile Include="../../LockScreenGif/Services/Lockscreen/PermissionWorkerCommand.cs" Link="Production/PermissionWorkerCommand.cs" />
     <ProjectReference Include="../../LockscreenGif.Privileged.Contracts/LockscreenGif.Privileged.Contracts.csproj" />
   </ItemGroup>
