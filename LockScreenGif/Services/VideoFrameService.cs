@@ -61,6 +61,14 @@ public static partial class VideoFrameService
     public static Task<IReadOnlyList<byte[]>> PreviewWindowAsync(string input, int start, int end, CancellationToken cancellationToken) =>
         Task.Run(() => PreviewWindowCoreAsync(input, start, end, cancellationToken), cancellationToken);
 
+    public static Task<IReadOnlyList<byte[]>> PreviewWindowAsync(
+        string input,
+        VideoFrameIndex index,
+        int start,
+        int end,
+        CancellationToken cancellationToken
+    ) => Task.Run(() => IndexedPreviewWindowCoreAsync(input, index, start, end, cancellationToken), cancellationToken);
+
     public static Task<IReadOnlyList<byte[]>> ThumbnailsAsync(string input, VideoFrameIndex index, CancellationToken cancellationToken) =>
         Task.Run(() => ThumbnailsCoreAsync(input, index, cancellationToken), cancellationToken);
 
@@ -78,9 +86,11 @@ public static partial class VideoFrameService
         string input,
         double nominalFps,
         IProgress<int>? progress,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        IProgress<VideoIndexProgress>? detailedProgress = null
     )
     {
+        var progressTracker = detailedProgress is null ? null : new IndexProgressTracker();
         var timeBase = 0d;
         var timestamps = new List<double>();
         var lastDuration = 1 / nominalFps;
@@ -109,6 +119,7 @@ public static partial class VideoFrameService
             ],
             line =>
             {
+                progressTracker?.ReadHeader(line);
                 timeBase = ReadTimeBase(line, timeBase);
                 if (!TryReadFrame(line, out var number, out var time, out var duration, timeBase))
                 {
@@ -125,6 +136,7 @@ public static partial class VideoFrameService
                 if (number == 0 || progressClock.ElapsedMilliseconds >= 200)
                 {
                     progress?.Report(number + 1);
+                    detailedProgress?.Report(progressTracker!.Frame(number + 1, time, lastDuration));
                     progressClock.Restart();
                 }
             },
@@ -132,8 +144,10 @@ public static partial class VideoFrameService
             maximumDecoderThreads: 8
         );
         cancellationToken.ThrowIfCancellationRequested();
+        var index = new VideoFrameIndex(timestamps, lastDuration);
         progress?.Report(timestamps.Count);
-        return new VideoFrameIndex(timestamps, lastDuration);
+        detailedProgress?.Report(new(index.Count, 1));
+        return index;
     }
 
     public static async Task<byte[]> PreviewAsync(string input, int frame, CancellationToken cancellationToken) =>
@@ -230,45 +244,86 @@ public static partial class VideoFrameService
         VideoFrameIndex index,
         int frame,
         CancellationToken cancellationToken
+    ) => (await SeekImagesAsync(input, index, frame, frame + 1, 160, cancellationToken).ConfigureAwait(false)).Single();
+
+    private static async Task<IReadOnlyList<byte[]>> IndexedPreviewWindowCoreAsync(
+        string input,
+        VideoFrameIndex index,
+        int start,
+        int end,
+        CancellationToken cancellationToken
     )
     {
-        var target = index.SourceStartTime + index.TimeAt(frame);
-        var precedingGap = frame > 0 ? index.TimeAt(frame) - index.TimeAt(frame - 1) : 0;
+        index.ValidateRange(start, end);
+        if (index.SourceStartTime >= 0)
+        {
+            try
+            {
+                return await SeekImagesAsync(input, index, start, end, 560, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception ex) when (ex is MediaProcessingException or InvalidDataException)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                Logger.Info("Indexed frame preview seeking was unavailable; using sequential extraction.");
+            }
+        }
+
+        return await PreviewWindowCoreAsync(input, start, end, cancellationToken).ConfigureAwait(false);
+    }
+
+    private static async Task<IReadOnlyList<byte[]>> SeekImagesAsync(
+        string input,
+        VideoFrameIndex index,
+        int start,
+        int end,
+        int width,
+        CancellationToken cancellationToken
+    )
+    {
+        index.ValidateRange(start, end);
+        var target = index.SourceStartTime + index.TimeAt(start);
+        var precedingGap = start > 0 ? index.TimeAt(start) - index.TimeAt(start - 1) : 0;
         // Seek inside the gap before the desired frame. Converting its exact PTS
         // to FFmpeg's microsecond seek clock could otherwise round past that frame.
-        var seek = target - precedingGap / 4;
+        var seek = Math.Round(target - precedingGap / 4, 6);
         var timeBase = 0d;
-        var decodedTime = double.NaN;
+        var decodedTimes = new List<double>();
         using var output = new MemoryStream();
         await RunAsync(
-                [
-                    "-ss",
-                    seek.ToString("F6", CultureInfo.InvariantCulture),
-                    "-i",
-                    input,
-                    "-map",
-                    "0:v:0",
-                    "-vf",
-                    "showinfo=checksum=0,scale=160:-2",
-                    "-frames:v",
-                    "1",
-                    "-an",
-                    "-sn",
-                    "-dn",
-                    "-fps_mode",
-                    "passthrough",
-                    "-c:v",
-                    "png",
-                    "-f",
-                    "image2pipe",
-                    "pipe:1",
-                ],
+                (string[])
+                    [
+                        "-ss",
+                        seek.ToString("F6", CultureInfo.InvariantCulture),
+                        "-i",
+                        input,
+                        "-map",
+                        "0:v:0",
+                        "-vf",
+                        $"showinfo=checksum=0,scale={width}:-2",
+                        "-frames:v",
+                        (end - start).ToString(CultureInfo.InvariantCulture),
+                        "-an",
+                        "-sn",
+                        "-dn",
+                        "-fps_mode",
+                        "passthrough",
+                        "-c:v",
+                        "png",
+                        "-f",
+                        "image2pipe",
+                        "pipe:1",
+                    ],
                 line =>
                 {
                     timeBase = ReadTimeBase(line, timeBase);
-                    if (TryReadFrame(line, out var number, out var time, out _, timeBase) && number == 0)
+                    if (TryReadFrame(line, out var number, out var time, out _, timeBase) && number < end - start)
                     {
-                        decodedTime = seek + time;
+                        if (number != decodedTimes.Count)
+                        {
+                            throw new InvalidDataException("Unexpected sought frame order.");
+                        }
+
+                        decodedTimes.Add(seek + time);
                     }
                 },
                 cancellationToken,
@@ -276,14 +331,24 @@ public static partial class VideoFrameService
             )
             .ConfigureAwait(false);
         var images = SplitPngs(output.ToArray());
-        var followingGap = index.TimeAt(frame + 1) - index.TimeAt(frame);
-        var tolerance = (frame > 0 ? Math.Min(precedingGap, followingGap) : followingGap) / 2;
-        if (images.Count != 1 || !double.IsFinite(decodedTime) || Math.Abs(decodedTime - target) >= tolerance)
+        if (images.Count != end - start || decodedTimes.Count != images.Count)
         {
-            throw new InvalidDataException("The thumbnail seek did not return the indexed frame.");
+            throw new InvalidDataException("The frame seek did not return the requested image count.");
         }
 
-        return images[0];
+        for (var i = 0; i < images.Count; i++)
+        {
+            var frame = start + i;
+            var followingGap = index.TimeAt(frame + 1) - index.TimeAt(frame);
+            var tolerance = (frame > 0 ? Math.Min(index.TimeAt(frame) - index.TimeAt(frame - 1), followingGap) : followingGap) / 2;
+            var expectedTime = index.SourceStartTime + index.TimeAt(frame);
+            if (!double.IsFinite(decodedTimes[i]) || Math.Abs(decodedTimes[i] - expectedTime) >= tolerance)
+            {
+                throw new InvalidDataException("The frame seek did not return the indexed frames.");
+            }
+        }
+
+        return images;
     }
 
     private static async Task<IReadOnlyList<byte[]>> SequentialThumbnailsAsync(
@@ -490,17 +555,7 @@ public static partial class VideoFrameService
         }
         catch (InvalidOperationException) { }
         catch (System.ComponentModel.Win32Exception) { }
-        using var registration = cancellationToken.Register(() =>
-        {
-            try
-            {
-                if (!process.HasExited)
-                {
-                    process.Kill();
-                }
-            }
-            catch (InvalidOperationException) { }
-        });
+        using var registration = cancellationToken.Register(() => StopDecoder(process));
         var copy = process.StandardOutput.BaseStream.CopyToAsync(output ?? Stream.Null);
         var recent = new Queue<string>();
         try
@@ -529,13 +584,23 @@ public static partial class VideoFrameService
         }
         finally
         {
+            StopDecoder(process);
+            await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
+            await process.WaitForExitAsync().ConfigureAwait(false);
+            await copy.ConfigureAwait(false);
+        }
+    }
+
+    private static void StopDecoder(Process process)
+    {
+        try
+        {
             if (!process.HasExited)
             {
                 process.Kill();
             }
-
-            await process.WaitForExitAsync().ConfigureAwait(false);
-            await copy.ConfigureAwait(false);
         }
+        catch (InvalidOperationException) { }
+        catch (System.ComponentModel.Win32Exception) { }
     }
 }

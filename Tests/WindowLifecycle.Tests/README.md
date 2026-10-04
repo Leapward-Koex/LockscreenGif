@@ -6,7 +6,7 @@ Run from the repository root with the .NET 10 SDK:
 dotnet run --project Tests/WindowLifecycle.Tests/WindowLifecycle.Tests.csproj -c Release
 ```
 
-This harness links production close handling and preview lifetime methods to WinUI/media doubles. It covers both Closed/Unloaded orderings, reusable drafts across navigation, repeated cleanup, frame-only drafts after playback failure and one-click shutdown. Pending apply, verification, diagnostics and explicit feature actions must drain before close; repeated clicks, cleanup failure and a stopped dispatcher are also checked.
+This harness links production close handling and preview lifetime methods to WinUI/media doubles. It covers both Closed/Unloaded orderings, reusable drafts across navigation, repeated cleanup, frame-only drafts after playback failure and one-click shutdown. Pending apply, verification, diagnostics and explicit feature actions must drain before close; repeated clicks, cleanup failure and a stopped dispatcher are also checked. Hardware capability discovery must be stopped once when closing begins, including when the dispatcher can no longer accept work.
 
 The doubles reject pausing disposed media or closing/removing message hooks inside the original close callback. They do not reproduce WinUI's native message loop or request a real reboot. No Windows settings, native media APIs, user files or analytics transports are used.
 

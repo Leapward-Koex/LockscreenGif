@@ -1,5 +1,6 @@
 using LockscreenGif;
 using LockscreenGif.Contracts.Services;
+using LockscreenGif.Services;
 using LockscreenGif.Services.Diagnostics;
 using LockscreenGif.Services.Lockscreen;
 using LockscreenGif.Views;
@@ -86,7 +87,8 @@ internal static class Program
         LockscreenVerificationService Verification,
         FakeLockscreenService Lockscreen,
         WindowsImageFeatureService WindowsFeature,
-        WindowsSessionMonitor Monitor
+        WindowsSessionMonitor Monitor,
+        HardwareDecodingCapabilityService HardwareDecoding
     ) Setup()
     {
         _ = new App();
@@ -95,13 +97,15 @@ internal static class Program
         var lockscreen = new FakeLockscreenService();
         var windowsFeature = new WindowsImageFeatureService();
         var monitor = new WindowsSessionMonitor();
+        var hardwareDecoding = new HardwareDecodingCapabilityService();
         App.Register(diagnostics);
         App.Register(verification);
         App.Register<ILockscreenService>(lockscreen);
         App.Register(windowsFeature);
         App.Register(monitor);
+        App.Register(hardwareDecoding);
         App.Register<IErrorReporter>(new FakeErrorReporter());
-        return (diagnostics, verification, lockscreen, windowsFeature, monitor);
+        return (diagnostics, verification, lockscreen, windowsFeature, monitor, hardwareDecoding);
     }
 
     private static async Task IdleCloseAsync()
@@ -112,6 +116,7 @@ internal static class Program
         var player = new FakePlayer();
         var page = new MainPage(player);
         Check(window.AppWindow.RequestClose(), "defer the initial native close request");
+        Check(services.HardwareDecoding.DisposeCalls == 1, "request hardware discovery cancellation as soon as close begins");
         Check(window.CloseCalls == 0 && services.Monitor.DisposeCalls == 0, "do not close or remove hooks inside Closing");
         Check(window.DispatcherQueue.Count == 1, "one click schedules shutdown");
         window.DispatcherQueue.Pump();
@@ -139,6 +144,7 @@ internal static class Program
         var window = App.MainWindow;
         window.AppWindow.RequestClose();
         window.AppWindow.RequestClose();
+        Check(services.HardwareDecoding.DisposeCalls == 1, "repeated close requests cancel shared hardware discovery only once");
         Check(window.DispatcherQueue.Count == 1, "repeated clicks cannot schedule concurrent shutdowns");
         window.DispatcherQueue.Pump();
         Check(window.CloseCalls == 0 && services.Verification.CloseCalls == 1, "wait for verification cleanup");
@@ -202,10 +208,11 @@ internal static class Program
 
     private static void DispatcherShutdown()
     {
-        Setup();
+        var services = Setup();
         App.MainWindow.DispatcherQueue.AcceptWork = false;
         Check(!App.MainWindow.AppWindow.RequestClose(), "do not strand a close request when the dispatcher has stopped");
         Check(App.AnalyticsStops == 1, "dispatcher shutdown stops analytics without waiting");
+        Check(services.HardwareDecoding.DisposeCalls == 1, "dispatcher shutdown still stops shared hardware discovery");
     }
 
     private static async Task UntilAsync(Func<bool> condition)

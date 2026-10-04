@@ -267,7 +267,17 @@ public sealed partial class MainPage
 
             var operationId = Guid.NewGuid();
             var timer = Stopwatch.StartNew();
-            var operation = new AnalyticsProperties { OperationId = operationId, MetadataFallbackUsed = false };
+            var capability = App.GetService<HardwareDecodingCapabilityService>().Snapshot;
+            var decodeOptions = new VideoDecodeOptions(
+                App.GetService<VideoEditingPreferences>().UseHardwareDecoding,
+                capability.Availability == HardwareDecodingAvailability.Available ? capability.AdapterIndex : null
+            );
+            var operation = new AnalyticsProperties
+            {
+                OperationId = operationId,
+                MetadataFallbackUsed = false,
+                HardwareDecodingRequested = decodeOptions.UseHardwareDecoding,
+            };
             var stage = AnalyticsMediaLoadStage.ReadingMetadata;
             _analyticsService.Track(AnalyticsEvent.VideoLoadStarted, operation);
             MediaPlayer? preparedPlayer = null;
@@ -302,17 +312,35 @@ public sealed partial class MainPage
                 stage = AnalyticsMediaLoadStage.IndexingFrames;
                 scanning = true;
                 VideoLoadStatus.Text = "Reading video frames…";
-                var progress = new Progress<int>(count =>
+                var progress = new Progress<VideoIndexProgress>(value =>
                 {
                     if (_isVideoLoading && scanning && ReferenceEquals(_videoLoadCts, loadSource) && !token.IsCancellationRequested)
                     {
-                        VideoLoadStatus.Text = $"Reading video frames… {count:N0} found";
+                        VideoLoadStatus.Text = $"Reading video frames… {value.FrameCount:N0} found";
+                        UpdateVideoLoadProgress(value.Fraction);
                     }
                 });
-                var frames = await VideoFrameService.IndexAsync(file.Path, fps, progress, token);
+                VideoIndexingResult indexing;
+                var indexingTimer = Stopwatch.StartNew();
+                try
+                {
+                    indexing = await VideoFrameService.IndexAsync(file.Path, fps, decodeOptions, null, token, detailedProgress: progress);
+                    operation = operation with
+                    {
+                        IndexDecoder =
+                            indexing.Decoder == VideoIndexDecoder.D3D11 ? AnalyticsVideoIndexDecoder.D3D11 : AnalyticsVideoIndexDecoder.Cpu,
+                        HardwareDecodingFallbackUsed = indexing.HardwareFallbackUsed,
+                    };
+                }
+                finally
+                {
+                    operation = operation with { IndexingDurationMs = indexingTimer.Elapsed.TotalMilliseconds };
+                }
+                var frames = indexing.Index;
                 scanning = false;
                 token.ThrowIfCancellationRequested();
                 VideoLoadStatus.Text = $"Read {frames.Count:N0} frames. Opening preview…";
+                UpdateVideoLoadProgress(null);
                 stage = AnalyticsMediaLoadStage.OpeningPreview;
                 try
                 {

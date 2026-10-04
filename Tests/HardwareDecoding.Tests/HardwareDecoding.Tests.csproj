@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../LockScreenGif/Services/HardwareDecodingCapabilityService.cs" Link="Production/HardwareDecodingCapabilityService.cs" />
+    <Compile Include="../../LockScreenGif/Services/DxgiHardwareAdapterEnumerator.cs" Link="Production/DxgiHardwareAdapterEnumerator.cs" />
+    <Compile Include="../../LockScreenGif/Services/FfmpegHardwareDecodingProbe.cs" Link="Production/FfmpegHardwareDecodingProbe.cs" />
+    <Compile Include="../../LockScreenGif/Services/VideoEditingPreferences.cs" Link="Production/VideoEditingPreferences.cs" />
+    <Compile Include="../../LockScreenGif/Services/VideoEditingSettingsState.cs" Link="Production/VideoEditingSettingsState.cs" />
+    <None Include="../../LockScreenGif/Vendor/FFMPEG/ffmpeg.exe" Link="Vendor/FFMPEG/ffmpeg.exe" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../LockScreenGif/Assets/VideoDecoding/*.mp4;../../LockScreenGif/Assets/VideoDecoding/*.webm;../../LockScreenGif/Assets/VideoDecoding/*.ivf" Link="Assets/VideoDecoding/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -109,3 +109,9 @@ public enum AnalyticsMediaLoadStage
     PlayingPreview,
     ReadingFallbackMetadata,
 }
+
+public enum AnalyticsVideoIndexDecoder
+{
+    Cpu,
+    D3D11,
+}

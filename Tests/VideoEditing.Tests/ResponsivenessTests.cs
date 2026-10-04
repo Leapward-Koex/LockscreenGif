@@ -11,6 +11,7 @@ internal static class ResponsivenessTests
         var previous = SynchronizationContext.Current;
         Task<VideoFrameIndex> indexing;
         Task<IReadOnlyList<byte[]>> preview;
+        Task<IReadOnlyList<byte[]>> indexedPreview;
         Task<IReadOnlyList<byte[]>> thumbnails;
         Task<(string Directory, double[] Timestamps)> export;
         try
@@ -18,6 +19,7 @@ internal static class ResponsivenessTests
             SynchronizationContext.SetSynchronizationContext(context);
             indexing = VideoFrameService.IndexAsync(video, 30000d / 1001, null, CancellationToken.None);
             preview = VideoFrameService.PreviewWindowAsync(video, 0, 2, CancellationToken.None);
+            indexedPreview = VideoFrameService.PreviewWindowAsync(video, index, 0, 2, CancellationToken.None);
             thumbnails = VideoFrameService.ThumbnailsAsync(video, index, CancellationToken.None);
             export = VideoFrameService.ExportAsync(video, index, 0, 2, 64, 0, _ => { });
         }
@@ -26,13 +28,13 @@ internal static class ResponsivenessTests
             SynchronizationContext.SetSynchronizationContext(previous);
         }
 
-        await Task.WhenAll(indexing, preview, thumbnails, export).WaitAsync(TimeSpan.FromSeconds(30));
+        await Task.WhenAll(indexing, preview, indexedPreview, thumbnails, export).WaitAsync(TimeSpan.FromSeconds(30));
         if (context.Posts != 0)
         {
             throw new InvalidOperationException($"Video processing posted {context.Posts} continuations onto the UI context.");
         }
 
-        Console.WriteLine("PASS indexing, preview, thumbnail and export processing do not resume on the UI context");
+        Console.WriteLine("PASS indexing, ordinal/indexed previews, thumbnail and export processing do not resume on the UI context");
     }
 
     private sealed class RecordingContext : SynchronizationContext

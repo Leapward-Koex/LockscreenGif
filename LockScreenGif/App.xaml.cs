@@ -88,6 +88,14 @@ public partial class App : Application
                             "lockscreen.json"
                         )
                     ));
+                    services.AddSingleton(_ => new VideoEditingPreferences(
+                        Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                            "LockscreenGif",
+                            "video-editing.json"
+                        )
+                    ));
+                    services.AddSingleton<HardwareDecodingCapabilityService>();
                     services.AddSingleton<ILockscreenService, LockscreenService>();
                     services.AddSingleton<WindowsSessionMonitor>();
                     services.AddSingleton<PrivilegedSessionFactory>();
@@ -157,6 +165,7 @@ public partial class App : Application
         }
         if (!_closePending)
         {
+            _ = GetService<HardwareDecodingCapabilityService>().EnsureCheckedAsync();
             GetService<AnalyticsService>().Track(AnalyticsEvent.AppOpened);
             (MainWindow.Content as ShellPage)?.StartPageAnalytics();
         }

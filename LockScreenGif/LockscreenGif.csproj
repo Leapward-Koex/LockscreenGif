@@ -54,6 +54,10 @@
     <None Update="Vendor\FFMPEG\ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Assets\VideoDecoding\*.mp4;Assets\VideoDecoding\*.webm;Assets\VideoDecoding\*.ivf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
     <None Update="Vendor\gifski\gifski.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

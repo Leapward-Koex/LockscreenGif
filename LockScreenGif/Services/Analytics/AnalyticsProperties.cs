@@ -40,6 +40,16 @@ public sealed record AnalyticsProperties
 
     public bool? PlaybackAvailable { get; init; }
 
+    // Snapshot of the user's preference, distinct from the decoder observed in a completed index.
+    public bool? HardwareDecodingRequested { get; init; }
+
+    public AnalyticsVideoIndexDecoder? IndexDecoder { get; init; }
+
+    public bool? HardwareDecodingFallbackUsed { get; init; }
+
+    // Complete indexing time, including a failed hardware attempt when CPU recovery was needed.
+    public double? IndexingDurationMs { get; init; }
+
     public double? FailureStageDurationMs { get; init; }
 
     public double? ExtractionDurationMs { get; init; }

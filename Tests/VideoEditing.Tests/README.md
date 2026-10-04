@@ -10,6 +10,8 @@ This console suite links the production frame model, decoder/export service and 
 
 Thumbnail checks compare sequential ordinal extraction with timestamp seeks and the bounded-concurrency strip path. Fixtures cover fractional and variable frame timing, B frames with long GOPs, video delayed after audio, single-frame deduplication, and cancellation of a decoder blocked on input.
 
+Indexed preview-window checks compare every 560-pixel-wide PNG against sequential ordinal extraction across fractional/VFR timing, long GOPs with B frames, delayed video, rotation, keyframe boundaries and final frames. They also cover invalid ranges, sequential fallback after an empty seek, cancellation and continuations outside the UI context.
+
 Timing-only indexing is compared with an explicit full-quality FFmpeg decode for FFV1, H.264, HEVC, MPEG4 and VP9. The checks compare every presentation timestamp and the final frame duration, including reordered B frames, variable timing, a nonzero source start and rotation. H.264, HEVC and rotated previews must retain the full-quality reference's PNG bytes; faster indexing must not change image decoding settings.
 
 The `RUN native GIF encoding and decoder round-trip` marker identifies entry into native encoding. If the process exits there without a managed exception, inspect its exit code; CI reports decimal and unsigned hexadecimal forms. The preceding PASS names the last completed check, not the failing operation.
