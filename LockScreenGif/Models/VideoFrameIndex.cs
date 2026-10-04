@@ -9,6 +9,10 @@ public sealed class VideoFrameIndex
     public int Count => _boundaries.Length - 1;
     public double Duration => _boundaries[^1];
 
+    // FFmpeg's decoded timeline can start after another stream in the input.
+    // Keep this origin for input seeking while editing uses zero-based times.
+    public double SourceStartTime { get; }
+
     public VideoFrameIndex(IEnumerable<double> timestamps, double lastFrameDuration)
     {
         var times = timestamps.ToArray();
@@ -27,6 +31,7 @@ public sealed class VideoFrameIndex
 
             _boundaries[i] = times[i] - times[0];
         }
+        SourceStartTime = times[0];
         _boundaries[^1] = _boundaries[^2] + lastFrameDuration;
     }
 

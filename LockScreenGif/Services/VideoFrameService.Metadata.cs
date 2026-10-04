@@ -19,7 +19,7 @@ public static partial class VideoFrameService
     )]
     private static partial Regex MetadataFirstFrame();
 
-    // Match the decoder and autorotation used by indexing, previews and exports. Only
+    // Match the pixel decoding and autorotation used by previews and exports. Only
     // request the first frame; obtaining metadata must not add a full indexing pass.
     public static Task<VideoMetadata> ReadMetadataAsync(string input, CancellationToken cancellationToken) =>
         Task.Run(() => ReadMetadataCoreAsync(input, cancellationToken), cancellationToken);

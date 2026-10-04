@@ -26,21 +26,25 @@ Windows playback is optional. If Windows metadata cannot be read for a supported
 
 `VideoFrameService.IndexAsync` decodes the first video stream and records presentation-order timestamps from FFmpeg `showinfo`. Integer PTS and stream time base preserve fractional and variable frame rates; frame count is not inferred from nominal FPS. Invalid/non-increasing timestamps are rejected. The final decoded frame duration falls back to nominal FPS only when needed. Fallback metadata reads one decoded frame rather than adding another full indexing pass and follows FFmpeg's automatic rotation.
 
+The index pass skips decoder loop filtering and automatic image rotation because it retains only timestamps. It still decodes every source frame, including reordered B-frames. Metadata, still previews, thumbnails and export retain normal pixel decoding and orientation. This avoids spending time improving or rotating pixels that the index immediately discards; it does not use an approximate FPS-based index or skip source frames.
+
 Export uses `trim=start_frame=…:end_frame=…`, timestamp normalization, optional frame reduction, scaling and timestamp-preserving PNG output. There is no intermediate video transcode. Reduced-rate output retains the first and last selected frames even when their spacing is shorter than the requested sampling interval.
 
 Gifski receives the selected timestamps, offset by the final frame duration for its positive-first-PTS final-delay convention. GIF delays remain limited to hundredths of a second. The encoder uses the exported PNG dimensions explicitly, preserving the selected resolution rather than allowing Gifski's automatic downscaling. Each encoder is finalized once; a successful DLL load is retained for the process lifetime so native workers cannot outlive the module.
 
 Paused previews use the same ordinal frame selection as export. A small decoded neighborhood caches up to 32 PNGs in memory; timeline thumbnails load separately. New preview requests debounce/cancel older requests. A black timeline spinner ends on thumbnail success, failure or cancellation, and a stale request cannot replace a newer video's thumbnails.
 
+The timeline samples up to eight distinct indexed frames. Longer videos use input timestamp seeking with at most two simultaneous decoders, avoiding another decode through almost the entire source. The index retains the first decoded timestamp so video streams delayed after audio seek correctly. Each seek starts just before the target timestamp and verifies the returned frame timing. Small clips (last sampled ordinal below 512), negative source starts, and inputs that cannot seek reliably use sequential ordinal extraction. Preview and export image quality and rotation remain unchanged.
+
 Initial preparation shows an overlay outside the scroll area with filename, stage, discovered frame count and Cancel/Escape. Editing stays disabled until indexing and the preview-opening attempt finish. Cancelling preparation keeps the previous selection. Uncached stills show a smaller preview spinner while the editor remains usable. Conversion has progress but does not expose the preparation Cancel button.
 
-Metadata, decoding, parsing and PNG work run in background tasks. Frame-count progress is throttled to five updates per second plus initial/final updates. FFmpeg uses at most four decoder/encoder threads, two filter threads and below-normal priority. Cancellation stops the owned decoder. The space warning estimates extracted PNG usage; the GIF needs additional space while those frames remain, and actual use varies with the source.
+Metadata, decoding, parsing and PNG work run in background tasks. Frame-count progress is throttled to five updates per second plus initial/final updates. The initial index uses up to eight decoder threads; other decodes and encoders use up to four. Decoder thread counts remain capped at half the logical processors (at least one thread), with two filter threads and below-normal priority. Cancellation stops the owned decoder. The space warning estimates extracted PNG usage; the GIF needs additional space while those frames remain, and actual use varies with the source.
 
 ## Saving generated output
 
 Save copies the prepared GIF bytes into the picker-owned destination, truncates any previous tail, flushes and closes both streams. It does not re-encode or change resolution. Local providers with ID `computer` or `local` bypass cached-file provider updates. Other or unknown providers must return `Complete` or `CompleteAndRenamed` before the app reports **GIF saved**. Real write/provider failures remain failures; cancelling the picker keeps the generated output available. Save is not an atomic overwrite guarantee.
 
-Reference contracts: [FFmpeg trim/showinfo](https://ffmpeg.org/ffmpeg-filters.html#trim), [Gifski timestamps](https://github.com/ImageOptim/gifski/blob/main/gifski.h).
+Reference contracts: [FFmpeg trim/showinfo](https://ffmpeg.org/ffmpeg-filters.html#trim), [FFmpeg decoder options](https://ffmpeg.org/ffmpeg-codecs.html#Codec-Options), [Gifski timestamps](https://github.com/ImageOptim/gifski/blob/main/gifski.h).
 
 ## Validation
 
