@@ -116,7 +116,7 @@ failures after a committed copy use `verification_failed`. Detailed exception
 families and codes remain available on the companion error event.
 
 Common properties are app version, Windows version, platform, environment,
-random installation ID, and `$session_id`. No paths, filenames, media, hashes,
+random installation ID, and `$session_id`. No paths, filenames, media, file hashes,
 usernames, Windows SIDs, exception messages, stack traces, or diagnostic reports
 are sent.
 
@@ -138,7 +138,7 @@ Each `$exception` contains:
 - `$exception_fingerprint`: a stable SHA-256 of the approved boundary, exception
   family, category, generation stage, HRESULT, native component and native code.
   A known media load stage also distinguishes failures; missing or invalid stages
-  leave the previous grouping unchanged. Recovery flags do not split issues.
+  are excluded from the fingerprint. Recovery flags do not split issues.
   Operation IDs, source selections, durations, app versions and installation IDs
   do not split an issue into new fingerprints.
 - The available typed operation ID, workflow, source, timing and error properties
@@ -170,7 +170,7 @@ observations, successful permission retries, ordinary polling/probe misses and
 analytics' own failures do not create issues.
 
 Apply and removal internals sometimes return failure results instead of throwing.
-They now retain the first actual exception in a transient `[JsonIgnore]` field
+They retain the first actual exception in a transient `[JsonIgnore]` field
 and report it once at the operation boundary. Partial failures keep `outcome=partial`.
 The known committed-file verification mismatch receives a fixed local exception;
 arbitrary result `Error` strings are never parsed or transmitted. These transient
@@ -201,8 +201,8 @@ Older events without a stage cannot be diagnosed retroactively.
 | Evidence | Interpretation |
 | --- | --- |
 | `error_hresult=-2147467259` (`0x80004005`) | `E_FAIL`, an unspecified native failure. Keep `native_failure`; do not infer a particular codec or security product. |
-| `error_hresult=-1072868846` (`0xC00D5212`) | `MF_E_TOPO_CODEC_NOT_FOUND`, now `codec_missing`. Windows could not find a compatible encode/decode transform; this does not identify the missing codec. |
-| `error_hresult=-2147020345` (`0x800711C7`) or `native_error_code=4551` | `ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION`, now `security_policy_blocked`. Windows Application Control blocked a file; the error alone does not identify which file or policy. |
+| `error_hresult=-1072868846` (`0xC00D5212`) | `MF_E_TOPO_CODEC_NOT_FOUND`, classified as `codec_missing`. Windows could not find a compatible encode/decode transform; this does not identify the missing codec. |
+| `error_hresult=-2147020345` (`0x800711C7`) or `native_error_code=4551` | `ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION`, classified as `security_policy_blocked`. Windows Application Control blocked a file; the error alone does not identify which file or policy. |
 | Win32 `1260` or `577`, including their `HRESULT_FROM_WIN32` forms | `security_policy_blocked`: group-policy blocking or failed digital-signature verification respectively. These need trusted installation/policy review, not decoder retries. |
 
 The numeric definitions come from Microsoft's

@@ -1,15 +1,13 @@
 # Window lifecycle checks
 
-Run `dotnet run --project Tests/WindowLifecycle.Tests/WindowLifecycle.Tests.csproj -c Release`.
+Run from the repository root with the .NET 10 SDK:
 
-This harness links the production close handler and preview lifetime methods to
-small WinUI/media doubles. The media double throws if paused after disposal;
-the window and monitor doubles reject closing or removing message hooks inside
-the original close callback. Checks cover both Closed/Unloaded orderings,
-navigation preserving a video draft, repeated cleanup, an empty preview, one-click
-idle shutdown, pending verification/diagnostics/apply work, repeated close clicks,
-verification failure, and a dispatcher that no longer accepts work.
+```powershell
+dotnet run --project Tests/WindowLifecycle.Tests/WindowLifecycle.Tests.csproj -c Release
+```
 
-No Windows settings, native media APIs, files, or analytics transports are used.
-The doubles do not reproduce WinUI's native message loop; also manually check
-closing with a video loaded, after applying it, and from Settings/Diagnostics.
+This harness links production close handling and preview lifetime methods to WinUI/media doubles. It covers both Closed/Unloaded orderings, reusable drafts across navigation, repeated cleanup, frame-only drafts after playback failure and one-click shutdown. Pending apply, verification, diagnostics and explicit feature actions must drain before close; repeated clicks, cleanup failure and a stopped dispatcher are also checked.
+
+The doubles reject pausing disposed media or closing/removing message hooks inside the original close callback. They do not reproduce WinUI's native message loop or request a real reboot. No Windows settings, native media APIs, user files or analytics transports are used.
+
+Also manually close with a video loaded, after Apply, during pending cleanup and from Settings/Diagnostics. See [video editing](../../docs/video-editing.md#validation) for native UI checks.

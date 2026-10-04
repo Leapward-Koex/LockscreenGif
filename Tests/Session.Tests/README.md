@@ -1,7 +1,13 @@
 # Session lifecycle checks
 
-Run `dotnet run --project Tests/Session.Tests/Session.Tests.csproj` from the repository root.
+Run from the repository root with the .NET 10 SDK:
 
-This console harness links the production session, collection, analysis, and report classes. Windows notifications, environment collection, and applying are replaced with test doubles. It never locks the desktop, changes ACLs, or invokes the Windows image-setting API. All source, cache, and report files live beneath a unique temporary directory that is removed afterward.
+```powershell
+dotnet run --project Tests/Session.Tests/Session.Tests.csproj -c Release
+```
 
-Coverage includes apply/lock/unlock completion, fresh boundary hashes, immutable snapshots, current-session replacement, no automatic report storage, explicit exports, reference-file cleanup, cancellation during applying, and interruption cleanup.
+This console harness links production diagnostic session, collection, analysis and reporting classes. Notifications, environment collection, applying and the privileged transport use doubles. Source/cache/report files live under a unique temporary directory removed afterward; no desktop lock, ACL change or Windows image API call is made.
+
+Coverage includes apply/lock/unlock transitions, source-kind snapshots, boundary hashes, immutable/current-session replacement, explicit export and cleanup. Trace cases cover declined elevation, disconnects/deadlines, backlog and final drains, concurrent finish, retention and shutdown boundaries. The optional Apply file-read check covers fresh target evidence, completion, timeout, relock and unavailable tracing.
+
+These simulated lifecycles do not establish native notification/provider coverage or visible animation. See [diagnostics](../../docs/diagnostics.md) for real-machine validation and interpretation limits.

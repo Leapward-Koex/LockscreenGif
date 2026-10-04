@@ -1,8 +1,14 @@
 #requires -Version 7.0
+param(
+    [string]$AppDirectory = "$PSScriptRoot/../artifacts/app",
+    [string]$InstallerProject = "$PSScriptRoot/../Installer/LockscreenGif.aip"
+)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
-$appRoot = Join-Path $repo 'artifacts/app'
-[xml]$installer = Get-Content -LiteralPath "$repo/Installer/LockscreenGif.aip" -Raw
+$appRoot = (Resolve-Path -LiteralPath $AppDirectory).Path
+& "$repo/Tests/NativeRuntimePackaging.Tests.ps1"
+& "$repo/scripts/Test-NativeRuntimePackaging.ps1" -AppDirectory $appRoot -InstallerProject $InstallerProject
+[xml]$installer = Get-Content -LiteralPath $InstallerProject -Raw
 $files = $installer.SelectNodes("//COMPONENT[@cid='caphyon.advinst.msicomp.MsiFilesComponent']/ROW")
 $payload = @()
 $components = @{}
@@ -10,7 +16,11 @@ $directories = @{}
 foreach ($row in $installer.SelectNodes("//COMPONENT[@cid='caphyon.advinst.msicomp.MsiCompsComponent']/ROW")) { $components[$row.Component] = $row }
 foreach ($row in $installer.SelectNodes("//COMPONENT[@cid='caphyon.advinst.msicomp.MsiDirsComponent']/ROW")) { $directories[$row.Directory] = $row }
 foreach ($row in $files) {
-    $source = [IO.Path]::GetFullPath((Join-Path "$repo/Installer" $row.SourcePath))
+    $source = if ([IO.Path]::IsPathFullyQualified($row.SourcePath)) {
+        [IO.Path]::GetFullPath($row.SourcePath)
+    } else {
+        [IO.Path]::GetFullPath((Join-Path (Split-Path -Parent ([IO.Path]::GetFullPath($InstallerProject))) $row.SourcePath))
+    }
     if (-not $source.StartsWith(([IO.Path]::GetFullPath($appRoot) + [IO.Path]::DirectorySeparatorChar), [StringComparison]::OrdinalIgnoreCase)) {
         throw "Installer input is outside the publish directory: $($row.File)"
     }

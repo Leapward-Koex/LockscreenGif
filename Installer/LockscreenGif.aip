@@ -366,6 +366,9 @@
     <ROW Component="dwmcorei.dll" ComponentId="{B943AE32-4634-4AC1-A67D-42F1D627C557}" Directory_="APPDIR" Attributes="256" KeyPath="dwmcorei.dll"/>
     <ROW Component="ffmpeg.exe" ComponentId="{1477CD08-16FF-4A3D-A464-E728B37705B3}" Directory_="FFMPEG_Dir" Attributes="256" KeyPath="ffmpeg.exe"/>
     <ROW Component="gifski.dll" ComponentId="{1B56F556-61FB-41F0-92B9-5C179B6EF8DD}" Directory_="gifski_Dir" Attributes="256" KeyPath="gifski.dll"/>
+    <ROW Component="vcruntime140.dll" ComponentId="{3CF27F4E-40BD-488B-9822-80B54275AF83}" Directory_="gifski_Dir" Attributes="256" KeyPath="vcruntime140.dll"/>
+    <ROW Component="GifskiRuntimeReadme" ComponentId="{665288FC-9DF0-4794-8A0C-23A7F3FFB4C5}" Directory_="gifski_Dir" Attributes="0" KeyPath="GifskiRuntimeReadme"/>
+    <ROW Component="GifskiRuntimeProvenance" ComponentId="{B4F61F8F-031E-464C-A50D-E922EA1E7399}" Directory_="gifski_Dir" Attributes="0" KeyPath="GifskiRuntimeProvenance"/>
     <ROW Component="map.html" ComponentId="{B2ABB5D9-C725-4634-9E02-D8FE15901108}" Directory_="Assets_1_Dir" Attributes="0" KeyPath="map.html" Type="0"/>
     <ROW Component="marshal.dll" ComponentId="{EB51EC83-A002-4246-9D18-0B160A88CC08}" Directory_="APPDIR" Attributes="256" KeyPath="marshal.dll"/>
     <ROW Component="onnxruntime.dll" ComponentId="{A4A61ED0-A8E6-460B-9E5D-5C78F49D983F}" Directory_="APPDIR" Attributes="256" KeyPath="onnxruntime.dll"/>
@@ -708,6 +711,9 @@
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_82" Component_="Microsoft.ui.xaml.dll.mui_82" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\uz-Latn-UZ\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="ffmpeg.exe" Component_="ffmpeg.exe" FileName="ffmpeg.exe" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Vendor\FFMPEG\ffmpeg.exe" SelfReg="false" DigSign="true"/>
     <ROW File="gifski.dll" Component_="gifski.dll" FileName="gifski.dll" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Vendor\gifski\gifski.dll" SelfReg="false"/>
+    <ROW File="vcruntime140.dll" Component_="vcruntime140.dll" FileName="VCRUNT~1.DLL|vcruntime140.dll" Version="14.51.36247.0" Attributes="0" SourcePath="..\artifacts\app\Vendor\gifski\vcruntime140.dll" SelfReg="false"/>
+    <ROW File="GifskiRuntimeReadme" Component_="GifskiRuntimeReadme" FileName="RUNTIM~1.TXT|runtime-README.txt" Attributes="0" SourcePath="..\artifacts\app\Vendor\gifski\runtime-README.txt" SelfReg="false"/>
+    <ROW File="GifskiRuntimeProvenance" Component_="GifskiRuntimeProvenance" FileName="RUNTIM~1.JSO|runtime-provenance.json" Attributes="0" SourcePath="..\artifacts\app\Vendor\gifski\runtime-provenance.json" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_83" Component_="Microsoft.ui.xaml.dll.mui_83" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\vi-VN\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_83" Component_="Microsoft.ui.xaml.dll.mui_83" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\vi-VN\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="MainPage.xbf" Component_="MainPage.xbf" FileName="MainPage.xbf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Views\MainPage.xbf" SelfReg="false"/>
@@ -1094,6 +1100,9 @@
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_82"/>
     <ROW Feature_="MainFeature" Component_="ffmpeg.exe"/>
     <ROW Feature_="MainFeature" Component_="gifski.dll"/>
+    <ROW Feature_="MainFeature" Component_="vcruntime140.dll"/>
+    <ROW Feature_="MainFeature" Component_="GifskiRuntimeReadme"/>
+    <ROW Feature_="MainFeature" Component_="GifskiRuntimeProvenance"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_83"/>
     <ROW Feature_="MainFeature" Component_="MainPage.xbf"/>
     <ROW Feature_="MainFeature" Component_="WebView2Loader.dll"/>

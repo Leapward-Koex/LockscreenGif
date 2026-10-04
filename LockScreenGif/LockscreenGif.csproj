@@ -57,6 +57,19 @@
     <None Update="Vendor\gifski\gifski.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <!-- Keep the native encoder's app-local runtime and redistribution provenance together. -->
+    <None Update="Vendor\gifski\vcruntime140.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+    <None Update="Vendor\gifski\runtime-README.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+    <None Update="Vendor\gifski\runtime-provenance.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup Condition="'$(DisableMsixProjectCapabilityAddedByProject)'!='true' and '$(EnableMsixTooling)'=='true'">
