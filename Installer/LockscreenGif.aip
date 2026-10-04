@@ -38,6 +38,7 @@
     <ROW Directory="APPDIR" Directory_Parent="TARGETDIR" DefaultDir="APPDIR:." IsPseudoRoot="1" DirectoryOptions="3"/>
     <ROW Directory="Assets_1_Dir" Directory_Parent="Microsoft.UI.Xaml_Dir" DefaultDir="Assets" DirectoryOptions="3"/>
     <ROW Directory="Assets_Dir" Directory_Parent="APPDIR" DefaultDir="Assets" DirectoryOptions="3"/>
+    <ROW Directory="VideoDecoding_Dir" Directory_Parent="Assets_Dir" DefaultDir="VIDEOD~1|VideoDecoding" DirectoryOptions="3"/>
     <ROW Directory="CustomControls_Dir" Directory_Parent="APPDIR" DefaultDir="CUSTOM~1|CustomControls" DirectoryOptions="3"/>
     <ROW Directory="DesktopFolder" Directory_Parent="TARGETDIR" DefaultDir="DESKTO~1|DesktopFolder" IsPseudoRoot="1"/>
     <ROW Directory="FFMPEG_Dir" Directory_Parent="Vendor_Dir" DefaultDir="FFMPEG" DirectoryOptions="3"/>
@@ -157,6 +158,7 @@
     <ROW Component="Gifski.Net.dll" ComponentId="{E02A6723-D892-4CD4-BF71-04121138A322}" Directory_="APPDIR" Attributes="0" KeyPath="Gifski.Net.dll"/>
     <ROW Component="Instances.dll" ComponentId="{C5C6A619-2453-4E4A-B2AC-A0E4403AB565}" Directory_="APPDIR" Attributes="0" KeyPath="Instances.dll"/>
     <ROW Component="LockScreenLogo.scale200.png" ComponentId="{37546A25-C9C3-4A91-AF7A-3785EAFB0A67}" Directory_="Assets_Dir" Attributes="0" KeyPath="LockScreenLogo.scale200.png" Type="0"/>
+    <ROW Component="VideoDecodingProbes" ComponentId="{1C9519E5-E7CF-4D0A-8E98-E230B7B9B401}" Directory_="VideoDecoding_Dir" Attributes="0" KeyPath="VideoDecodeH264" Type="0"/>
     <ROW Component="LockscreenGif.dll" ComponentId="{AA6F747C-E4F0-40E1-913A-888137B9B080}" Directory_="APPDIR" Attributes="256" KeyPath="LockscreenGif.dll"/>
     <ROW Component="LockscreenGif.exe" ComponentId="{FA037A32-CF15-41DE-B7F2-7D9FD1412690}" Directory_="APPDIR" Attributes="256" KeyPath="LockscreenGif.exe"/>
     <ROW Component="Logger.dll" ComponentId="{B0E3596D-FA34-4F2D-A72D-791ECD65F0D5}" Directory_="APPDIR" Attributes="0" KeyPath="Logger.dll"/>
@@ -418,6 +420,12 @@
     <ROW File="Wide310x150Logo.scale200.png" Component_="LockScreenLogo.scale200.png" FileName="WIDE31~1.PNG|Wide310x150Logo.scale-200.png" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\Wide310x150Logo.scale-200.png" SelfReg="false"/>
     <ROW File="WindowIcon.ico" Component_="LockScreenLogo.scale200.png" FileName="WINDOW~1.ICO|WindowIcon.ico" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\WindowIcon.ico" SelfReg="false"/>
     <ROW File="WindowIcon.png" Component_="LockScreenLogo.scale200.png" FileName="WINDOW~1.PNG|WindowIcon.png" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\WindowIcon.png" SelfReg="false"/>
+    <ROW File="VideoDecodeH264" Component_="VideoDecodingProbes" FileName="h264.mp4" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\VideoDecoding\h264.mp4" SelfReg="false"/>
+    <ROW File="VideoDecodeHevc" Component_="VideoDecodingProbes" FileName="hevc.mp4" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\VideoDecoding\hevc.mp4" SelfReg="false"/>
+    <ROW File="VideoDecodeVp9" Component_="VideoDecodingProbes" FileName="VP9.WEB|vp9.webm" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\VideoDecoding\vp9.webm" SelfReg="false"/>
+    <ROW File="VideoDecodeAv1" Component_="VideoDecodingProbes" FileName="av1.ivf" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\VideoDecoding\av1.ivf" SelfReg="false"/>
+    <ROW File="VideoDecodeReadme" Component_="VideoDecodingProbes" FileName="README.md" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\VideoDecoding\README.md" SelfReg="false"/>
+    <ROW File="VideoDecodeGenerator" Component_="VideoDecodingProbes" FileName="GENERA~1.PS1|Generate-Probes.ps1" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\Assets\VideoDecoding\Generate-Probes.ps1" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_4" Component_="Microsoft.ui.xaml.dll.mui_4" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\az-Latn-AZ\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.UI.Xaml.Phone.dll.mui_4" Component_="Microsoft.ui.xaml.dll.mui_4" FileName="MICROS~2.MUI|Microsoft.UI.Xaml.Phone.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\az-Latn-AZ\Microsoft.UI.Xaml.Phone.dll.mui" SelfReg="false"/>
     <ROW File="Microsoft.ui.xaml.dll.mui_5" Component_="Microsoft.ui.xaml.dll.mui_5" FileName="MICROS~1.MUI|Microsoft.ui.xaml.dll.mui" Version="65535.65535.65535.65535" Attributes="0" SourcePath="..\artifacts\app\bg-BG\Microsoft.ui.xaml.dll.mui" SelfReg="false"/>
@@ -922,6 +930,7 @@
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_2"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_3"/>
     <ROW Feature_="MainFeature" Component_="LockScreenLogo.scale200.png"/>
+    <ROW Feature_="MainFeature" Component_="VideoDecodingProbes"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_4"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_5"/>
     <ROW Feature_="MainFeature" Component_="Microsoft.ui.xaml.dll.mui_6"/>
