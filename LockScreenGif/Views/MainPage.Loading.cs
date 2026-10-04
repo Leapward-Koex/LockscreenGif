@@ -20,14 +20,16 @@ public sealed partial class MainPage
         CancelVideoLoadButton.Content = "Cancel";
         CancelVideoLoadButton.IsEnabled = true;
         VideoLoadPanel.Visibility = Visibility.Visible;
-        VideoLoadRing.IsActive = true;
+        UpdateVideoLoadProgress(null);
         CancelVideoLoadButton.Focus(FocusState.Programmatic);
     }
 
     private void EndVideoLoading()
     {
         _isVideoLoading = false;
-        VideoLoadRing.IsActive = false;
+        VideoLoadProgress.IsIndeterminate = false;
+        VideoLoadProgress.Value = 0;
+        VideoLoadPercentage.Visibility = Visibility.Collapsed;
         VideoLoadPanel.Visibility = Visibility.Collapsed;
         PageContent.IsEnabled = true;
         if (IsLoaded)
@@ -35,6 +37,15 @@ public sealed partial class MainPage
             RefreshFlowUi();
             FocusStage();
         }
+    }
+
+    private void UpdateVideoLoadProgress(double? fraction)
+    {
+        var known = fraction is { } value && double.IsFinite(value) && value >= 0;
+        VideoLoadProgress.IsIndeterminate = !known;
+        VideoLoadProgress.Value = known ? Math.Clamp(fraction!.Value * 100, 0, 100) : 0;
+        VideoLoadPercentage.Visibility = known ? Visibility.Visible : Visibility.Collapsed;
+        VideoLoadPercentage.Text = known ? $"Frame loading: about {Math.Floor(VideoLoadProgress.Value):0}%" : string.Empty;
     }
 
     private async void CancelVideoLoad_Click(object sender, RoutedEventArgs e) => await CancelVideoLoadingAsync();
@@ -60,6 +71,7 @@ public sealed partial class MainPage
         CancelVideoLoadButton.IsEnabled = false;
         CancelVideoLoadButton.Content = "Cancelling…";
         VideoLoadStatus.Text = "Stopping frame loading…";
+        UpdateVideoLoadProgress(null);
         // Process cancellation callbacks must not delay rendering the cancelling state.
         await source.CancelAsync();
     }

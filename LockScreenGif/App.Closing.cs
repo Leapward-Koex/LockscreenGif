@@ -1,4 +1,5 @@
 using LockscreenGif.Contracts.Services;
+using LockscreenGif.Services;
 using LockscreenGif.Services.Analytics;
 using LockscreenGif.Services.Diagnostics;
 using LockscreenGif.Services.Lockscreen;
@@ -21,6 +22,7 @@ public partial class App
         }
 
         _closePending = true;
+        GetService<HardwareDecodingCapabilityService>().Dispose();
         // Always leave the native Closing callback before removing message hooks
         // or calling Close, even when every shutdown task completes synchronously.
         if (!MainWindow.DispatcherQueue.TryEnqueue(async () => await CloseWindowAsync()))

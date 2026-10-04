@@ -425,9 +425,10 @@ public sealed partial class MainPage
         }
 
         PausePreview();
-        _previewFrame = Math.Clamp(frame, 0, _frames.Count - 1);
+        var index = _frames;
+        _previewFrame = Math.Clamp(frame, 0, index.Count - 1);
         frame = _previewFrame;
-        Seek(_frames.TimeAt(frame));
+        Seek(index.TimeAt(frame));
         UpdatePreviewPosition();
         _previewCts?.Dispose();
         _previewCts = CancellationTokenSource.CreateLinkedTokenSource(_editorCts?.Token ?? CancellationToken.None);
@@ -438,14 +439,15 @@ public sealed partial class MainPage
         SetPreviewStatus(null);
         try
         {
-            // Debounce held buttons and rapid edits. Decode the exact ordinal frame, not a keyframe seek.
+            // Debounce held buttons and rapid edits. Verify the exact indexed frames
+            // after seeking, rather than decoding the video from its beginning again.
             if (!_previewCache.TryGetValue(frame, out var bytes))
             {
                 SetPreviewLoading(true, frame);
                 await Task.Delay(100, token);
                 var first = Math.Max(0, frame - 8);
-                var last = Math.Min(_frames.Count, frame + 9);
-                var images = await VideoFrameService.PreviewWindowAsync(input, first, last, token);
+                var last = Math.Min(index.Count, frame + 9);
+                var images = await VideoFrameService.PreviewWindowAsync(input, index, first, last, token);
                 token.ThrowIfCancellationRequested();
                 for (var i = 0; i < images.Count; i++)
                 {

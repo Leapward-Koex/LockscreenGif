@@ -1,7 +1,11 @@
-# Picked-file save regression checks
+# Picked-file save checks
 
-Run `dotnet run --project Tests/PickedFileWriter.Tests/PickedFileWriter.Tests.csproj -c Release`.
+Run from the repository root with the .NET 10 SDK:
 
-This isolated harness links the production `PickedFileWriter` and substitutes in-memory storage files and cached-file update APIs. It checks destination identity, complete byte copying, truncation, flush/close ordering, same-file protection, empty provider paths, exact local-provider recognition, unknown/cloud-provider statuses and COM errors, cancellation, and preservation of the primary failure when update cleanup also fails. Plain local files bypass provider-app updates while real local write failures still propagate.
+```powershell
+dotnet run --project Tests/PickedFileWriter.Tests/PickedFileWriter.Tests.csproj -c Release
+```
 
-It does not exercise the real Windows picker or provider synchronization. Manually save a generated GIF to a new local file and over an existing longer GIF, then check a provider-backed destination where available. Confirm a usable saved GIF, the success message, and unchanged generated-output resolution.
+This harness links production `PickedFileWriter` to in-memory storage/provider doubles. It checks byte-exact copying, truncation, destination identity, same-file protection, flush/close ordering and provider completion. Exact `computer`/`local` provider IDs bypass updates; unknown/cloud providers still require a successful completion status. Open/write/flush errors and synthetic cancellation propagate, and secondary completion errors do not replace the original write failure.
+
+The suite does not open the real picker, test picker cancellation or synchronize a real provider. Manually save a generated GIF to a new local file, overwrite a longer GIF and check a provider destination where available. Confirm usable bytes, accurate feedback and preserved output dimensions. Copying is not an atomic overwrite guarantee. See [saving generated output](../../docs/video-editing.md#saving-generated-output).

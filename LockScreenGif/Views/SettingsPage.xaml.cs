@@ -17,6 +17,7 @@ public sealed partial class SettingsPage : Page
         _analytics = App.GetService<AnalyticsService>();
         RefreshPreference();
         InitializeWindowsImageFeatureSettings();
+        InitializeHardwareDecodingSettings();
     }
 
     private void RefreshPreference()

@@ -534,6 +534,18 @@ public sealed class AnalyticsService : IDisposable, IErrorReporter
         Add("media_load_stage", MediaLoadStageName(values.MediaLoadStage));
         Add("metadata_fallback_used", values.MetadataFallbackUsed);
         Add("playback_available", values.PlaybackAvailable);
+        Add("hardware_decoding_requested", values.HardwareDecodingRequested);
+        Add(
+            "index_decoder",
+            values.IndexDecoder switch
+            {
+                AnalyticsVideoIndexDecoder.Cpu => "cpu",
+                AnalyticsVideoIndexDecoder.D3D11 => "d3d11",
+                _ => null,
+            }
+        );
+        Add("hardware_decoding_fallback_used", values.HardwareDecodingFallbackUsed);
+        Add("indexing_duration_ms", Duration(values.IndexingDurationMs));
         Add("failure_stage_duration_ms", Duration(values.FailureStageDurationMs));
         Add("extraction_duration_ms", Duration(values.ExtractionDurationMs));
         Add("encoding_duration_ms", Duration(values.EncodingDurationMs));

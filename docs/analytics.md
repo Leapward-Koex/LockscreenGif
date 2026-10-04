@@ -89,6 +89,9 @@ Properties use a fixed typed allowlist:
 | `extracted_frame_count` | Frames reported by FFmpeg after successful extraction. May be fewer than selected source frames when a target FPS is used; omitted if extraction fails. |
 | `media_load_stage` | Last observed GIF selection or video load stage: `picking_file`, `reading_metadata`, `indexing_frames`, `opening_preview`, `opening_file`, `decoding_image`, `completing`, `playing_preview`, or `reading_fallback_metadata`. Retained on terminal events and companion errors when available. |
 | `metadata_fallback_used`, `playback_available` | Optional video load observations: whether the bundled FFmpeg metadata reader was attempted, and whether Windows video playback initialized. `false` is an observed result; an absent value means not yet known. Runtime playback failures report `playback_available=false`. These do not certify successful GIF generation or lockscreen playback. |
+| `hardware_decoding_requested` | Saved hardware-decoding preference snapshotted when video loading starts. This is a user preference, not proof that the machine or selected video supports hardware decoding. |
+| `index_decoder`, `hardware_decoding_fallback_used` | Decoder observed in a completed frame index (`cpu` or `d3d11`), and whether a hardware indexing attempt failed and CPU recovery was used. CPU indexing while capability discovery is pending or unavailable is not a fallback. Unknown observations are omitted. |
+| `indexing_duration_ms` | Elapsed time for indexing that finished, failed, or was cancelled, rounded to milliseconds and bounded to 0–86,400,000. Includes hardware initialization, any CPU recovery attempt, and process cleanup. Does not include capability discovery, metadata, preview, or timeline thumbnails. |
 | `failure_stage`, `failure_stage_duration_ms` | Generation stage where an exception was caught, and elapsed time within that stage. Stages are `preparing`, `extracting_frames`, `encoding_gif`, `opening_output`, `loading_preview`, and `completing`. |
 | `extraction_duration_ms`, `encoding_duration_ms`, `preview_duration_ms` | Elapsed times for completed generation stages, retained if a later stage fails. A missing value means the stage did not complete, not zero time. |
 | `uses_reference_gif` | Whether a diagnostic test requested the bundled reference GIF. |
@@ -116,7 +119,7 @@ failures after a committed copy use `verification_failed`. Detailed exception
 families and codes remain available on the companion error event.
 
 Common properties are app version, Windows version, platform, environment,
-random installation ID, and `$session_id`. No paths, filenames, media, hashes,
+random installation ID, and `$session_id`. No paths, filenames, media, file hashes,
 usernames, Windows SIDs, exception messages, stack traces, or diagnostic reports
 are sent.
 
@@ -138,7 +141,7 @@ Each `$exception` contains:
 - `$exception_fingerprint`: a stable SHA-256 of the approved boundary, exception
   family, category, generation stage, HRESULT, native component and native code.
   A known media load stage also distinguishes failures; missing or invalid stages
-  leave the previous grouping unchanged. Recovery flags do not split issues.
+  are excluded from the fingerprint. Recovery flags do not split issues.
   Operation IDs, source selections, durations, app versions and installation IDs
   do not split an issue into new fingerprints.
 - The available typed operation ID, workflow, source, timing and error properties
@@ -170,7 +173,7 @@ observations, successful permission retries, ordinary polling/probe misses and
 analytics' own failures do not create issues.
 
 Apply and removal internals sometimes return failure results instead of throwing.
-They now retain the first actual exception in a transient `[JsonIgnore]` field
+They retain the first actual exception in a transient `[JsonIgnore]` field
 and report it once at the operation boundary. Partial failures keep `outcome=partial`.
 The known committed-file verification mismatch receives a fixed local exception;
 arbitrary result `Error` strings are never parsed or transmitted. These transient
@@ -201,8 +204,8 @@ Older events without a stage cannot be diagnosed retroactively.
 | Evidence | Interpretation |
 | --- | --- |
 | `error_hresult=-2147467259` (`0x80004005`) | `E_FAIL`, an unspecified native failure. Keep `native_failure`; do not infer a particular codec or security product. |
-| `error_hresult=-1072868846` (`0xC00D5212`) | `MF_E_TOPO_CODEC_NOT_FOUND`, now `codec_missing`. Windows could not find a compatible encode/decode transform; this does not identify the missing codec. |
-| `error_hresult=-2147020345` (`0x800711C7`) or `native_error_code=4551` | `ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION`, now `security_policy_blocked`. Windows Application Control blocked a file; the error alone does not identify which file or policy. |
+| `error_hresult=-1072868846` (`0xC00D5212`) | `MF_E_TOPO_CODEC_NOT_FOUND`, classified as `codec_missing`. Windows could not find a compatible encode/decode transform; this does not identify the missing codec. |
+| `error_hresult=-2147020345` (`0x800711C7`) or `native_error_code=4551` | `ERROR_SYSTEM_INTEGRITY_POLICY_VIOLATION`, classified as `security_policy_blocked`. Windows Application Control blocked a file; the error alone does not identify which file or policy. |
 | Win32 `1260` or `577`, including their `HRESULT_FROM_WIN32` forms | `security_policy_blocked`: group-policy blocking or failed digital-signature verification respectively. These need trusted installation/policy review, not decoder retries. |
 
 The numeric definitions come from Microsoft's
@@ -225,6 +228,24 @@ load using the bundled FFmpeg reader. Windows preview failure can likewise produ
 a handled `$exception` while frame preview, trimming and conversion remain available.
 Count terminal `video_load_completed` outcomes when measuring unusable video loads;
 counting all handled exceptions would also include these recovered attempts.
+
+Hardware indexing adds observations to the existing video-load funnel rather
+than emitting per-frame, probe, or setting-toggle events. The start event records
+`hardware_decoding_requested`; a completed index records `index_decoder` and
+`hardware_decoding_fallback_used`. Indexing elapsed time is recorded when that
+stage exits, including failure or cancellation. If preview setup later fails
+or the load is cancelled, retain the completed indexing observations. An index
+that never completed has no successful decoder observation. Hardware
+fallback is quiet locally and does not create an error issue when CPU recovery
+succeeds. If both attempts fail, the normal load failure still applies.
+
+Compare successful `d3d11` and `cpu` indexing durations by app version, showing
+sample counts. Separate CPU recovery (`hardware_decoding_fallback_used=true`)
+from direct CPU indexing so hardware initialization and failure costs stay
+visible. The preference alone cannot establish hardware availability, and
+differences between machines and source videos prevent this comparison from
+proving a causal speedup. No GPU names, adapter indexes, codec identifiers,
+filenames, or media are transmitted.
 
 ### Investigating generation failures
 
@@ -394,6 +415,8 @@ for individual events would count the same installation several times.
 | Does apply reliability differ by source? | Break the same normal-apply success rate down by `lockscreen_source` (`video` versus `user_gif`). Use `workflow=diagnostics` separately for bundled-reference comparisons. Join start/completion by `operation_id`; missing source on older events means unrecorded, not `user_gif`. |
 | Why do applies fail before finding targets? | Filter `lockscreen_apply_completed` to `outcome=failed` or `partial`, break down by `apply_failure_reason`, and inspect `target_count=0` separately. Distinguish `cache_inaccessible`, `cache_missing`, and `no_destinations`; compare app/Windows versions and API options. Keep `workflow=diagnostics` separate from `workflow=lockscreen`, exclude cancellations, and treat missing reasons as unrecorded. Companion `$exception` events share the operation ID and reason when an exception is available. |
 | What makes operations slow? | Median and p95 of `duration_ms` for successful generation/apply. Compare generation's completed extraction, encoding, and preview durations. Break down by requested width, FPS mode, source/target FPS, and clip duration; show sample counts. |
+| How long does selecting a video take? | Median and p95 of `duration_ms` on successful `video_load_completed`, compared by `app_version`, `metadata_fallback_used` and `playback_available`; show sample counts. This measures preparation until frame editing is available. The first exact still and timeline thumbnails load afterward, so their readiness is not included. |
+| Does hardware indexing help, and how often does it recover through CPU? | On successful `video_load_completed`, compare median and p95 `indexing_duration_ms` by `index_decoder` and `app_version`, showing sample counts. Separate `hardware_decoding_fallback_used=true` from direct CPU indexing, and count it among requested hardware loads. Requested hardware with direct CPU can mean unavailable or pending discovery, so it is not evidence of a failed GPU attempt. Whole-load `duration_ms` shows whether the indexing difference carries through to editing readiness. |
 | Where does GIF generation fail? | Filter `gif_generation_completed` to `outcome=failed`, break down by `failure_stage`, then `error_kind` and native component/code or exception family/HRESULT. Compare versions and requested settings; exclude cancellations. Missing fields on older events mean unknown, not success. |
 | Do installations return? | Retention: successful normal apply as the start event and **Meaningful app use** as the return action, weekly periods across eight weeks. Use **On or after** for this occasional-use utility; distinguish first-use and recurring retention. |
 

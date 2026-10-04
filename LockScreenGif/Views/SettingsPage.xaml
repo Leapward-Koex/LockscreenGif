@@ -19,6 +19,21 @@
                         Message="The setting applies for this session, but could not be saved. Toggle it again to retry before closing the app." />
                 </StackPanel>
             </Border>
+            <TextBlock Text="Video editing" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Padding="24" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+                <StackPanel Spacing="16">
+                    <ToggleSwitch x:Name="HardwareDecodingToggle" Header="Use hardware decoding"
+                        IsEnabled="False" OnContent="Enabled" OffContent="Disabled"
+                        Toggled="HardwareDecodingToggle_Toggled" />
+                    <TextBlock TextWrapping="Wrap"
+                        Text="Accelerates initial frame loading when supported. Videos automatically use CPU decoding when needed. Changes apply the next time you select a video." />
+                    <TextBlock x:Name="HardwareDecodingAvailabilityText" TextWrapping="Wrap"
+                        Text="Checking hardware decoding availability…" />
+                    <InfoBar IsOpen="{x:Bind ViewModel.VideoEditingPreferences.HasSaveError, Mode=OneWay}"
+                        IsClosable="False" Severity="Warning" Title="Could not save the video editing preference"
+                        Message="The setting applies for this session, but could not be saved. Toggle it again to retry before closing the app." />
+                </StackPanel>
+            </Border>
             <TextBlock Text="Logs" Style="{StaticResource SubtitleTextBlockStyle}" />
             <Border Padding="24" CornerRadius="8" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
                 <StackPanel Spacing="16">

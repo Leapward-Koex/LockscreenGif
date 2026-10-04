@@ -390,14 +390,16 @@
                 Background="{ThemeResource SolidBackgroundFillColorBaseBrush}"
                 BorderBrush="{ThemeResource SurfaceStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="12">
             <StackPanel Spacing="16">
-                <ProgressRing x:Name="VideoLoadRing" Width="44" Height="44" IsActive="False"
-                              AutomationProperties.Name="Preparing video" />
                 <TextBlock Text="Preparing your video" Style="{ThemeResource SubtitleTextBlockStyle}"
                            TextAlignment="Center" TextWrapping="Wrap" />
                 <TextBlock x:Name="VideoLoadFileName" TextTrimming="CharacterEllipsis" TextAlignment="Center"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 <TextBlock Text="Reading the video so you can select exact frames. Editing will be available when this finishes. Longer videos can take a little while."
                            TextWrapping="Wrap" TextAlignment="Center" />
+                <ProgressBar x:Name="VideoLoadProgress" Minimum="0" Maximum="100" Value="0"
+                             HorizontalAlignment="Stretch" AutomationProperties.Name="Video frame loading progress" />
+                <TextBlock x:Name="VideoLoadPercentage" Visibility="Collapsed" TextAlignment="Center"
+                           TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 <TextBlock x:Name="VideoLoadStatus" Text="Reading video details…" TextWrapping="Wrap"
                            TextAlignment="Center" AutomationProperties.LiveSetting="Polite" />
                 <Button x:Name="CancelVideoLoadButton" Content="Cancel" Click="CancelVideoLoad_Click"

@@ -37,7 +37,7 @@ After changing rules, run the formatting script below to apply them everywhere.
 
 ## Format all C# files
 
-From the repository root on Windows, with the .NET SDK installed:
+From the repository root on Windows, with the SDK selected by [global.json](../global.json) installed:
 
 ```powershell
 dotnet tool restore

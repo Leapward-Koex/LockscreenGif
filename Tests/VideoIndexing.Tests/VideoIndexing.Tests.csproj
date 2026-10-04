@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../LockScreenGif/Models/VideoFrameIndex.cs" Link="Production/VideoFrameIndex.cs" />
+    <Compile Include="../../LockScreenGif/Models/VideoIndexProgress.cs" Link="Production/VideoIndexProgress.cs" />
+    <Compile Include="../../LockScreenGif/Models/VideoDecodeOptions.cs" Link="Production/VideoDecodeOptions.cs" />
+    <Compile Include="../../LockScreenGif/Services/VideoFrameService.cs" Link="Production/VideoFrameService.cs" />
+    <Compile Include="../../LockScreenGif/Services/VideoFrameService.Progress.cs" Link="Production/VideoFrameService.Progress.cs" />
+    <Compile Include="../../LockScreenGif/Services/VideoFrameService.Metadata.cs" Link="Production/VideoFrameService.Metadata.cs" />
+    <Compile Include="../../LockScreenGif/Services/VideoFrameService.Hardware.cs" Link="Production/VideoFrameService.Hardware.cs" />
+    <Compile Include="../../LockScreenGif/Services/MediaProcessingException.cs" Link="Production/MediaProcessingException.cs" />
+    <Compile Include="../VideoEditing.Tests/TestSupport.cs" Link="TestSupport.cs" />
+    <None Include="../../LockScreenGif/Vendor/FFMPEG/ffmpeg.exe" Link="Vendor/FFMPEG/ffmpeg.exe" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

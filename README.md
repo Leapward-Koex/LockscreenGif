@@ -1,6 +1,7 @@
 # Lockscreen Gif
-A simple application to set your windows lockscreen to a video or a GIF image.
-You cannot set a GIF as a lockscreen using the normal windows settings even when using file extension spoofing but with some Windows system image cache modifications you can trick Windows into using a GIF on your lockscreen.
+
+Set an animated GIF as your Windows lock screen, or convert a video into a GIF
+first. The app applies GIFs through the Windows lock-screen image cache.
 
 # Video file input demo
 
@@ -12,10 +13,23 @@ https://github.com/user-attachments/assets/1dc4ec39-2f38-42c6-8216-3c911f6d8bc9
 https://github.com/Leapward-Koex/LockscreenGif/assets/30615050/7448e59f-9767-4509-8ce3-721cf1783faa
 
 
-# Notes
-ONLY real .GIF files are supported.
-Videos cannot work and will never work directly, please use the video option to dynamically create a gif to use.
-GIFs created through the video option are created with [FFMPEG](https://www.ffmpeg.org/) and [Gifski](https://gif.ski/) to produce high quality, video like gifs.
+# Use the app
+
+1. Select **Picture** in Windows **Settings > Personalization > Lock screen**.
+   If the app reports a missing image cache, choose a picture, then lock and
+   unlock Windows once.
+2. Follow the app's **Prerequisites** panel. If it offers **Disable Windows
+   feature**, allow the requested elevation. A reboot may be needed for Windows
+   to use the change; the app offers **Not now** and **Reboot**. See the
+   [Windows feature guide](docs/windows-image-feature.md).
+3. Select **Choose GIF**, or **Choose video** and edit the clip. For video,
+   select **Continue** to generate the GIF preview. Then select **Set lock screen**.
+   **Save GIF…** keeps a reusable copy of a generated GIF.
+4. Lock Windows to check animation on the clock and sign-in screens. A successful
+   apply confirms that the cache files were updated; it does not verify playback.
+
+The applied image must be a real GIF. Video input is converted using
+[FFmpeg](https://www.ffmpeg.org/) and [Gifski](https://gif.ski/).
 
 # Logs
 
@@ -44,13 +58,27 @@ root on Windows to add required braces and format all C# source. Use
 See [the code style guide](docs/code-style.md) for the shared rules and Visual
 Studio format-on-save setup.
 
+# Build and package
+
+Build on Windows using the SDK selected by [global.json](global.json) and the
+MSBuild setup in the [Windows build workflow](.github/workflows/dotnet-desktop.yml).
+From the repository root, publish and check the actual distribution folder:
+
+```powershell
+dotnet publish LockScreenGif/LockscreenGif.csproj -c Release -p:PublishProfile=FolderProfile.pubxml
+pwsh -NoProfile -File scripts/Test-PrivilegedPackaging.ps1
+pwsh -NoProfile -File Tests/ReleasePackaging.Tests.ps1
+```
+
+The folder profile publishes to `artifacts/app`. The checks require PowerShell 7
+and validate the helper, native runtime/provenance and MSI payload inventory.
+Build `DefaultBuild` from `Installer/LockscreenGif.aip` with Advanced Installer
+23.3, setting its numeric product version to match the app's numeric version.
+The workflow contains the versioned MSI and ZIP packaging steps.
+
 # Automated prereleases
 
-Builds use .NET 10 LTS and require Windows 11 24H2 (build 26100) or later, x64.
-Install the **x64 .NET 10 Desktop Runtime** before running either distribution;
-the MSI currently does not install it for you. The Windows App SDK is bundled.
-
-The .NET SDK is selected by `global.json`. The Windows .NET reference package is
+Builds use .NET 10 LTS. The Windows .NET reference package is
 10.0.26100.87; the existing minimum Windows build remains 26100. Newer Windows
 builds are not excluded by the installer.
 

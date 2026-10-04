@@ -8,7 +8,9 @@
   <ItemGroup>
     <PackageReference Include="Gifski.Net" Version="1.2.0" />
     <Compile Include="../../LockScreenGif/Models/VideoFrameIndex.cs" Link="Production/VideoFrameIndex.cs" />
+    <Compile Include="../../LockScreenGif/Models/VideoIndexProgress.cs" Link="Production/VideoIndexProgress.cs" />
     <Compile Include="../../LockScreenGif/Services/VideoFrameService.cs" Link="Production/VideoFrameService.cs" />
+    <Compile Include="../../LockScreenGif/Services/VideoFrameService.Progress.cs" Link="Production/VideoFrameService.Progress.cs" />
     <Compile Include="../../LockScreenGif/Services/VideoFrameService.Metadata.cs" Link="Production/VideoFrameService.Metadata.cs" />
     <Compile Include="../../LockScreenGif/Services/GifSkiService.cs" Link="Production/GifSkiService.cs" />
     <Compile Include="../../LockScreenGif/Services/MediaProcessingException.cs" Link="Production/MediaProcessingException.cs" />

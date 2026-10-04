@@ -129,6 +129,8 @@ try
     );
     var vfrIndex = await VideoFrameService.IndexAsync(vfr, 25, null, CancellationToken.None);
     Check(vfrIndex.Count == 8 && Close(vfrIndex.TimeAt(5) - vfrIndex.TimeAt(4), 0.12), "VFR indexing preserves unequal frame durations");
+    await ThumbnailTests.RunAsync(cfr, cfrIndex, vfr, vfrIndex);
+    await PreviewWindowTests.RunAsync(cfr, cfrIndex, vfr, vfrIndex);
     var variable = await VideoFrameService.ExportAsync(vfr, vfrIndex, 1, 8, 64, 0, _ => { });
     Check(
         variable.Timestamps.Length == 7 && variable.Timestamps.Zip(vfrIndex.PresentationTimes(1, 8)).All(p => Close(p.First, p.Second)),
@@ -158,6 +160,7 @@ try
     );
     var singleGif = await GifSkiService.CreateGif(single.Directory, _ => { }, single.Timestamps, cfrIndex.TimeAt(12) - cfrIndex.TimeAt(11));
     Check(File.Exists(singleGif) && new FileInfo(singleGif).Length > 0, "single-frame GIF generation succeeds");
+    await IndexingTests.RunAsync(cfr, vfr);
     await MetadataTests.RunAsync(cfr, vfr);
     await ResolutionTests.RunAsync();
     await MediaFailureTests.RunAsync(allFiles[0]);

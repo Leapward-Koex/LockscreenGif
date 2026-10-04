@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "file": "vcruntime140.dll",
+  "architecture": "x64",
+  "peMachine": "0x8664",
+  "fileVersion": "14.51.36247.0",
+  "bytes": 178616,
+  "sha256": "D1F4225DF2CD877DBF130D5668A021DCE3F94118455FF5EC952061C30AFC9CE7",
+  "supplier": "Microsoft Corporation",
+  "sourceProduct": "Visual Studio 2026 Community",
+  "sourceRelativePath": "VC/Redist/MSVC/14.51.36231/x64/Microsoft.VC145.CRT/vcruntime140.dll",
+  "redistributionList": "https://learn.microsoft.com/en-us/visualstudio/releases/2026/redistribution",
+  "licenseTerms": "https://visualstudio.microsoft.com/license-terms/",
+  "notice": "runtime-README.txt",
+  "deployment": "App-local beside Vendor/gifski/gifski.dll",
+  "modified": false
+}

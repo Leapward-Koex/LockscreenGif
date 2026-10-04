@@ -116,6 +116,16 @@ namespace LockscreenGif.Services.Lockscreen
     }
 }
 
+namespace LockscreenGif.Services
+{
+    public sealed class HardwareDecodingCapabilityService : IDisposable
+    {
+        public int DisposeCalls { get; private set; }
+
+        public void Dispose() => DisposeCalls++;
+    }
+}
+
 namespace WindowLifecycle.Tests
 {
     public sealed class FakeErrorReporter : LockscreenGif.Contracts.Services.IErrorReporter
